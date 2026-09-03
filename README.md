@@ -1,16 +1,17 @@
-# Datacap App Generator — Bob Mode
+# Datacap App Generator
 
-> Custom Bob mode: **`datacap-app-generator`**  
-> Target platform: **IBM Datacap 9.1.10**  
-> Mode file: [`.bob/custom_modes.yaml`](.bob/custom_modes.yaml)  
-> Plan file: [`datacap-app-generator-plan.md`](datacap-app-generator-plan.md)
+> **Bob Mode:** `datacap-app-generator`  
+> **Target Platform:** IBM Datacap 9.1.10  
+> **Repository:** [github.com/boontee/datacap_app_generator](https://github.com/boontee/datacap_app_generator)  
+> **Mode file:** [`.bob/custom_modes.yaml`](.bob/custom_modes.yaml)  
+> **Plan file:** [`datacap-app-generator-plan.md`](datacap-app-generator-plan.md)
 
 ---
 
-## What This Mode Does
+## Overview
 
-The **Datacap App Generator** is a guided, two-phase assistant that produces a complete
-IBM Datacap 9.1.10 application scaffold from a blank slate. It replaces manual Datacap Studio
+The **Datacap App Generator** is a guided, two-phase IBM Bob assistant mode that produces a complete
+IBM Datacap 9.1.10 application scaffold from scratch. It replaces manual Datacap Studio
 configuration for the initial application structure, ruleset skeletons, and C# action projects.
 
 **You answer questions. It generates files.**
@@ -31,11 +32,13 @@ configuration for the initial application structure, ruleset skeletons, and C# a
 
 ---
 
-## How to Activate
+## Quick Start
 
-Select **"Datacap App Generator"** from the Bob mode picker (bottom-left of the interface).
-
-The mode is registered as a **workspace mode** — it is available only in this project.
+1. Open this repository in IBM Bob.
+2. Select **"Datacap App Generator"** from the mode picker (bottom-left).
+3. Describe your application — e.g. *"I need a Datacap app for AP invoice processing"*.
+4. Answer the intake questions across 6 sections.
+5. Confirm generation — all files are written to `output/<AppName>/`.
 
 ---
 
@@ -43,10 +46,10 @@ The mode is registered as a **workspace mode** — it is available only in this 
 
 ### Phase 1 — Intake
 
-A structured Q&A conversation across **6 sections**. Each section is confirmed before the next begins. Answers are written to `output/<AppName>/requirements.json` incrementally.
+A structured Q&A conversation across **6 sections**. Each section is confirmed before moving to the next. Answers are incrementally written to `output/<AppName>/requirements.json`.
 
-| Section | Topic | Key Outputs |
-|---------|-------|-------------|
+| # | Section | Key Outputs |
+|---|---------|-------------|
 | 1 | **Application Identity** | App name, server, DSNs, install path |
 | 2 | **Document Hierarchy** | Document types → page types → fields, line items, dictionaries, lookups |
 | 3 | **Workflow Design** | Input method, verification client, Rulerunner tasks, branching, batch split |
@@ -54,19 +57,17 @@ A structured Q&A conversation across **6 sections**. Each section is confirmed b
 | 5 | **Integration Points** | Export targets, lookup DBs, custom C# action definitions |
 | 6 | **Non-Functional Requirements** | Volume, HA, environment, secrets strategy, README flag |
 
-**Resume support:** if `output/<AppName>/requirements.json` already exists, the mode
-asks whether to resume from it or start fresh.
+**Resume support:** if `output/<AppName>/requirements.json` already exists, the mode asks whether to resume from it or start fresh.
 
 ### Phase 2 — Generation
 
-After all sections are confirmed the mode runs **pre-generation validation**, then writes
-every output file in order. Each file is logged as it is written.
+After all sections are confirmed the mode runs **pre-generation validation**, then writes every output file in order. Each file is logged as it is written.
 
 ---
 
-## Generated Files
+## Generated Output
 
-All output lands in `output/<AppName>/`.
+All files land in `output/<AppName>/`.
 
 ```
 output/<AppName>/
@@ -99,7 +100,7 @@ output/<AppName>/
 ### Template Sources
 
 | Generated File | Base Template |
-|----------------|--------------|
+|----------------|---------------|
 | `<AppName>.xml` | `templates/dco-xml/AppName.xml` |
 | `collection.xml` | `templates/rulesets/collection.xml` |
 | `CustomActions.cs` | `templates/custom-action/CustomActions.cs` |
@@ -107,7 +108,7 @@ output/<AppName>/
 | `CustomActions.rrx` | `templates/custom-action/CustomActions.rrx` |
 | `<AppName>.app` | `templates/app-config/AppName.app` |
 | `.gitignore` | `templates/gitignore.txt` (if `nfr.sourceControl=true`) |
-| Ruleset `.rul` files | Generated (no base template) |
+| Ruleset `.rul` files | Generated inline (no base template) |
 
 ---
 
@@ -129,7 +130,7 @@ The mode blocks file generation if any of these checks fail:
 
 ---
 
-## Generation Rules (Invariants)
+## Generation Invariants
 
 These rules are enforced by the mode regardless of user answers:
 
@@ -143,11 +144,11 @@ These rules are enforced by the mode regardless of user answers:
 
 ---
 
-## Knowledge Base Used
+## Knowledge Base
 
-The mode reads and cites these files during generation:
+The mode reads these files during generation:
 
-| File | Used for |
+| File | Purpose |
 |------|---------|
 | `knowledge-base/datacap-application-development-guide-v9.md` | Action library reference — every action in every `.rul` file is sourced here |
 | `knowledge-base/datacap-app-structure.md` | Canonical folder layout, `.app` INI format, source control matrix |
@@ -159,94 +160,69 @@ The mode reads and cites these files during generation:
 
 ---
 
-## Tool Permissions
+## MCP Datacap Server
 
-The mode has access to the following Bob tool groups:
+This repo includes a custom MCP server (`mcp-datacap-server/`) that connects Bob directly to a live IBM Datacap Task Manager instance via REST API.
 
-| Group | Capability | Why needed |
-|-------|-----------|-----------|
-| `read` | File reading, symbol lookup | Read plan, templates, knowledge-base |
-| `edit` | File writing and modification | Write `requirements.json` and all generated files |
-| `execute` | Shell command execution | Create output directories (`New-Item`) |
-| `todo` | `update_todo_list` | Track intake section and generation progress |
-| `skill` | `use_skill` | Load specialist skills if needed during generation |
+### Available Tools
 
----
+| Tool | Description |
+|------|-------------|
+| `list-applications` | List all registered Datacap applications |
+| `get-workflow` | Get workflow hierarchy (workflows → jobs → tasks) |
+| `get-task-profiles` | List ruleset execution profiles |
+| `get-dco-definition` | Get full SetupDCO XML (document/page/field hierarchy) |
+| `list-batches` | List batches with optional filters |
+| `create-batch` | Create and grab a new batch |
+| `upload-file` | Upload a TIFF/PDF image to a grabbed batch |
+| `grab-batch` / `grab-next-batch` | Grab a pending batch for processing |
+| `release-batch` | Release a batch with a given status |
+| `get-page-file` | Retrieve the DCO XML state of a batch |
+| `get-batch-history` | Get the task progression log for a batch |
+| `transaction-start/end` | Start/end a stateless transaction |
+| `transaction-set-file` | Upload files into a transaction workspace |
+| `transaction-execute` | Execute rulesets within a transaction |
+| `transaction-get-file` | Retrieve output files from a transaction |
+| `delete-batch` | Delete a test batch and its folder |
+| `get-statistics` | Processing stats (counts, avg time, age) |
+| `get-fingerprint-list` | List fingerprint templates for a page type |
 
-## Usage Example
+### Build & Register
 
-```
-User: [switches to Datacap App Generator mode]
-User: I need a new Datacap app for accounts payable invoice processing.
-
-Mode: Starting Datacap App Generator.
-      Checking for existing requirements.json... not found.
-      
-      [Section 1/6 - Application Identity]
-      
-      1.1  What is the application name? (PascalCase, no spaces)
-      1.2  What is a short description?
-      ...
-      
-      [Section 1/6 confirmed]
-      ✓ Written to output/APInvoice/requirements.json (app section)
-      
-      [Section 2/6 - Document Hierarchy]
-      ...
-      
-      [All 6 sections complete]
-      Running pre-generation validation...
-      ✅ No errors. 1 warning: no export target configured — Export.rul will be a stub.
-      Confirm? [y/n]
-      
-      Generating files...
-      ✓ Generated dco_APInvoice/APInvoice.xml
-      ✓ Generated dco_APInvoice/rules/collection.xml
-      ✓ Generated dco_APInvoice/rules/PageID.rul
-      ...
-      ✓ Generated README.md
-      
-      Generation complete. 11 files written to output/APInvoice/
-      
-      [Deployment Checklist]
-      ...
+```powershell
+cd mcp-datacap-server
+npm install
+npm run build
 ```
 
----
-
-## What This Mode Does NOT Do
-
-- It does **not** import fingerprints into Datacap Studio — fingerprints must be created manually.
-- It does **not** register the application in Datacap Application Manager — this requires the GUI.
-- It does **not** create SQL Server databases or ODBC DSNs — those are infrastructure prerequisites.
-- It does **not** build or register the custom action DLL — that requires Visual Studio 2022.
-- It does **not** configure Rulerunner Manager — that is a server-side manual step.
-
-All of the above are covered in the generated `README.md` deployment checklist.
+Then register in `.bob/mcp.json` pointing to `build/index.js` with your Datacap server URL and credentials.
 
 ---
 
-## Files in This Workspace
+## Workspace Structure
 
 ```
 datacap_project_generator/
 │
 ├── .bob/
-│   └── custom_modes.yaml                        ← mode registration (this mode)
+│   ├── custom_modes.yaml                   ← Datacap App Generator mode registration
+│   └── mcp.json                            ← MCP server config (Datacap connection)
 │
-├── datacap-app-generator-plan.md                ← authoritative plan (source of truth for the mode)
-├── datacap-app-generator-README.md              ← this file
+├── README.md                               ← this file
+├── datacap-app-generator-plan.md           ← authoritative mode behaviour plan
+├── datacap-api-help.json                   ← Datacap REST API reference
 │
-├── knowledge-base/                              ← reference knowledge used during generation
+├── knowledge-base/                         ← reference docs used during generation
 │   ├── datacap-application-development-guide-v9.md
 │   ├── datacap-app-structure.md
 │   ├── datacap-development-best-practices.md
 │   ├── datacap-ibm-docs-developing-applications.md
 │   ├── datacap-ibm-docs-reference-9.1.8.md
 │   ├── datacap-sample-applications.md
-│   └── datacap-watsonx-ai-integration.md
+│   ├── datacap-watsonx-ai-integration.md
+│   └── ibm-datacap-application-development-guide-9.pdf
 │
-├── templates/                                   ← base files used during generation
+├── templates/                              ← base files used during generation
 │   ├── app-config/AppName.app
 │   ├── dco-xml/AppName.xml
 │   ├── gitignore.txt
@@ -256,10 +232,28 @@ datacap_project_generator/
 │       ├── CustomActions.csproj
 │       └── CustomActions.rrx
 │
-└── output/                                      ← generated applications land here
+├── mcp-datacap-server/                     ← custom MCP server (TypeScript/Node)
+│   ├── src/index.ts
+│   ├── build/index.js
+│   ├── package.json
+│   └── tsconfig.json
+│
+└── output/                                 ← generated applications land here (gitignored)
     └── <AppName>/
         └── ...
 ```
+
+---
+
+## Limitations
+
+- Does **not** import fingerprints into Datacap Studio — fingerprints must be created manually.
+- Does **not** register the application in Datacap Application Manager — requires the GUI.
+- Does **not** create SQL Server databases or ODBC DSNs — infrastructure prerequisites.
+- Does **not** build or register the custom action DLL — requires Visual Studio 2022.
+- Does **not** configure Rulerunner Manager — a server-side manual step.
+
+All of the above are covered in the generated `README.md` deployment checklist.
 
 ---
 
@@ -267,13 +261,14 @@ datacap_project_generator/
 
 | What changed | What to update |
 |---|---|
-| New Datacap action library added | `knowledge-base/datacap-application-development-guide-v9.md` + optionally the plan |
-| New export target type needed | `datacap-app-generator-plan.md` Section 5A + Generation Map |
-| New intake question | `datacap-app-generator-plan.md` appropriate section + `requirements.json` schema |
-| Template file updated | `templates/` — mode picks up changes automatically on next run |
-| Mode behaviour change | `.bob/custom_modes.yaml` `roleDefinition` or `customInstructions` |
-| Watson AI / LLM patterns updated | `knowledge-base/datacap-watsonx-ai-integration.md` |
+| New Datacap action added | `knowledge-base/datacap-application-development-guide-v9.md` |
+| New export target type | `datacap-app-generator-plan.md` Section 5A + Generation Map |
+| New intake question | `datacap-app-generator-plan.md` + `requirements.json` schema |
+| Template file updated | `templates/` — picked up automatically on next run |
+| Mode behaviour change | `.bob/custom_modes.yaml` `roleDefinition` / `customInstructions` |
+| MCP server tools changed | `mcp-datacap-server/src/index.ts` → rebuild → restart Bob |
+| Watson AI / LLM patterns | `knowledge-base/datacap-watsonx-ai-integration.md` |
 
-> The `datacap-app-generator-plan.md` is the **single source of truth**. The `roleDefinition`
-> in `custom_modes.yaml` instructs the mode to always read the plan file at session start —
-> so updating the plan is sufficient for most behaviour changes.
+> `datacap-app-generator-plan.md` is the **single source of truth** for mode behaviour.
+> The `roleDefinition` in `custom_modes.yaml` instructs the mode to always read the plan at session start —
+> updating the plan is sufficient for most behaviour changes.
