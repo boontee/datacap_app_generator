@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "datacap": {
+      "command": "node",
+      "args": [
+        "C:\\Workspaces\\datacap_project_generator\\mcp-datacap-server\\build\\index.js"
+      ],
+      "env": {
+        "DATACAP_URL": "http://localhost:82/service",
+        "DATACAP_APP": "APT",
+        "DATACAP_USER": "admin",
+        "DATACAP_PASSWORD": "admin",
+        "DATACAP_STATION": "1"
+      },
+      "alwaysAllow": [
+        "list-applications",
+        "get-task-profiles"
+      ]
+    }
+  }
+}

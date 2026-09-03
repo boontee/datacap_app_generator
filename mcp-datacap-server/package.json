@@ -1,0 +1,22 @@
+{
+  "name": "mcp-datacap-server",
+  "version": "1.0.0",
+  "description": "MCP server for IBM Datacap 9.1.10 REST API",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "bin": {
+    "mcp-datacap-server": "./build/index.js"
+  },
+  "files": ["build"],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
+  }
+}

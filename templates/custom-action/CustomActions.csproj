@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  IBM Datacap 9.1.10 — Custom Action Library
+  Build with Visual Studio 2022, targeting .NET Framework 4.8, x86 (32-bit COM DLL)
+
+  IMPORTANT:
+  - Platform target MUST be x86 (Datacap Desktop is 32-bit)
+  - Output type MUST be Class Library (COM-visible DLL)
+  - Register after build: regsvr32 CustomActions.dll
+
+  DDK References (adjust paths to your DDK installation):
+    TDCO.DLL       → C:\Datacap\<AppName>\dco_<AppName>\rules\TDCO.dll
+    dclogX.DLL     → C:\Datacap\bin\dclogX.dll
+    dcrroLib.DLL   → C:\Datacap\bin\dcrroLib.dll
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyName>CustomActions</AssemblyName>
+    <RootNamespace>CustomActions</RootNamespace>
+    <PlatformTarget>x86</PlatformTarget>
+    <OutputType>Library</OutputType>
+    <ComVisible>true</ComVisible>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <!-- Datacap DDK references — update HintPath to your DDK location -->
+  <ItemGroup>
+    <Reference Include="TDCOLib">
+      <HintPath>$(DatacapDDK)\TDCO.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="dclogXLib">
+      <HintPath>$(DatacapDDK)\dclogX.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="dcrroLib">
+      <HintPath>$(DatacapDDK)\dcrroLib.dll</HintPath>
+      <EmbedInteropTypes>false</EmbedInteropTypes>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Post-build: copy to application rules folder -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;C:\Datacap\$(AppName)\dco_$(AppName)\rules\&quot;" />
+    <Exec Command="copy /Y &quot;$(ProjectDir)CustomActions.rrx&quot; &quot;C:\Datacap\$(AppName)\dco_$(AppName)\rules\&quot;" />
+    <Exec Command="regsvr32 /s &quot;C:\Datacap\$(AppName)\dco_$(AppName)\rules\CustomActions.dll&quot;" />
+  </Target>
+
+</Project>

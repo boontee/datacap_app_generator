@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IBM Datacap 9.1.10 — Ruleset Collection Registry
+  File location: C:\Datacap\<AppName>\dco_<AppName>\rules\collection.xml
+
+  Add one <ruleset> entry per .rul file in this folder.
+  Datacap Studio reads this file to populate the Ruleset Library panel.
+-->
+<collection>
+  <ruleset name="PageID"      file="PageID.rul"      description="Page identification via fingerprint matching" />
+  <ruleset name="Recognition" file="Recognition.rul" description="OCR and zone-based recognition"              />
+  <ruleset name="Extraction"  file="Extraction.rul"  description="Data extraction from recognised text"        />
+  <ruleset name="Validation"  file="Validation.rul"  description="Business rule validation"                    />
+  <ruleset name="Export"      file="Export.rul"      description="Export to back-end systems"                  />
+</collection>

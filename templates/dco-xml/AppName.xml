@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  IBM Datacap 9.1.10 — SetupDCO Document Hierarchy Template
+  File location: C:\Datacap\<AppName>\dco_<AppName>\<AppName>.xml
+
+  CUSTOMISE:
+    1. Replace <AppName> with your application name
+    2. Add/remove <document> blocks for each document type
+    3. Add/remove <page> blocks for each page type within a document
+    4. Add/remove <field> blocks for each field to extract
+
+  Field datatype values:
+    AlphaNumeric | Alphabetic | Numeric | Date | Boolean | Currency
+-->
+<batch name="AppName" type="Batch">
+
+  <!-- ── Batch-level variables ─────────────────────────────────────────── -->
+  <variable name="BatchStatus"   value="0" />
+  <variable name="ExportPayload" value="" />
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- Document type: Invoice                                               -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <document name="Invoice" type="Document" description="Supplier Invoice">
+
+    <page name="InvoicePage" type="Page" description="Main invoice page">
+      <field name="InvoiceNumber"  type="Field" datatype="AlphaNumeric" required="true"  description="Invoice reference number"   />
+      <field name="InvoiceDate"    type="Field" datatype="Date"         required="true"  description="Invoice issue date"          />
+      <field name="DueDate"        type="Field" datatype="Date"         required="false" description="Payment due date"            />
+      <field name="VendorName"     type="Field" datatype="Alphabetic"   required="true"  description="Supplier / vendor name"      />
+      <field name="VendorID"       type="Field" datatype="AlphaNumeric" required="false" description="Vendor account identifier"   />
+      <field name="PONumber"       type="Field" datatype="AlphaNumeric" required="false" description="Related purchase order"      />
+      <field name="SubTotal"       type="Field" datatype="Numeric"      required="false" description="Amount before tax"           />
+      <field name="TaxAmount"      type="Field" datatype="Numeric"      required="false" description="Tax / VAT amount"            />
+      <field name="TotalAmount"    type="Field" datatype="Numeric"      required="true"  description="Total payable amount"        />
+      <field name="CurrencyCode"   type="Field" datatype="AlphaNumeric" required="false" description="ISO 4217 currency code"      />
+    </page>
+
+    <page name="LineItemPage" type="Page" description="Invoice line items page">
+      <field name="LineNumber"      type="Field" datatype="Numeric"      required="false" />
+      <field name="LineDescription" type="Field" datatype="AlphaNumeric" required="false" />
+      <field name="LineQuantity"    type="Field" datatype="Numeric"      required="false" />
+      <field name="LineUnitPrice"   type="Field" datatype="Numeric"      required="false" />
+      <field name="LineAmount"      type="Field" datatype="Numeric"      required="false" />
+    </page>
+
+  </document>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- Document type: PurchaseOrder                                         -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <document name="PurchaseOrder" type="Document" description="Purchase Order">
+
+    <page name="POPage" type="Page" description="Purchase order main page">
+      <field name="PONumber"    type="Field" datatype="AlphaNumeric" required="true"  />
+      <field name="PODate"      type="Field" datatype="Date"         required="true"  />
+      <field name="Requester"   type="Field" datatype="Alphabetic"   required="false" />
+      <field name="Department"  type="Field" datatype="AlphaNumeric" required="false" />
+      <field name="POAmount"    type="Field" datatype="Numeric"      required="false" />
+      <field name="ApprovalRef" type="Field" datatype="AlphaNumeric" required="false" />
+    </page>
+
+  </document>
+
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <!-- Document type: Unknown  (catch-all for unclassified pages)          -->
+  <!-- ════════════════════════════════════════════════════════════════════ -->
+  <document name="Unknown" type="Document" description="Unclassified document">
+    <page name="UnknownPage" type="Page" description="Unclassified page">
+    </page>
+  </document>
+
+</batch>

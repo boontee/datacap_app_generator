@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  IBM Datacap 9.1.10 — RRX Action Declaration File
+  Place alongside CustomActions.dll in:
+    C:\Datacap\<AppName>\dco_<AppName>\rules\
+
+  The 'progid' must EXACTLY match the [ProgId] attribute on the C# class.
+  The 'level' attribute declares where in the document hierarchy the action runs.
+  Valid levels: Batch | Document | Page | Field
+-->
+<RRX>
+  <Library name="CustomActions" description="Custom Validation and Export Actions">
+
+    <!-- ───────────────────────── Validation Actions ─────────────────────── -->
+    <Class name="ValidationActions" progid="CustomActions.ValidationActions"
+           description="Field and document validation helpers">
+
+      <Action name="ValidateRequiredField"
+              description="Marks the field as error if its value is blank."
+              level="Field" />
+
+      <Action name="ValidateDateField"
+              description="Validates that the field value is a parseable date."
+              level="Field" />
+
+      <Action name="ValidateNumericField"
+              description="Validates that the field value is a parseable decimal number."
+              level="Field" />
+
+      <Action name="LogDocumentFields"
+              description="Writes all field values of the current document to the batch log."
+              level="Document" />
+
+    </Class>
+
+    <!-- ───────────────────────── Export Actions ─────────────────────────── -->
+    <Class name="ExportActions" progid="CustomActions.ExportActions"
+           description="Export preparation helpers">
+
+      <Action name="BuildExportPayload"
+              description="Reads all document fields and stores a JSON payload in a batch variable."
+              level="Document" />
+
+    </Class>
+
+  </Library>
+</RRX>
