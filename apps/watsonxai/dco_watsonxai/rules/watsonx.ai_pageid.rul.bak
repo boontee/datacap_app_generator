@@ -1,0 +1,2447 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<archive>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="6" modder="admin.1" qi="" dt="08/20/24 11:46:28.169 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID" qi="">
+					<p name="NewProjectID" type="string" qi="The project ID." v="PLACE YOUR PROJECT ID HERE"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/adv/watsonkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="7" modder="admin.1" qi="" dt="07/15/25 13:41:34.244 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="9e210a62-1344-444c-a439-1f20eb132be7"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/adv/watsonkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="8" modder="admin.1" qi="" dt="07/15/25 13:45:23.91 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="9e210a62-1344-444c-a439-1f20eb132be7"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/adv/watsonkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="9" modder="admin.1" qi="" dt="07/15/25 13:48:23.638 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="9e210a62-1344-444c-a439-1f20eb132be7"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="10" modder="admin.1" qi="" dt="07/15/25 14:02:06.961 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="9e210a62-1344-444c-a439-1f20eb132be7"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="11" modder="admin.1" qi="" dt="07/15/25 14:02:55.502 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="9e210a62-1344-444c-a439-1f20eb132be7"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="12" modder="admin.1" qi="" dt="07/15/25 14:09:41.448 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="9e210a62-1344-444c-a439-1f20eb132be7"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="13" modder="admin.1" qi="" dt="07/15/25 14:27:49.410 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="9e210a62-1344-444c-a439-1f20eb132be7"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="14" modder="admin.1" qi="" dt="08/12/25 15:16:22.692 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/watsonAPIkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID" qi="">
+					<p name="NewProjectID" type="string" qi="The project ID." v="@APPVAR(values/gen/watsonProjectID)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="15" modder="admin.1" qi="" dt="08/12/25 15:46:06.517 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/watsonAPIkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID" qi="">
+					<p name="NewProjectID" type="string" qi="The project ID." v="@APPVAR(values/gen/watsonProjectID)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText" qi="">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Straight Bill of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="16" modder="admin.1" qi="" dt="08/12/25 15:52:46.124 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/watsonAPIkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID" qi="">
+					<p name="NewProjectID" type="string" qi="The project ID." v="@APPVAR(values/gen/watsonProjectID)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For Straight Bill of Lading" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText" qi="">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Straight Bill of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="17" modder="admin.1" qi="" dt="08/12/25 16:55:43.578 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/watsonAPIkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID" qi="">
+					<p name="NewProjectID" type="string" qi="The project ID." v="@APPVAR(values/gen/watsonProjectID)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For Straight Bill of Lading" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText" qi="">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Straight Bill of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="6" modder="admin.1" qi="" dt="08/20/24 11:46:28.169 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID" qi="">
+					<p name="NewProjectID" type="string" qi="The project ID." v="PLACE YOUR PROJECT ID HERE"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/adv/watsonkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="7" modder="admin.1" qi="" dt="04/29/26 08:34:44.8 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="@APPVAR(values/gen/Project_Id)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/APIKey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="8" modder="admin.1" qi="" dt="04/29/26 08:51:45.970 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="mistralai/mistral-small-3-1-24b-instruct-2503"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="@APPVAR(values/gen/Project_Id)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/APIKey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="9" modder="admin.1" qi="" dt="04/29/26 09:23:17.748 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="mistralai/mistral-small-3-1-24b-instruct-2503"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="@APPVAR(values/gen/Project_Id)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/APIKey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="10" modder="admin.1" qi="" dt="09/03/26 19:39:34.732 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="mistralai/mistral-small-3-1-24b-instruct-2503"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID" qi="">
+					<p name="NewProjectID" type="string" qi="The project ID." v="@APPVAR(values/gen/Project_Id)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAccessTokenURL" qi="">
+					<p name="newTokenURL" type="string" qi="The token request URL for the service." v="https://iam.cloud.ibm.com"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/APIKey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="11" modder="admin.1" qi="" dt="09/03/26 20:03:58.707 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="mistralai/mistral-small-3-1-24b-instruct-2503"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="4c0e9701-8cb9-4416-a4c7-58bc8e33a90c"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAccessTokenURL" qi="">
+					<p name="newTokenURL" type="string" qi="The token request URL for the service." v="https://iam.cloud.ibm.com"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="sYn-ebfLMyg2wKPiAih9hyC3V_NBic9dkrgaUjXvJV3A"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="12" modder="admin.1" qi="" dt="09/03/26 20:07:27.33 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="mistralai/mistral-small-3-1-24b-instruct-2503"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="4c0e9701-8cb9-4416-a4c7-58bc8e33a90c"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAccessTokenURL" qi="" disabled="y">
+					<p name="newTokenURL" type="string" qi="The token request URL for the service." v="https://iam.cloud.ibm.com"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="sYn-ebfLMyg2wKPiAih9hyC3V_NBic9dkrgaUjXvJV3A"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="13" modder="admin.1" qi="" dt="09/03/26 20:13:39.575 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="mistralai/mistral-small-3-1-24b-instruct-2503"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="4c0e9701-8cb9-4416-a4c7-58bc8e33a90c"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAccessTokenURL" disabled="y" qi="">
+					<p name="newTokenURL" type="string" qi="The token request URL for the service." v="https://iam.cloud.ibm.com/identity/token"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="sYn-ebfLMyg2wKPiAih9hyC3V_NBic9dkrgaUjXvJV3A"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="14" modder="admin.1" qi="" dt="09/03/26 20:14:36.191 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="meta-llama/llama-3-3-70b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID" qi="">
+					<p name="NewProjectID" type="string" qi="The project ID." v="4c0e9701-8cb9-4416-a4c7-58bc8e33a90c"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAccessTokenURL" disabled="y" qi="">
+					<p name="newTokenURL" type="string" qi="The token request URL for the service." v="https://iam.cloud.ibm.com/identity/token"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="sYn-ebfLMyg2wKPiAih9hyC3V_NBic9dkrgaUjXvJV3A"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="16" modder="admin.1" qi="" dt="09/03/26 20:23:24.515 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://au-syd.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="meta-llama/llama-3-3-70b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="fd694aea-9bf1-4459-a71e-d1c968f3f75f"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAccessTokenURL" qi="">
+					<p name="newTokenURL" type="string" qi="The token request URL for the service." v="https://iam.cloud.ibm.com/identity/token"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="LJFgoPxkXobRY3Puo1Nga8p31JvFAGUfuP-Nybf9XZjC"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="4" name="watsonx.ai_PageID" ver="17" modder="admin.1" qi="" dt="09/03/26 22:49:20.643 ">
+		<rule name="Other Rule" id="1" qi="">
+			<func name="Recognize Page" qi="">
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightTMM">
+					<p name="MaxHeightTMM" type="string" qi="The new maximum height for calculations." v="0"/>
+				</a>
+				<a ns="net:SharedRecognitionTools.Actions" name="SetMaxCharacterHeightAVG" qi="">
+					<p name="AVG" type="string" qi="The new average for calculations." v="0"/>
+				</a>
+				<a name="Recognize" ns="net:RecognitionOCRPL.OCRPActions" qi=""/>
+				<a name="Recognize" ns="net:RecognitionOCRA.OCRAActions" disabled="y"/>
+				<a name="CreateCcoFromLayout" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="NormalizeCCO" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="RecognizePageOCR_A" ns="net:RecognitionOCRA.OCRAActions" disabled="y" qi=""/>
+				<a name="CreateTextFile" ns="net:SharedRecognitionTools.Actions" qi=""/>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Classify With Watson" qi="">
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://au-syd.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="meta-llama/llama-3-3-70b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetProjectID">
+					<p name="NewProjectID" type="string" qi="The project ID." v="fd694aea-9bf1-4459-a71e-d1c968f3f75f"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAccessTokenURL" qi="">
+					<p name="newTokenURL" type="string" qi="The token request URL for the service." v="https://iam.cloud.ibm.com/identity/token"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="LJFgoPxkXobRY3Puo1Nga8p31JvFAGUfuP-Nybf9XZjC"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens" qi="">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask the model." v="Classify the text in this document.  The returned page classification must be exactly one of the following classification types: &quot;Invoice&quot;, &quot;Bill of Lading&quot;, &quot;Straight Bill of Lading&quot;, &quot;Bank Statement&quot;, &quot;Utility Bill&quot;, &quot;Cable Bill&quot;, &quot;Water Bill&quot;, &quot;Unknown&quot;. Only respond with the exact answer. Do not return explanation text."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@X.LLMPageType"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Test For Invoice" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Invoice"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Invoice"/>
+				</a>
+			</func>
+			<func name="Test For Bank Statement">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bank Statement"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType">
+					<p name="Type" type="string" v="BankStatement"/>
+				</a>
+			</func>
+			<func name="Test For BOL">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Bill Of Lading"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="BillofLading"/>
+				</a>
+			</func>
+			<func name="Test For Utility">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Utility Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Water Bill" qi="">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Water Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+			<func name="Test For Utility - Cable Bill">
+				<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsValueInText">
+					<p name="Target" type="string" v="@X.LLMPageType"/>
+					<p name="Value" type="string" v="Cable Bill"/>
+					<p name="CaseSensitive" type="string" v="False"/>
+				</a>
+				<a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetPageType" qi="">
+					<p name="Type" type="string" v="Utility"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+</archive>

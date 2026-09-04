@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ruleset id="6" name="Converttiff2pdfRuleset" ver="1" modder="admin.1" qi="">
+	<rule name="Tiff2PdfRule" id="1" dcomap.close="D" qi="">
+		<func name="Toff2Pdffunction">
+			<a name="RecognizeToPDFOCR_A" ns="net:RecognitionOCRA.OCRAActions" qi=""/>
+		</func>
+	</rule>
+</ruleset>

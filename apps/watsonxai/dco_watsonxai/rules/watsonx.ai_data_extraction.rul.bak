@@ -1,0 +1,599 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<archive>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="130" modder="admin.1" dt="08/20/24 11:46:09.713 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="131" modder="admin.1" dt="07/15/25 13:54:42.999 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="132" modder="admin.1" dt="07/15/25 13:58:01.889 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="133" modder="admin.1" dt="07/15/25 13:59:24.599 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="134" modder="admin.1" dt="07/15/25 14:01:59.500 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="135" modder="admin.1" dt="07/15/25 14:04:07.898 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="136" modder="admin.1" dt="07/15/25 14:10:14.650 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="137" modder="admin.1" dt="07/15/25 14:16:33.466 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" qi="">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v="˂|system|˃+@CHR(13)+@CHR(10)+You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior.+@CHR(13)+@CHR(10)+˂|user|˃ +@CHR(13)+@CHR(10)+[Document]+@CHR(13)+@CHR(10)+{{PAGETEXT}}+@CHR(13)+@CHR(10)+[End]+@CHR(13)+@CHR(10)+The following is a list of keys to find within the document. Please find only these keys and do not return any additional keys.+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+{{LLMKEYS}}+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+Return the key value pairs in JSON format. Return only JSON in the following format. Do not include additional keys. Do not include additional text before or after the JSON.+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+˂| assistant |˃"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="" disabled="y">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="138" modder="admin.1" dt="07/15/25 14:23:37.956 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="bj_XthGgx3mCsS3JPO_evfm5gS29QSv-hHM_GUwFTu3I"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" qi="">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v="˂|system|˃+@CHR(13)+@CHR(10)+You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior.+@CHR(13)+@CHR(10)+˂|user|˃ +@CHR(13)+@CHR(10)+[Document]+@CHR(13)+@CHR(10)+{{PAGETEXT}}+@CHR(13)+@CHR(10)+[End]+@CHR(13)+@CHR(10)+The following is a list of keys to find within the document. Please find only these keys and do not return any additional keys.+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+{{LLMKEYS}}+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+Return the key value pairs in JSON format. Return only JSON in the following format. Do not include additional keys. Do not include additional text before or after the JSON.+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+˂| assistant |˃"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="0"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="" disabled="y">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+	<ruleset id="3" name="watsonx.ai_Data_Extraction" ver="139" modder="admin.1" dt="08/12/25 15:17:27.22 " qi="">
+		<rule name="PageRule" id="1" qi="">
+			<func name="Extract Values" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="rrSet" qi="">
+					<p name="Source" type="string" v="-Extract"/>
+					<p name="Target" type="string" v="@X.SaveLLMjson"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging" qi="">
+					<p name="Enabled" type="string" qi="Turns the enhanced logging on or off." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" disabled="y">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetEndpointURL" qi="">
+					<p name="LLMURL" type="string" qi="The URL for the LLM." v="https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" qi="">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM." v="ibm/granite-3-8b-instruct"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetAPIKey" qi="">
+					<p name="APIKey" type="string" qi="The authentication API key.  Smart parameters are supported." v="@APPVAR(values/gen/watsonAPIkey)"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForPageValuesUsingKeys" qi="">
+					<p name="Question" type="string" qi="A custom question with identifiers for page text and key placement." v="˂|system|˃+@CHR(13)+@CHR(10)+You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior.+@CHR(13)+@CHR(10)+˂|user|˃ +@CHR(13)+@CHR(10)+[Document]+@CHR(13)+@CHR(10)+{{PAGETEXT}}+@CHR(13)+@CHR(10)+[End]+@CHR(13)+@CHR(10)+The following is a list of keys to find within the document. Please find only these keys and do not return any additional keys.+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+{{LLMKEYS}}+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+Return the key value pairs in JSON format. Return only JSON in the following format. Do not include additional keys. Do not include additional text before or after the JSON.+@CHR(13)+@CHR(10)+@CHR(13)+@CHR(10)+˂| assistant |˃"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="0"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskForKVPsAndCreateFieldsUsingPageText" qi="" disabled="y">
+					<p name="Question" type="string" qi="The question to ask Watson." v=""/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v="1"/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Ask Question" qi="" disabled="y">
+				<a ns="net:watsonx_ai.Actions" name="SetMaximumNewTokens">
+					<p name="MaximumNewTokens" type="string" qi="The maximum number of tokens." v="4096"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="SetModel" disabled="y">
+					<p name="Model" type="string" qi="The model to use as expected by the LLM.  Smart parameters are supported." v="google/flan-ul2"/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAQuestionUsingPageText">
+					<p name="Question" type="string" qi="The question to ask the model." v="What is the invoice number of this document? Provide only the invoice number without any explanation.  Do not provide extra text that says something like &quot;The invoice number is&quot;."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field10"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="AskAQuestionUsingPageText" ns="net:watsonx_ai.Actions">
+					<p name="Question" type="string" qi="The question to ask the model."/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable."/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model."/>
+				</a>
+				<a ns="net:watsonx_ai.Actions" name="AskAFreeFormQuestion">
+					<p name="Question" type="string" qi="The question to ask the model." v="How do you convert feet to meters?"/>
+					<p name="Target" type="string" qi="A smart parameter expression that identifies the target field or DCO variable." v="@P\Field11"/>
+					<p name="Format" type="string" qi="Specifies the format of the page text that is sent to the model." v=""/>
+				</a>
+				<a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+			</func>
+			<func name="Stop" qi="">
+				<a ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" name="SetReturnValue">
+					<p name="ReturnValue" type="string" v="true"/>
+				</a>
+			</func>
+		</rule>
+	</ruleset>
+</archive>

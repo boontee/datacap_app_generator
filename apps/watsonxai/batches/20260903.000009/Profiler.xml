@@ -1,0 +1,20 @@
+<?xml-stylesheet type="text/xsl" href="..\..\dco.xsl"?>
+<B id="20260903.000009">
+	<V n="TYPE">watsonxai</V>
+	<V n="LAST_RR_TPROFILE">PageID:3</V>
+	<V n="hr_pdfResX">300</V>
+	<V n="hr_pdfResY">300</V>
+	<P id="TM000001">
+		<V n="TYPE">Other</V>
+		<V n="STATUS">49</V>
+		<V n="IMAGEFILE">tm000001.tif</V>
+		<V n="PageName">APT004</V>
+		<V n="ScanSrcPath">C:\Datacap\watsonxai\images\Input\APT004.tif</V>
+		<V n="SplitPageCount">1</V>
+		<V n="hr_NormalizeTMM">0</V>
+		<V n="hr_NormalizeAVG">0</V>
+		<V n="layout">TM000001_layout.xml</V>
+		<V n="CCOFILE">TM000001.cco</V>
+		<V n="MESSAGE">The character string &quot;cable bill&quot; is not contained in the character string &quot;&quot; that was found in the TM000001 field.</V>
+	</P>
+</B>

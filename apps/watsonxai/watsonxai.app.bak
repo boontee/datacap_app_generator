@@ -1,0 +1,990 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<archive>
+	<app name="watsonxai">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiEng.mdb;"/>
+		<k name="tmadmin" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiAdm.mdb;"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiFingerprint.mdb;"/>
+			<k name="lookupdb" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiLook.mdb;"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs=""/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="C:\Datacap\watsonxai\dco_watsonxai\Settings.ini"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="USE DATACAP APPLICATION MANAGER TO SET THE APIKEY HERE"/>
+			</k>
+		</k>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="07/15/25 13:39:29.422 " ver="1">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]01af5224cc95db34b50d285ff84117da0515002beb705e3848d263e1b5a56edcd9b83217581d184e114ba6cd7e041f7ed41a0ba4d83789a9eeb278c7a9f4831b7536f42e9026c114c02b9d5525177ac27854075a23ab42161e306687fd3ab44c6b54c7fa79d6b9cda92437d06211ae371f13c140414f506816ecd0303fb37f8081492bc1934cd3d79c0e31c5736bbae1cad707aab0f58413a1a231c4ce37257c73d42f3ac98dd398a24a9c87dbc93a59c187fd0fa050ec1febc0df85dff12ae506[/secured]"/>
+		<k name="tmadmin" cs="[secured]0154eb69d22279beaa2f5a72d7586d964578a30aa9623311a18cbdf02b4e0850e0b106068e38d7d93522768b4a20d36902cbe1d4d01f0a8e465af394930976966e24cef8a11563bcf75cc740b9cb8b8760c6f65aa7611d555c5d510f659bfcd158c1f2222bd0e5e827b47b81cfb3e0d70d1233376252b913799201e2f5a87e84340747b3330f96c04f7aee9ff61ce4ccf0be597fdeaeb3417bf13a2f1c22a689a91c34d48d8f678b52273282ee77ad68bf9039f83e2ea83dbb51d742e1ee10bb35[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]011f6b3d4df5e3aab191d972d105963adf91c3e3976fd927aaa04fae227f5a648cde2407129f488eb8fd2e287279e9593546f770d046934d45b4df1eb230e1f3eea42eab202eb899a06d3e83ae11a5eb758e1b2b95de4836d48b3d98a3c4d246ca17c6d3d614f45d8a4882f8a0fa8d802ccd11e652c656b42c139b722dde06c44cef55e9f373929bc54a27fa7d1df946d5ae41398e63539eb7a429148122a6b4e701cf0e241a60bada404fa87c12f2bd4ca746da7273da9b876be19387089f76fd6b548c68c6e66a3026ab5b453b15eeb7[/secured]"/>
+			<k name="lookupdb" cs="[secured]01d6ef3f6f5cbcdc733b489f795fc98da2f81498465e99588de8ca0c1b5302ac6e1571cfed975aa486fd6aedd49ff4091722001b5caf000f44e17920451bf0f100b0e523bf3a644ab837544c8f6beeaed7f12b5ade94faefed7700187600eb17f2792ea123284c6ff1fa2dce2b3588dbff2a130b0557ca2718aef8d5dcc6b99bb0a9e9702eabfcd6a082d57f5e745efa8a72d04cbd7e4a0aa776dddf1d8fd5f7ea7e4476946d5e85f0ec132f3d70f848e16b2b5fcedfc7bb22f7d40f0d8e7046ac[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]017215271554cc3f93c6909df60c7d4a4f89da36b818576d7c64a0d3b4f0cd7ef5c919d2267507567c47a13825493f76df69773edc5260ee15b320d483e01d7301[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]012b84193221630392653e8218fedf788ddbc19b728027a749aa6b472d0368a19cf5dc38f8fe22c821d57a954bfb42fb4b4738900f09b187ffe023f1e72fb1064933df20552e14aeeb29d70f44767bbdf55d89bfdb76232a655f0c000090efc9d6deb75fd99af5b3d05f8b405decd5ffb1[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="08/12/25 15:12:09.505 " ver="2">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]0197960a4afa16bcb7c003f61ca25ae29cfcb6ba3204220876079fd7409cb8cb4b92a0501b0a248a8335626d85c89f40522cc572c743bd82b8d2add2525f84eceef5c116e2be80b6a618eb48c5b7e7427ad0d6df02322f2ced5dc48ae0cff9a7ba156ff466b110e7541be44a424cac2b9a7efd2ea4c26e1fdda8affd8e53fabcc0d76729aa6539cddd93888001dff691ab411a2aa972e1ec8704441050b9418a851965cfeb2a3497ab9ea81e2e553dd0afe21afef02d7c3e0383f356bd1013ee82[/secured]"/>
+		<k name="tmadmin" cs="[secured]0163270f4a976e1c3ae272ff962939a8347a627f4cf14942ba2cc1c722babac8f368823bf2caecd45f5f35ead310c1dddc1395eb9e437f4b41719466e9d68d42822d11623b61ccab35b9d14ccb2c83722a24b3faeda7ee6d8d754c049699078110298e5bed99298e71228e3665977bbee0364807ae5c0734e1a4021356f94d7628208fa4f488c6c9c441d2db59e9c62a4b25ec3f9427154b0e6a99a2bcb54cc31fd3c8443ac4476f690381ca07983b83dc03f912944bf9836c5b3931350758521c[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]01597fc9bee33b6819372e5fe9c45870142048ad5a5c9eb84c279938143cb5546f28cad0aabc5706571872058479ed65c75b90875a8d96122e6b89553634a9b64af63a0a3360fa8daba598380e8a7c0a789eea400ce58e76692322ef27c7dabe87ee179a8a91bd7d95dd9b43af961940e078bf83f9fad8622f6b823711c5d53c0c5f50cc2c8057e453bccaa1044e3c1420cb5984ed9bbb3c961d5ef21ec79831a674ae0b5e337362e06a16a3a8ce7a7d60b8431084ed37a62803073264a2555d543248fedc805270b439b15ca0ccedbe96[/secured]"/>
+			<k name="lookupdb" cs="[secured]01a867644ad8bba28ab11a79a1f3d8da4a9913f0c78e1ce9f8d32ada544b44db9daa42892dae7df630bda177c719452e6afef3f47cdd5a59e74c3c4cf4adf3f46bffedfc89bc78325c072a6195ec356bf429d75ef80365bf122fe47fb065c9533734e404462ab694f60795f2d72bfec3bdd94efd99eef1cd319d72ca738f84e76905c5c531b898054f54363f9bb2b5c42fdb52f1cd91ac4148d014c0b545c1b45a0d751c03b032e74a823295565d905082a76a37ee7c2c482f283c5978ee5b0611[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01c4b408f77cea0ad2842086d5da79572b00f7c69f623a163e99ebecb05c5bb2bb8e03616d24687231e94343fceeee81410d48307818869fa11681e46b447f91ff[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="watsonAPIkey" v="[encoded].[/encoded]"/>
+				<k name="Value name3" v="[encoded].[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]0105825dab66eb5850fec5a569719e82a19fc4c58084e6908637a3e455a52b26f770a2a4f5b4d3491d25a946b8ce0c1882630b58cdf6401eebab9a05d8cee9c35e051cbe6c3f8446c2388295db54f3e01c8e7fce74ce75423f9d6a1328d8dd18a5fd2112068ad4bc311fc2523f62999294[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="08/12/25 15:12:25.134 " ver="3">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]01878c3438bedaf709143085c9fad79c7ab105d58b61d5ce66ed6774e2e17f63fec9c7ce9ec401dc3306843672ccb78a29d2d46031f41c01666c90be96b5aa7c11591d9607366026bf8756a46d30d2c40a58327bda5d0dead0588cec6da54a99a98505d590eb4cfddd475e06af05de1bd403c11f10f8fbfc6efaf5e8d5f365dbdd5a54510b08de53988f2e8dcc0537998d413070bc53a41ce7d101f46cc1db95f552316d52c9e90c8e69b3abb89c58474f6fbc237d845d1a1c83ef045159356ca0[/secured]"/>
+		<k name="tmadmin" cs="[secured]016693f85f9f98bd725ed20ed668be89170f81269d45d05aef3c057fb2c3dd074dfffd5ca4e3aee59661cee28304371d5fb48c2e86e7de7453695207d43f6192c06d687367a347e80ac32188a92ad7a44fc6b987d180f295d5a3af657a2d40024e3c67e5283b885176688ab5c4a948db244acb04baf2ad3513709cd414b9f5c270b16068e88e449e3500420bf0114192c136e06ab8f1ab4a0ff98784c26b55d481d1b74bda638aa4e0ccad6aee0f0f9134c2f197d8bed4d7455eaf81925644c8fb[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]01fb5a40dfa1ced45316b1d0cd90234261f893a41d71f8e31035b370d173e7d6554e39426632a8b34ec60fe2181d5a3b8624a80b3102ac44e630d8cce05ca36fdc108f73f93ea53366bae676f67bbe2eb5632c414221b189ee659247228e75ca5f25e4adc6b542ecd75dc81ad453fdd812bd364bcfff497280e94e893ff731a95fab726ea3e0b0d0687633f05557e567f82140c118bd0d3843084836208e64e98f75ca841c5f81c77f0f598fe1270b34e1ed2c6fd8df23ca336f53b4fd3a05f3e5ddbe25cf644c7af403f0c78a0341aeaa[/secured]"/>
+			<k name="lookupdb" cs="[secured]01c51ed66e185471c53cd85ebfca12f89e5eb18980cd6ca63a2672d1ce1eb5c4d86eb0872e9f9f8b396f9fcc54e0ca888d1014440039ed3335e832d60d9bbdb288196fcc24a726eb59631c65df95da782ea43a851218ea3d4b4a43428220c53aaf929fe22b07600af1cf267b545ad11744f3380f9c0186ff618c24d4050a90bd090db482069f4ffd5471a1b2074c8ea72e08f8e0593e16cc127a0c233c5342a71e2d112193e2d55c55c8287b7032e8377d0a6a914c0bc16ad650adfe1c31d2067b[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01b0712dcb3071dd69d6b555d6bd132919eb8da8f3238087f844dcd6c0560b92b2c6e8120657a2c5541489a809ee15c8817ba88ce38feb42bf26e54634e339cc88[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="watsonAPIkey" v="[encoded].[/encoded]"/>
+				<k name="watsonProjectID" v="[encoded].[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]01ca9cd78bd8ee5a606326f8e34b052443435162225d0eda66ed814e32e25fc1dcde98b2dfe1117890bd6c0b34f34f881e2ccd0a10ca12604b333a41e41241446d85eccb9c3a8bfbccbabf44658d22397f6319fc5aa12b3d3462b39a98eb53e2ff4055dfe337c9d035dd3f4e0891b27b8f[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="08/12/25 15:13:06.947 " ver="4">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]019a03ecb34524486ac76216e405592115050a7a32e6ebbe5b49365080f4af890e9a3729700b03c31586e9601331dfd71dcdf5b70af3c89ca14e5fa6630cd7f40c1aadf07d12168c76f7c0b25f38f103d45f289ce19491849b7fb8e85592006039bc28fb949be6c58386eddff794d822d849b682605fc49097950a0c65331d72f5a1360bf745a84c93523e6c9d6c1cc9eb4507ef1d251901bfd468b78bd78046f74429a1fb8708d749f4835dd439a0e2ec06f56b684a52acf4445f7665e2d742d4[/secured]"/>
+		<k name="tmadmin" cs="[secured]0128aa1f475a79672c9a9377217ca1c89ee8c3434e4db43ec83b366b0bb68d40aad19a25af3291ca8e2bfe7f5f8fe25f15a4ff4bd3e0dc463733843e4e3f58872fb53c0b6423e37247edf3815223714656c00896cf0eeb7db2a71d485d4b143cbce825ae032233023a8a431bc454a35b12cd62c72ba923acd4e9a39311cc4bae4d10076bcddd9b719e1372ddef5633a9c8737e33c66d3a71b78de1ed0b9bac29b8a413ac7615c22ee4835855204d7d9f4374fecc922bc879705ec41fdeabf9badd[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]01390b2499ffca49a62019b1faf589aa5e7c7a6b960aa3ef282a9abb9ee9e950912822190b49e4d9d731b6b5c3d3df41c3d2cc53ae8a3625fb4a74a049dd79d7e7dd4f5c9b6ff61b7cdb0e20de507950fe62ec3d02d4a3c2f510caff7eace25aaec82452e6b6d1df69542a9d0547a1ce2c66d4e565b54c7cb4a5495a2b26e98e54f7315e81baab6ff1c92e94309f093c9008c8b07402f861014e0ee3d0d086ae266d62131fbecf7a53c5df516a2b9c0f4025446959f9ab1220f423e7b44b80793c1e2cbff312e615dbc525dfbd230bdd76[/secured]"/>
+			<k name="lookupdb" cs="[secured]01bb7ed897ec528edb57837121a667d3121c09d7d8c49ae094d9c1a284add29dd8bbcc4e7bf1792c60ceb0a04ca9e5c94d00dfcfaee4e70c3a8c9c3116157a0bf34d750434abce1901503b79135055efcd1576660b46177ce6d4ef4646610a36c349715980ceb3bab83f3edfc63cbffc2a20c2194f05d68ef806f06d4c7c85317529b91e09a6bca721952d6c173bfbc8d84e28a48248fe89d093775b6d5dec123f0343b819c1211e1e0a5277361906ee5e822e8250bd701b4f6913fb3cfd6dc49a[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01484a1b0c4a28fd3e79e55db809eb8516b9611eedfa92f56370377d8293191a06df0378d4edbca6907a081e436f2f5c2f751018a7a16aa43a5e1c2514523a705b[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="watsonAPIkey" v="[encoded].DJf6Ox8E6BSG37fEMS0yQ9c418dBCjG4VBhK7zgAdu0IIE7L93T6P43xq2vrBeB5pz9V25LU18e6wr7Xc3Ay7zYEuAD5L5aQ4n7EvbCUQ7C17NzEMR5Es9bw9ey2gS7Xc7R2[/encoded]"/>
+				<k name="watsonProjectID" v="[encoded].0WYEvnCUHBShBeR5py5F8Ds05OgBD23HOFxnGWS6NZ4YZE6r934Evl8EI2w8BeQ5pz9VO9bqDv76wSG4TFxnCFt6NWD521KP93PEvl3xkFix[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]01e4a04822607eac6766dbd62fef6a06f2f70211573968055bf85d63ab98c344b725e70a4cd3b15743985f9d8df99faa8910b9cd7653f2b90752ba018013a3c66187474aeb1e1601fb1e9665300968fbcb3b51a70c477b6c14ba625bd573fe40ca4ca1eb1f3b16e278b83ad987e2d20d40[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="08/12/25 15:37:03.499 " ver="5">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]018461e4c2bcb3ecb7a8945194679a76af5b1a7199b66481d6e9c8256e3c64803a99b53b0e3f13cf997bec2d3bfd76d1567a99ad1000e0fd66b99a8855a47618d4469f91a03fbabb0ae27cf95030f612f21e6b91da2f112ad8a879d5e2c814f4bb0df0ae379f3d408b2523b377cf51eabe4143cdc0f0e392283a179f21b800121b20864d2d7f9b4c7a0538ba77a8aaa5e00430e47ce072917ede6aa54b9f5579e22d373fa6eee1af1927ce5415e0a1a194b8b1162eff9b1c058420ffac49816976[/secured]"/>
+		<k name="tmadmin" cs="[secured]015918952046ac1c9836f90b2e2056a6d56c9a4ccd9f5849415a150682c091e25871612f90709bc1dfdb70a53dd66c2da3f4680fd2c7a07d282b67b6eb8a9b279f7e78f234a7ef25eb20f95574b662b0d54a75a8356ea658356a7eb058b8fb795aa3440927bb84a29924a523fb9f8183d2e392ba49d50e7ade7925f1a01254c2850482567f5a22fa94b1065038641d229ee5843e0e99ae2c54a38e42724ed94fb768674e312c94f90f64690100e48658f43334fc96f938a296e7c7722aa88e093e[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]0119497c281fbcd94dd6d1e18ac5e7ff45596b35666644900a2ca01845ec5f63f8db1be3cd25ccda2753d7204e8494673e83fed82f4273d207ca6765ffd103735f6449e71c4659b259a148dec78860f8aeb90e8f282cc3a7738ff46d9c711e02222b66ddc0878bca7bd6c3f5a5d2aafc81e74ff6660254fbc0169316b46b54900bb4b4eabb134acc15bb8dcb94a08d58195c4a8963b580600b26f8ef78160b06997106ddccefbdb6173ef7b43dce91e473371d5af0ac384cb226f52487c692572ddc4f005dff9399e9b4231ebec50527b1[/secured]"/>
+			<k name="lookupdb" cs="[secured]01f502dba13a85a3ff61a11481bafdb5abc0e1d0eba2f9ad1877a90d23285c29d4aeeb1dd46591e2678075a75dd0b94c7bd8ba7d88bce033a58a3716c549060ddb1c4b0422984a091a3627c14299973e498743a73f238c16d9219fa5154a6c106936523be0ac5be8b921f8ac7047a2c5a9fb77b1422f85c5e05449fa3a26c5156ecee8d130941759b7ef000653248140c66de76cfaede6dac7214b149214880f16333d785ccc1df8f096710f2a27aabdcb1a5e9b944a02fc723224d8e757c44d94[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01eb2fdb507cb8fb7ff65740367a1c8f6416f40a3792eabaf589822c55256b435155449bc020f185f17fd3000c8d6e082725e6dd3c0c7b9ad8e628b2959a626c92[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="watsonAPIkey" v="[encoded].DJf6Ox8E6BSG37fEMS0yQ9c418dBCjG4VBhK7zgAdu0IIE7L93T6P43xq2vrBeB5pz9V25LU18e6wr7Xc3Ay7zYEuAD5L5aQ4n7EvbCUQ7C17NzEMR5Es9bw9ey2gS7Xc7R2[/encoded]"/>
+				<k name="watsonProjectID" v="[encoded].0WYEvnCUHBShBeR5py5F8Ds05OgBD23HOFxnGWS6NZ4YZE6r934Evl8EI2w8BeQ5pz9VO9bqDv76wSG4TFxnCFt6NWD521KP93PEvl3xkFix[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]0199990a9c0851174bdb016f92aae7fd44ca128b5a8c8d2c50d2d3e255a48b42bbe8c80f6bb672c03c5f78450a0226de33bee34ea749c985e956e7c4831e2fb0809ee4718996407fd203a998a31d0d74b8e362f90502349a0dc9edbfb6106eb4928f177864324133506c5ef3e8a0addf02[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="08/12/25 20:10:01.242 " ver="6" src_ver="5">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]018461e4c2bcb3ecb7a8945194679a76af5b1a7199b66481d6e9c8256e3c64803a99b53b0e3f13cf997bec2d3bfd76d1567a99ad1000e0fd66b99a8855a47618d4469f91a03fbabb0ae27cf95030f612f21e6b91da2f112ad8a879d5e2c814f4bb0df0ae379f3d408b2523b377cf51eabe4143cdc0f0e392283a179f21b800121b20864d2d7f9b4c7a0538ba77a8aaa5e00430e47ce072917ede6aa54b9f5579e22d373fa6eee1af1927ce5415e0a1a194b8b1162eff9b1c058420ffac49816976[/secured]"/>
+		<k name="tmadmin" cs="[secured]015918952046ac1c9836f90b2e2056a6d56c9a4ccd9f5849415a150682c091e25871612f90709bc1dfdb70a53dd66c2da3f4680fd2c7a07d282b67b6eb8a9b279f7e78f234a7ef25eb20f95574b662b0d54a75a8356ea658356a7eb058b8fb795aa3440927bb84a29924a523fb9f8183d2e392ba49d50e7ade7925f1a01254c2850482567f5a22fa94b1065038641d229ee5843e0e99ae2c54a38e42724ed94fb768674e312c94f90f64690100e48658f43334fc96f938a296e7c7722aa88e093e[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]0119497c281fbcd94dd6d1e18ac5e7ff45596b35666644900a2ca01845ec5f63f8db1be3cd25ccda2753d7204e8494673e83fed82f4273d207ca6765ffd103735f6449e71c4659b259a148dec78860f8aeb90e8f282cc3a7738ff46d9c711e02222b66ddc0878bca7bd6c3f5a5d2aafc81e74ff6660254fbc0169316b46b54900bb4b4eabb134acc15bb8dcb94a08d58195c4a8963b580600b26f8ef78160b06997106ddccefbdb6173ef7b43dce91e473371d5af0ac384cb226f52487c692572ddc4f005dff9399e9b4231ebec50527b1[/secured]"/>
+			<k name="lookupdb" cs="[secured]01f502dba13a85a3ff61a11481bafdb5abc0e1d0eba2f9ad1877a90d23285c29d4aeeb1dd46591e2678075a75dd0b94c7bd8ba7d88bce033a58a3716c549060ddb1c4b0422984a091a3627c14299973e498743a73f238c16d9219fa5154a6c106936523be0ac5be8b921f8ac7047a2c5a9fb77b1422f85c5e05449fa3a26c5156ecee8d130941759b7ef000653248140c66de76cfaede6dac7214b149214880f16333d785ccc1df8f096710f2a27aabdcb1a5e9b944a02fc723224d8e757c44d94[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01eb2fdb507cb8fb7ff65740367a1c8f6416f40a3792eabaf589822c55256b435155449bc020f185f17fd3000c8d6e082725e6dd3c0c7b9ad8e628b2959a626c92[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="watsonAPIkey" v="[encoded].DJf6Ox8E6BSG37fEMS0yQ9c418dBCjG4VBhK7zgAdu0IIE7L93T6P43xq2vrBeB5pz9V25LU18e6wr7Xc3Ay7zYEuAD5L5aQ4n7EvbCUQ7C17NzEMR5Es9bw9ey2gS7Xc7R2[/encoded]"/>
+				<k name="watsonProjectID" v="[encoded].0WYEvnCUHBShBeR5py5F8Ds05OgBD23HOFxnGWS6NZ4YZE6r934Evl8EI2w8BeQ5pz9VO9bqDv76wSG4TFxnCFt6NWD521KP93PEvl3xkFix[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]0199990a9c0851174bdb016f92aae7fd44ca128b5a8c8d2c50d2d3e255a48b42bbe8c80f6bb672c03c5f78450a0226de33bee34ea749c985e956e7c4831e2fb0809ee4718996407fd203a998a31d0d74b8e362f90502349a0dc9edbfb6106eb4928f177864324133506c5ef3e8a0addf02[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="08/12/25 20:10:31.696 " ver="7" src_ver="6">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]018461e4c2bcb3ecb7a8945194679a76af5b1a7199b66481d6e9c8256e3c64803a99b53b0e3f13cf997bec2d3bfd76d1567a99ad1000e0fd66b99a8855a47618d4469f91a03fbabb0ae27cf95030f612f21e6b91da2f112ad8a879d5e2c814f4bb0df0ae379f3d408b2523b377cf51eabe4143cdc0f0e392283a179f21b800121b20864d2d7f9b4c7a0538ba77a8aaa5e00430e47ce072917ede6aa54b9f5579e22d373fa6eee1af1927ce5415e0a1a194b8b1162eff9b1c058420ffac49816976[/secured]"/>
+		<k name="tmadmin" cs="[secured]015918952046ac1c9836f90b2e2056a6d56c9a4ccd9f5849415a150682c091e25871612f90709bc1dfdb70a53dd66c2da3f4680fd2c7a07d282b67b6eb8a9b279f7e78f234a7ef25eb20f95574b662b0d54a75a8356ea658356a7eb058b8fb795aa3440927bb84a29924a523fb9f8183d2e392ba49d50e7ade7925f1a01254c2850482567f5a22fa94b1065038641d229ee5843e0e99ae2c54a38e42724ed94fb768674e312c94f90f64690100e48658f43334fc96f938a296e7c7722aa88e093e[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]0119497c281fbcd94dd6d1e18ac5e7ff45596b35666644900a2ca01845ec5f63f8db1be3cd25ccda2753d7204e8494673e83fed82f4273d207ca6765ffd103735f6449e71c4659b259a148dec78860f8aeb90e8f282cc3a7738ff46d9c711e02222b66ddc0878bca7bd6c3f5a5d2aafc81e74ff6660254fbc0169316b46b54900bb4b4eabb134acc15bb8dcb94a08d58195c4a8963b580600b26f8ef78160b06997106ddccefbdb6173ef7b43dce91e473371d5af0ac384cb226f52487c692572ddc4f005dff9399e9b4231ebec50527b1[/secured]"/>
+			<k name="lookupdb" cs="[secured]01f502dba13a85a3ff61a11481bafdb5abc0e1d0eba2f9ad1877a90d23285c29d4aeeb1dd46591e2678075a75dd0b94c7bd8ba7d88bce033a58a3716c549060ddb1c4b0422984a091a3627c14299973e498743a73f238c16d9219fa5154a6c106936523be0ac5be8b921f8ac7047a2c5a9fb77b1422f85c5e05449fa3a26c5156ecee8d130941759b7ef000653248140c66de76cfaede6dac7214b149214880f16333d785ccc1df8f096710f2a27aabdcb1a5e9b944a02fc723224d8e757c44d94[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01eb2fdb507cb8fb7ff65740367a1c8f6416f40a3792eabaf589822c55256b435155449bc020f185f17fd3000c8d6e082725e6dd3c0c7b9ad8e628b2959a626c92[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="watsonAPIkey" v="[encoded].DJf6Ox8E6BSG37fEMS0yQ9c418dBCjG4VBhK7zgAdu0IIE7L93T6P43xq2vrBeB5pz9V25LU18e6wr7Xc3Ay7zYEuAD5L5aQ4n7EvbCUQ7C17NzEMR5Es9bw9ey2gS7Xc7R2[/encoded]"/>
+				<k name="watsonProjectID" v="[encoded].0WYEvnCUHBShBeR5py5F8Ds05OgBD23HOFxnGWS6NZ4YZE6r934Evl8EI2w8BeQ5pz9VO9bqDv76wSG4TFxnCFt6NWD521KP93PEvl3xkFix[/encoded]"/>
+				<k name="FileNetURL" v="http://win-1gpq0nalnpb:9080/wsi/FNCEWS40MTOM/"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]0199990a9c0851174bdb016f92aae7fd44ca128b5a8c8d2c50d2d3e255a48b42bbe8c80f6bb672c03c5f78450a0226de33bee34ea749c985e956e7c4831e2fb0809ee4718996407fd203a998a31d0d74b8e362f90502349a0dc9edbfb6106eb4928f177864324133506c5ef3e8a0addf02[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="08/12/25 20:12:22.204 " ver="8" src_ver="7">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]018461e4c2bcb3ecb7a8945194679a76af5b1a7199b66481d6e9c8256e3c64803a99b53b0e3f13cf997bec2d3bfd76d1567a99ad1000e0fd66b99a8855a47618d4469f91a03fbabb0ae27cf95030f612f21e6b91da2f112ad8a879d5e2c814f4bb0df0ae379f3d408b2523b377cf51eabe4143cdc0f0e392283a179f21b800121b20864d2d7f9b4c7a0538ba77a8aaa5e00430e47ce072917ede6aa54b9f5579e22d373fa6eee1af1927ce5415e0a1a194b8b1162eff9b1c058420ffac49816976[/secured]"/>
+		<k name="tmadmin" cs="[secured]015918952046ac1c9836f90b2e2056a6d56c9a4ccd9f5849415a150682c091e25871612f90709bc1dfdb70a53dd66c2da3f4680fd2c7a07d282b67b6eb8a9b279f7e78f234a7ef25eb20f95574b662b0d54a75a8356ea658356a7eb058b8fb795aa3440927bb84a29924a523fb9f8183d2e392ba49d50e7ade7925f1a01254c2850482567f5a22fa94b1065038641d229ee5843e0e99ae2c54a38e42724ed94fb768674e312c94f90f64690100e48658f43334fc96f938a296e7c7722aa88e093e[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]0119497c281fbcd94dd6d1e18ac5e7ff45596b35666644900a2ca01845ec5f63f8db1be3cd25ccda2753d7204e8494673e83fed82f4273d207ca6765ffd103735f6449e71c4659b259a148dec78860f8aeb90e8f282cc3a7738ff46d9c711e02222b66ddc0878bca7bd6c3f5a5d2aafc81e74ff6660254fbc0169316b46b54900bb4b4eabb134acc15bb8dcb94a08d58195c4a8963b580600b26f8ef78160b06997106ddccefbdb6173ef7b43dce91e473371d5af0ac384cb226f52487c692572ddc4f005dff9399e9b4231ebec50527b1[/secured]"/>
+			<k name="lookupdb" cs="[secured]01f502dba13a85a3ff61a11481bafdb5abc0e1d0eba2f9ad1877a90d23285c29d4aeeb1dd46591e2678075a75dd0b94c7bd8ba7d88bce033a58a3716c549060ddb1c4b0422984a091a3627c14299973e498743a73f238c16d9219fa5154a6c106936523be0ac5be8b921f8ac7047a2c5a9fb77b1422f85c5e05449fa3a26c5156ecee8d130941759b7ef000653248140c66de76cfaede6dac7214b149214880f16333d785ccc1df8f096710f2a27aabdcb1a5e9b944a02fc723224d8e757c44d94[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01eb2fdb507cb8fb7ff65740367a1c8f6416f40a3792eabaf589822c55256b435155449bc020f185f17fd3000c8d6e082725e6dd3c0c7b9ad8e628b2959a626c92[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="watsonAPIkey" v="[encoded].DJf6Ox8E6BSG37fEMS0yQ9c418dBCjG4VBhK7zgAdu0IIE7L93T6P43xq2vrBeB5pz9V25LU18e6wr7Xc3Ay7zYEuAD5L5aQ4n7EvbCUQ7C17NzEMR5Es9bw9ey2gS7Xc7R2[/encoded]"/>
+				<k name="watsonProjectID" v="[encoded].0WYEvnCUHBShBeR5py5F8Ds05OgBD23HOFxnGWS6NZ4YZE6r934Evl8EI2w8BeQ5pz9VO9bqDv76wSG4TFxnCFt6NWD521KP93PEvl3xkFix[/encoded]"/>
+				<k name="FileNetURL" v="http://win-1gpq0nalnpb:9080/wsi/FNCEWS40MTOM/"/>
+				<k name="FileNetUserID" v="dadmin"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]0199990a9c0851174bdb016f92aae7fd44ca128b5a8c8d2c50d2d3e255a48b42bbe8c80f6bb672c03c5f78450a0226de33bee34ea749c985e956e7c4831e2fb0809ee4718996407fd203a998a31d0d74b8e362f90502349a0dc9edbfb6106eb4928f177864324133506c5ef3e8a0addf02[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="08/12/25 20:12:22.256 " ver="9" src_ver="8">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]018461e4c2bcb3ecb7a8945194679a76af5b1a7199b66481d6e9c8256e3c64803a99b53b0e3f13cf997bec2d3bfd76d1567a99ad1000e0fd66b99a8855a47618d4469f91a03fbabb0ae27cf95030f612f21e6b91da2f112ad8a879d5e2c814f4bb0df0ae379f3d408b2523b377cf51eabe4143cdc0f0e392283a179f21b800121b20864d2d7f9b4c7a0538ba77a8aaa5e00430e47ce072917ede6aa54b9f5579e22d373fa6eee1af1927ce5415e0a1a194b8b1162eff9b1c058420ffac49816976[/secured]"/>
+		<k name="tmadmin" cs="[secured]015918952046ac1c9836f90b2e2056a6d56c9a4ccd9f5849415a150682c091e25871612f90709bc1dfdb70a53dd66c2da3f4680fd2c7a07d282b67b6eb8a9b279f7e78f234a7ef25eb20f95574b662b0d54a75a8356ea658356a7eb058b8fb795aa3440927bb84a29924a523fb9f8183d2e392ba49d50e7ade7925f1a01254c2850482567f5a22fa94b1065038641d229ee5843e0e99ae2c54a38e42724ed94fb768674e312c94f90f64690100e48658f43334fc96f938a296e7c7722aa88e093e[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]0119497c281fbcd94dd6d1e18ac5e7ff45596b35666644900a2ca01845ec5f63f8db1be3cd25ccda2753d7204e8494673e83fed82f4273d207ca6765ffd103735f6449e71c4659b259a148dec78860f8aeb90e8f282cc3a7738ff46d9c711e02222b66ddc0878bca7bd6c3f5a5d2aafc81e74ff6660254fbc0169316b46b54900bb4b4eabb134acc15bb8dcb94a08d58195c4a8963b580600b26f8ef78160b06997106ddccefbdb6173ef7b43dce91e473371d5af0ac384cb226f52487c692572ddc4f005dff9399e9b4231ebec50527b1[/secured]"/>
+			<k name="lookupdb" cs="[secured]01f502dba13a85a3ff61a11481bafdb5abc0e1d0eba2f9ad1877a90d23285c29d4aeeb1dd46591e2678075a75dd0b94c7bd8ba7d88bce033a58a3716c549060ddb1c4b0422984a091a3627c14299973e498743a73f238c16d9219fa5154a6c106936523be0ac5be8b921f8ac7047a2c5a9fb77b1422f85c5e05449fa3a26c5156ecee8d130941759b7ef000653248140c66de76cfaede6dac7214b149214880f16333d785ccc1df8f096710f2a27aabdcb1a5e9b944a02fc723224d8e757c44d94[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01eb2fdb507cb8fb7ff65740367a1c8f6416f40a3792eabaf589822c55256b435155449bc020f185f17fd3000c8d6e082725e6dd3c0c7b9ad8e628b2959a626c92[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="watsonAPIkey" v="[encoded].DJf6Ox8E6BSG37fEMS0yQ9c418dBCjG4VBhK7zgAdu0IIE7L93T6P43xq2vrBeB5pz9V25LU18e6wr7Xc3Ay7zYEuAD5L5aQ4n7EvbCUQ7C17NzEMR5Es9bw9ey2gS7Xc7R2[/encoded]"/>
+				<k name="watsonProjectID" v="[encoded].0WYEvnCUHBShBeR5py5F8Ds05OgBD23HOFxnGWS6NZ4YZE6r934Evl8EI2w8BeQ5pz9VO9bqDv76wSG4TFxnCFt6NWD521KP93PEvl3xkFix[/encoded]"/>
+				<k name="FileNetURL" v="http://win-1gpq0nalnpb:9080/wsi/FNCEWS40MTOM/"/>
+				<k name="FileNetUserID" v="dadmin"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]0199990a9c0851174bdb016f92aae7fd44ca128b5a8c8d2c50d2d3e255a48b42bbe8c80f6bb672c03c5f78450a0226de33bee34ea749c985e956e7c4831e2fb0809ee4718996407fd203a998a31d0d74b8e362f90502349a0dc9edbfb6106eb4928f177864324133506c5ef3e8a0addf02[/secured]"/>
+				<k name="FileNetPassword" v="[secured]01825f823c64c7339fde3f6f8784d1b9da95232712bae5e5bf2c37861c5b63f04bd6ea58a761a5e839e2d12b4824262f4c997a70d4affa9d2627307dbb7543ef35[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiEng.mdb;"/>
+		<k name="tmadmin" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiAdm.mdb;"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiFingerprint.mdb;"/>
+			<k name="lookupdb" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiLook.mdb;"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs=""/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="C:\Datacap\watsonxai\dco_watsonxai\Settings.ini"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="USE DATACAP APPLICATION MANAGER TO SET THE APIKEY HERE"/>
+			</k>
+		</k>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 08:21:22.61 " ver="1">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiEng.mdb;"/>
+		<k name="tmadmin" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiAdm.mdb;"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiFingerprint.mdb;"/>
+			<k name="lookupdb" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiLook.mdb;"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs=""/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="C:\Datacap\watsonxai\dco_watsonxai\Settings.ini"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="USE DATACAP APPLICATION MANAGER TO SET THE APIKEY HERE"/>
+			</k>
+		</k>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 08:21:57.912 " ver="2" src_ver="1">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiEng.mdb;"/>
+		<k name="tmadmin" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiAdm.mdb;"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiFingerprint.mdb;"/>
+			<k name="lookupdb" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiLook.mdb;"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs=""/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="C:\Datacap\watsonxai\dco_watsonxai\Settings.ini"/>
+				<k name="FileNetURL" v="http://win-1gpq0nalnpb:9080/wsi/FNCEWS40MTOM/"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="USE DATACAP APPLICATION MANAGER TO SET THE APIKEY HERE"/>
+			</k>
+		</k>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 08:22:25.891 " ver="3" src_ver="2">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiEng.mdb;"/>
+		<k name="tmadmin" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiAdm.mdb;"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiFingerprint.mdb;"/>
+			<k name="lookupdb" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiLook.mdb;"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs=""/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="C:\Datacap\watsonxai\dco_watsonxai\Settings.ini"/>
+				<k name="FileNetURL" v="http://win-1gpq0nalnpb:9080/wsi/FNCEWS40MTOM/"/>
+				<k name="FileNetUserID" v="dadmin"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="USE DATACAP APPLICATION MANAGER TO SET THE APIKEY HERE"/>
+			</k>
+		</k>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 08:22:25.992 " ver="4" src_ver="3">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiEng.mdb;"/>
+		<k name="tmadmin" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=[path/]watsonxaiAdm.mdb;"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiFingerprint.mdb;"/>
+			<k name="lookupdb" cs="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Datacap\watsonxai\watsonxaiLook.mdb;"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs=""/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="C:\Datacap\watsonxai\dco_watsonxai\Settings.ini"/>
+				<k name="FileNetURL" v="http://win-1gpq0nalnpb:9080/wsi/FNCEWS40MTOM/"/>
+				<k name="FileNetUserID" v="dadmin"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="USE DATACAP APPLICATION MANAGER TO SET THE APIKEY HERE"/>
+				<k name="FileNetPassword" v="[secured]01e407f010d6469773053fa1908b23c10caf7189fb45d44b56e615b09768eea1597f617da3528804563a1f83ea92785b0a24af338bd490372328b21043f9a98277[/secured]"/>
+			</k>
+		</k>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 08:33:01.733 " ver="5" src_ver="3">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]01468b0eabfd3fa2d715d3b62a27a85ee864e9d6bdd9660ec3a3520f6c733b460c1e75688b85f2caf17083aafb4356e443a3072813687182bc87f7c83bda81122bed71e88a465b47edacb95ec2e7a792d8786ba07ab5473cfd4f443c649012abfa5b7eab9883628fcb3303ecac9df69191a795670401218b3bdb14fb6da9f8db5ba3195c37c853605fbaa753f3f55f69b71edff93e348ed15a144c900fd53bbee40f09026cd8f338fc72cbce130e9b47e0291f31a40d5b5a20b8478d64968f17c3[/secured]"/>
+		<k name="tmadmin" cs="[secured]01d1e79dc85073495d4085c1e28df50f9a2227a9c91f63bdadc7b6107cbaef733ef6afc151f26c2b0bb559669bf0e9c72e509636115a9c3cf1ce75acb221a279af6b5d7dcb3540bacab40c3e7e16deef1e85617a3a12ccee026f8443a7f73ffbea0adec219400594da7f82fa0cab40fcd827fa402ccd7a59e6aeb9a0871644e22a90af20ef3f5c4645a5957633388e045e387fb6f956a13df2a469f050f045c6dc2bc4c01061cafb9defda02507b386e6e60e16cf981854c4ee022515eda655ebe[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]01348775e3e82241d8eba808640a9256cfff3a3adee8775cba48c1b71f5346afa6c9b84e81e5cc5e85141073e045f26e341f2e75e9a626fef01bfce74154f523b9578232e46875de4b4e0b5665650600c13988131221da4fe3171ac805f5336268245d85f898a853443c87914c3f88b9ad785cba8ace0af0b63aa15d1a6f52d550a9232359dc7d098f4f60bde47c730c303c36138bd0b6505958c8d281c255ae25fb440772cb4659567a39095ab6783d3100f866587f0e063a37fe754edc2673b1d0efdf8eca8cda9c6fde32d0a1606e03[/secured]"/>
+			<k name="lookupdb" cs="[secured]01fce6eec7c0b2111fe848416a0cd94d60146a4461baad3d5ae6cdb0a12df76d26e7e3473786d6379ff894c858a04c5816a552676279186c3bec64931c0a5ca115ce625df9d9eec290e69142cb694e30bdd1834f6c9cbb5e89ae4fbf9c8168582d08159927a0ff747b4a96a9f14f2337f8c6fb4408679b2d6cf7800d3fdb1de193a59a49687ee7462e7ed1e9067e6dff9bfeec4db43cbf8496ab3fcc0726db660c19ba437029f11e6958a6db5d29f4a4b9d5184f784a2f90d479779e2e8ae92cc4[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01c1a42ace8491381336b29e882d40d4910317691add5b8ee6460b5683b70e466cf5c074eb8fb5b55909cec01b9e9db028ec65cd313c52536b2fa007c58182226f[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="FileNetURL" v="[encoded].4n7AfE8Dw2vuFueEMj0ymDsG5OxBD47XjBhWCFt27W8p45aL0WqAfBGkYBSLBeAA6E9VN9bnDv7FT1G48BhR7zh27W4YiE6wDJm6P43xt7BzFuZ1ZeDleDs1DvK2ga7Y7BhJ3jf[/encoded]"/>
+				<k name="FileNetUserID" v="[encoded].DJj6OzGkYFiaFuN1Zi0ycDsADvLFTI[/encoded]"/>
+				<k name="Value name4" v="[encoded].4n86PH3xw2wBFuNEMp5EpDsL18QFTJ7Xx7RGGW96NZD55E6q0WYEvn3y2FicBe75pz9VP9bq9fA2gD7XwFxTGWT27b8op1K44mo28e3xk2vr[/encoded]"/>
+				<k name="APIKey" v="[encoded].DJm28y3xo2vu7O05q35F915E9fD6wVBoN3AmCGD27RD561KV0WoAfV3xkFiSBe55pu0ym5LlDvNBCl3Hj3AnCFmAdk0IL9r393SAfA8E3FiW37vA655Ej9bk5OmFTEBoFFxm[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]0101d5c1c45056681adc65c9f2e854eb8f8acfae367fc2538584cccf16d7a50cc9e4f5c1bad9676ce5cc13924b602e43d09a4970e092d4f6aa5380430c30d5611bf8a767ce5e29fb1e88d067dc6df52121f93ea1cf9064982cb2a3adf03ea2c8e0197013e59de97d119f965a0c75cb2f2eecc560254a4e6d76185bad45deccf1fc[/secured]"/>
+				<k name="FileNetPassword" v="[secured]01d9079dd9f797f002c6fe3042a8d058a429d8b75109ccbe82bda1301a71a901b35032c860bc1cbeb7ce1544b21888ca6bb319dc126e8d3a7b7cd4861719cf7f00[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 08:44:30.609 " ver="6" src_ver="3">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]01c3ccd13e35741b6c4e95502739cbeee62ed037237dcbfb2bc97c41149391c5438005fc924d88efb477e69521d7422721cfb1c3552e2bb7113450f1f3a7a1dbe1de6f050935796957bc83fa1a22e278a3e9e06921825e1d8679b2cf0fa77c4fa33af29c18a3aae460fd668c36eab3f0d12c3c7eb2a1ea141ea004d2f34a6ddb62b8de8b5e3ab8bfaa19d63d243acc5c28f6e105dbe11a8aae403b0315ea3c8be0671000ae077ca621bf8246667c1c284d4f539de7037ef0d621527d6588a1e994[/secured]"/>
+		<k name="tmadmin" cs="[secured]0126a775e55d60f05e3144291e8a5c41c7a20150ad5f46424b18dfb4544e90859a9171bd072e9d1bbe0b242a7860b5b268ec9705c54b91aefec9f1a8d3bde801cb1a99c44412d5263445e7312293450e5b33183434547b6006e856d0b015605bff31fd1c3b0f2c5ec2f1b939f4cd41d6f88075cc1a28631e8ff825c670b61ad7de1453cee4201ac8703187a91264612057396f7ee54445e5aebd29e2d0e83ab0949c4e369ab3b2f7a87ec65b2368eabb9e05e2d8cea4add35057493db56d0d95be[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]0188c1e2d0865f99dedd1926ba13086c173d937ae6111ad647b33543ec35f7d21c639bb938ff4489b5dc7c57628405cd595bd73a803af4ccc627a1c82d8fa6c4bb5962b4a5f5c82e3af0aa9d41481d6dff16a7d6b13f4bd8287362c4cb5600b5775ffbffdc9d53b6dea9a4485173d95ac21f551c9e666a4fe78a08114aba786bf00e20f3ac8069b80ea86eaf8572b9e8dac9d5f9a0854f452c72217187e6b59870e83c16bc588b6beabb5c392d01e2c9df5a23d9bf439a2057ba8b7a3a89109c5b67763523775f363b0841e423a0ba4869[/secured]"/>
+			<k name="lookupdb" cs="[secured]0110093ccfabccf9c68d52608df95077790786d6879bbaf567ad3988b8a8fdcdb92e7d1e1062b1308f65870b797d03ad4897d1a47aa636419eebb547ff1fc49cf3f3fdb5f575826a4f7027221024e90ca3a455cb35b05330c892d2ebfd1cec7e7c2abc64890144d021fe1980612f3266be472912c579b12c884ed2249d8d744f62ed4d0d31fc82e2584de2cbcdbf30f05fcab353ef10c0ec22bea5406a9f701af977b51e182480060777c7cbd0cecf565f70ad534b442cbf601fb970ac169b8f19[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]0137b9f44fa5c78cc39fe084b4c239b82fb92ab2f6d3017a9f4d97a3fd404e5957488693ecff532faf071700e3dbff24166f85de3327e414d744d773fbc54ef298[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="FileNetURL" v="[encoded].4n7AfE8Dw2vuFueEMj0ymDsG5OxBD47XjBhWCFt27W8p45aL0WqAfBGkYBSLBeAA6E9VN9bnDv7FT1G48BhR7zh27W4YiE6wDJm6P43xt7BzFuZ1ZeDleDs1DvK2ga7Y7BhJ3jf[/encoded]"/>
+				<k name="FileNetUserID" v="[encoded].0WsAfB3xkFibBe41Zh[/encoded]"/>
+				<k name="Project_Id" v="[encoded].4n86PH3xw2wBFuNEMp5EpDsL18QFTJ7Xx7RGGW96NZD55E6q0WYEvn3y2FicBe75pz9VP9bq9fA2gD7XwFxTGWT27b8op1K44mo28e3xk2vr[/encoded]"/>
+				<k name="APIKey" v="[encoded].DJm28y3xo2vu7O05q35F915E9fD6wVBoN3AmCGD27RD561KV0WoAfV3xkFiSBe55pu0ym5LlDvNBCl3Hj3AnCFmAdk0IL9r393SAfA8E3FiW37vA655Ej9bk5OmFTEBoFFxm[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]01787570a4cc0c4a1dcc16e3c79156ff52ef9cce220bd7fae7093180f7320bba588590662902c13ee25a294ca4af707291b2289829d826fcba7780baafc48be431f6e60f0547c84e586097de29500c13268b24c720765beb7ceceb7c19b2191a7a5b2eb67b519a198ba4c7cd1c66c77c8dfdbac32c1e303568275c6c78239265fc[/secured]"/>
+				<k name="FileNetPassword" v="[secured]01489a8a8b91a948f657946f81feb6418c1801b6c205d90d4fcfe48ee3edd72239018093338c36c91129e692cccd35f605ad08f0b376673f4981c36ba37d485b84[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 09:27:37.847 " ver="7" src_ver="3">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]018b141cb726e11412406b9df46d10e7c2e11169df5dd07ec851d757c6ffb033ea62662d9909db17cccc5a1856d045884e698188de40fe923cfc79fdf5353f04c5155a88cf4d5fe1fa0cce8ca9a59033e3f6c3e47e07b534ba708b8f61f0423abc3739f23a470d7b9e3d558ab0ce94c7bd278cfc3359d9e74411245a0f30a833f3c47f97f07a94c0400104676c30a570886dbf5325176288aa9c66f80db517cafe5456a6dd5d2ca782e6081cd6d3001188b844715b3ec48a7a50d3a33fd9f2ba60[/secured]"/>
+		<k name="tmadmin" cs="[secured]018df16c74d5b1df02cf778461fafec4b37f0ca894713ae8d1d4bcf2240c6a56fad806404bac7d153157eed7c6fa99deff70a99ff5e05e7bf8b75901c814efc9c5d89549ff429834b4c9d2a8dd3f1783059ba3ae582b439da67a55ebedfc45569d19c85bc3331021790b7451995dc1474768480a2337dec92f41c7473eb55bc1b844320ab7136ec46b55985c9e6a06e497f3d223fffba9e1713733861615fcd829aa2645e2116630493027d252a873ae2bdbf363152f7a3bcaa5dc9a42f89927bb[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]0116c0b1ffaca03aec71cf9ae261ad680b60681191db20037b1c5779a31af834b61ce00a70ef8536cb5c84df6f91d2198bea4444d497a6041696aefcd0ccbac6d6c9b949ab08829fcc1963d5fd8f586d31f761da21d9befb4be4998c670f5bd9327942dc9858487fd9a5711e876cb450b18ec19b37177e840cfba0dcbce3061a717af9e11d9a102761a292fcf458cb16dfe2a77a5c9aabbf9c75c426fc87a94a8a6299beb9314734f8e2a621445c31253c9a1c5252568992e696bf75249f4325c2e45c5f7096f6c05a5e97add98a74c91c[/secured]"/>
+			<k name="lookupdb" cs="[secured]01511dfb10b657dfced58b0df87618ce4318f0d252c625c657e1526195b65a21a578c650f101e974e11aef8dc9732b10b691c40211fe9321a5d85117541f993b2fc4e403c7c2f6f873fee07646c8ab690084bf2a43d3978c76d745e23b6ef6c4f908aa689c914b97d169c045e8d4003b945c1aedc159de2fdf3b76530bb4e6a25f2ff4c064de0cc55a9b67152a738cb210c9492c1bc8fb06a251bd7d55648208d39ce2e5b9158d1a7f902c89049b63977ba13e04bf99498cf9f87fc4e50d4e8e48[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01e0d071ca7244a094ecc08bd651c6412956e655b0623468f6fe763b048c9e77806996d6902fe18d12830b046125bf9c7ad5376294a00b10c4536679da6f503e50[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="FileNetURL" v="[encoded].4n7AfE8Dw2vuFueEMj0ymDsG5OxBD47XjBhWCFt27W8p45aL0WqAfBGkYBSLBeAA6E9VN9bnDv7FT1G48BhR7zh27W4YiE6wDJm6P43xt7BzFuZ1ZeDleDs1DvK2ga7Y7BhJ3jf[/encoded]"/>
+				<k name="FileNetUserID" v="[encoded].0WsAfB3xkFibBe41Zh[/encoded]"/>
+				<k name="Project_Id" v="[encoded].[/encoded]"/>
+				<k name="APIKey" v="[encoded].[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]01d52328e0033c8f8a60c2141589e91e6d50cbf4e8b9e25508452f9f27d67313dc4f42b86de6f15134e2521ccf947b913cebbb19c47590a72ba06a2e97489709428096342a36d79788ebcd5fb979ae0b728958c5424b48787bb7c9334a3683acff4f40b17be6c0410313c908507ec8c1e4c71c9b85980cbb4f840c9a24f6d127cb[/secured]"/>
+				<k name="FileNetPassword" v="[secured]01e6948a7cacdbfb369333aa3e4bd4d0e398f7074befed05e4682ea52d51a9895f6eb94007ce9a8baaec3db5cdb902529da28ee9c9ae604260debc586e93144fab[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 09:30:29.57 " ver="8" src_ver="3">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]01b2f075dd8a2756cfbae7051c73f5f0bab9dd589a6cdcc26f19273298cdb809a04d0a5f919b3e3e24712b28c76ac964bc7ec337deeb6db518629573bbf89c46119a125362bc4da676e42f34b8cb385df60b5e3de2bd4b1c22a0b28019ae29985f5b30842f78f654335bd424cd2942fc501c2bb71104a9bbfe00a15d18ec6dd9033f77aa9dd508b0c33922000a762de6dfd8b558486919bb2b7a657de8d20fc3a4e037c95895e5d03b049a985fdd9d5831cdf21ac99f7f198afe26f0f38dabc406[/secured]"/>
+		<k name="tmadmin" cs="[secured]01b9cd8257cb4ca68a4598ff686bcbdde194878bd6e789aeb1cc9c3951d56d4066e29c9d6b7192367dfc94ac0df0832331054eb70e8a035129feb4519398ef4fbdce4494df24423ed5d0737f5bbe4927268a6a4e25d16af90957e0f37cbecef76c6713a5385686a0933589ef3c52439bda5182cc8b1cc561937e18aa33de3e0577c7536ae8b898e3f055b1c43157218a0e23f9f2d07da3d4fd29daf4989971b2041932cf94c7bce06cd2e4a15794c35db41c954d7b12cc42d733b1f31bd80aa45a[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]01501344ec9ae961ac01b4f1c2e5fbfbb17beb3c895c78427ed4ee358515734d74b17bae1efd1c6afc3a0185cb87e580d258cdbdbf590eeff8c93f9297be9399069e7cfb44d49684c156c1788012368350d22d829087c6e9b97b839c2d6189cfbdb3a2a80be7b1724d2bf2ae20b72e2b89887a1f386e3617e471c5131a3c7ae93a4bc6ccb7f74abbc1fe7208608b79f9615f2cad8b0b830a3bcc75ac7b4c627c740f7ab8b0f6207b073bd773d6ca7e81fdb500c8fad9090a7e1bcad015d2e1ec4958551271ee153722aa3a6e1da588131f[/secured]"/>
+			<k name="lookupdb" cs="[secured]015407088f13d6d8c533b27aae9082d99689c7a377790bc3f462f7465831683bf570f5824b5a6e5be00f27cc97e753842099b5943b3619282c5dfa0667b32bc7bdf67e6a824f581ee97b3d2b82226e6555fcb9aa13a2e4737f674ab93b5a762297586a2438d4694ce9d5e41c34c209e6eb5cdf497ff02f5c648fd70f4fb0dad15ad6731ef4a3190b54795f7056e7b9b0962ebff2213ce7847380d7445877bee0d3ad04e7adc76bd7593ac780f32c0d6cb8027ce6b3bc63d14e6736fbe0e8cd4ab9[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]018519e8150594b2c189d67669218bdca6ea2ccd74d3186b965c618592b9580333bcd9839212b08a44351ca63e532a752223085063a62021a7cbe538098d737de8[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="FileNetURL" v="[encoded].4n7AfE8Dw2vuFueEMj0ymDsG5OxBD47XjBhWCFt27W8p45aL0WqAfBGkYBSLBeAA6E9VN9bnDv7FT1G48BhR7zh27W4YiE6wDJm6P43xt7BzFuZ1ZeDleDs1DvK2ga7Y7BhJ3jf[/encoded]"/>
+				<k name="FileNetUserID" v="[encoded].0WsAfB3xkFibBe41Zh[/encoded]"/>
+				<k name="Project_Id" v="[encoded].4n86PH3xw2wBFuNEMp5EpDsL18QFTJ7Xx7RGGW96NZD55E6q0WYEvn3y2FicBe75pz9VP9bq9fA2gD7XwFxTGWT27b8op1K44mo28e3xk2vr[/encoded]"/>
+				<k name="APIKey" v="[encoded].DJm28y3xo2vu7O05q35F915E9fD6wVBoN3AmCGD27RD561KV0WoAfV3xkFiSBe55pu0ym5LlDvNBCl3Hj3AnCFmAdk0IL9r393SAfA8E3FiW37vA655Ej9bk5OmFTEBoFFxm[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]01c3c21e73a8211bd034255e918225bb19cb078a080719625c7b01ecfc4c144903ec0a39885e016087b84c9207d7ba9002bda6664133f0e7f070ebcf7ecc316d56deb32e74c5c0e2d9823a9409e7066230ac113fb6e340852f36597a10003a10f7ff60ddb5d1a3b9f677f18c56df9825080d33345a2f8e7a0262e5c2a66e4cb342[/secured]"/>
+				<k name="FileNetPassword" v="[secured]01e644e292d2e6bc9f6f5705e2715c08b49b73a646e84c3bd42c6bd3511440768b64897270e3c464113f3fa15ac8b56fcb9d818a2d913dc0600e5a724d4af1f944[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+	<app name="watsonxai" modder="Administrator.WIN-1GPQ0NALNPB.WORKGROUP" dt="04/29/26 09:41:47.0 " ver="9" src_ver="3">
+		<k name="tmservers">
+			<k name="tms" ip="127.0.0.1" port="2402" retry="3" protocol="300"/>
+		</k>
+		<k name="runtime" v="batches"/>
+		<k name="tmengine" cs="[secured]01a96920ce18541fed9fbdebc7e992f64ee4521434e2f7595937eb45f1732a408ee0703d04fe93bf5c67eb27c1e0944a3001d747e2c14bf796601a5b8071c5940e4a8b1f403b8d209b4ccd8403ebf96961959e0a6336392c92b45dba007b395cbb8159afcb83c378aad05046d821765ea823727443f27c1f2e137e3215483e92f98b96c3f93cfaf38728af158415f4530ed05bc106d32733f64263e120cd1e474e3954a4eef63b2af650fbab95269200f415e3bbe3bf2c12a9fa24ac3f20151426[/secured]"/>
+		<k name="tmadmin" cs="[secured]01c3b3724dbb21aef6ce11e865c9e04d9c30d7ddcc90d0c03ca0046eb003c275514ebc077776cacf54236097ae3c71ceb21570272961e3b346509566b635bb201b5d7dd4bbcd297232c7b77357556f086bf75b950ead6eaad59608874023a515333b9ba7abfdc30f49e9b63ea929d8a028af01d9ee3ea4ae613f80ed81b78bddc2705f4079cab8903cc683cb457b1512b6b33588e975f3ff915e5b3ac0dd3aacc734a015230371516d9d68521102521b5adcf8b72f2755192d979af2511f7607bd[/secured]"/>
+		<k name="dco_watsonxai">
+			<k name="setupdco" v="watsonxai.xml"/>
+			<k name="rules" v="rules"/>
+			<k name="imagefix" v="imagefix.ini"/>
+			<k name="UseFPXML" v="True"/>
+			<k name="fingerprintconn" cs="[secured]0126e09332c7574cf8379f86107bd954537ed8155a883d982639c863c59a636cc3103fbd637f8c0c568a192acf7f348dcb4a5f8f8552ccc11e6c29f6d93aabc532b3d1151e415662ce3f417b6a6f4d52c1a07d4987ba3e21c4b9514a82742c51314c0185c76338f4c625dd7e483461f7e513d87f5d6dddc6b070dead928697abf239bf4aff0ca1fbae895bd1fd7599049dd39e79794f0b9577e890cc6ce09cf6711186393deebfe3988c2220212ae9e29623b17ccfdf14f44976d8a552133a0116cf81a34c836e91e5915ff445603084b4[/secured]"/>
+			<k name="lookupdb" cs="[secured]01cc895f344f349258604c2a1c2d1ab4d9b542dd76206e24bf7177977de2735850e208263a22d01a14068af028c10812d54a10b2e4741d8e9b3c6c8ef0e3bea0ad1149cbe62fc4a0c2a879ac60461d0d1b1ae4453e3b0c8b5e8360fe58018efc8a9b0edc6210860b285f21ed9ae5f8c6374f112e04595ecbe99f5a1e523ef7a4a41760298bd8983085277b6c7bd550b09cb7d1fa2bb2788ab94ad8c7b1ad9694414319d3fb7c4d640f03a13cc43d7a2b7162f48265b0952fd9009abdbbc850c2be[/secured]"/>
+			<k name="vscanimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="vscanimagedir_Multi" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="exportdb" cs="[secured]01a6527f31d86252366ddc09e78c0fa17e3ec2fc289ad9ba4668aad77a766781323235b3a4f53b6c4c6c1813abfa8af6a33cc7b1ea094121e73d7bb087357c65d4[/secured]"/>
+			<k name="copyimagedir" v="C:\Datacap\watsonxai\images\Input"/>
+			<k name="locale" v=""/>
+			<k name="SaveReportStatistics" v="False"/>
+		</k>
+		<k name="fingerprint" v="fingerprint"/>
+		<k name="export" v="export"/>
+		<k name="tasks">
+			<k name="VScan" profile="ScanFromDisk_MultiFormat"/>
+			<k name="Convert" profile="Convert"/>
+			<k name="PageID" profile="PageID"/>
+			<k name="Profiler" profile="Profiler"/>
+			<k name="Export" profile="Export"/>
+			<k name="NProfiler" profile="Profiler"/>
+			<k name="NPageID" profile="PageID"/>
+		</k>
+		<k name="values">
+			<k name="gen">
+				<k name="SettingsFile" v="[encoded].DJnAfX8E6FiV37a5q30yZDsLDvRFTFG4Z3AlCFsAe34Yo9qw4n6EvX3xlBSK37lEMV0yZ5Lq18UBCy3HgBhH7zgEuL8ozE790WtAfDCUMFiY37b1Zn9V815b18g2gWBo83Av3jO27ZD5E[/encoded]"/>
+				<k name="FileNetURL" v="[encoded].4n7AfE8Dw2vuFueEMj0ymDsG5OxBD47XjBhWCFt27W8p45aL0WqAfBGkYBSLBeAA6E9VN9bnDv7FT1G48BhR7zh27W4YiE6wDJm6P43xt7BzFuZ1ZeDleDs1DvK2ga7Y7BhJ3jf[/encoded]"/>
+				<k name="FileNetUserID" v="[encoded].0WsAfB3xkFibBe41Zh[/encoded]"/>
+				<k name="Project_Id" v="[encoded].[/encoded]"/>
+				<k name="APIKey" v="[encoded].[/encoded]"/>
+			</k>
+			<k name="adv">
+				<k name="watsonkey" v="[secured]013c9b5e93a2c60b44b6b9063878489bad5b5a54201e1e5224deba0580c995b88332a171521c77342c6cfef7e43292ed477853f4a8aecdbae120b9eacf27c7135a45c26e89b5756cdf79ffbbd2e24a5dd0d127e3d099ff13c1988ae60c628b0b4a474b32dadba08407fe5d406e89c0bccf7c35812eef2d1d0324626bcf7b5f8544[/secured]"/>
+				<k name="FileNetPassword" v="[secured]01b73e01dba7973264df88a71732d4cc47c13481d99dc92ca19e7304e328f49ce03e5b97c3e7a50a9d4728e27d4750606f04d058205be6ab59075baeefec62f1e5[/secured]"/>
+			</k>
+		</k>
+		<k name="rrslogdir" v=" "/>
+		<k name="BatchNew" v=""/>
+		<k name="QBy" v=""/>
+		<k name="RoleMode" v=""/>
+		<k name="Authenticator" v=""/>
+		<k name="AutoImportNTGroups" v="True"/>
+		<k name="Audit" v="True"/>
+		<k name="SaveDeletedBatchInfo" v="True"/>
+		<k name="InheritJobPriority" v="False"/>
+	</app>
+</archive>

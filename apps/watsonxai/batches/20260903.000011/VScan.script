@@ -1,0 +1,6443 @@
+Dim CurrentObj 
+sub set_novCDCO(novCDCOObj) 
+	set CurrentObj = Nothing 
+	set CurrentObj = novCDCOObj 
+end sub 
+sub set_CDCOnothing() 
+	set CurrentObj = Nothing 
+end sub 
+'namespace ()
+                
+'*****************************************************************************
+' RRunner.rrx Script File
+'
+' Licensed Materials - Property of IBM
+' “Restricted Materials of IBM”
+' 5725-C15 5725-C69
+'
+' © Copyright IBM Corp. 1994, 2023 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+'
+'*****************************************************************************
+
+'(Declarations)
+
+On Error Resume Next 
+
+Dim gbRRX
+gbRRX = True
+Dim PicCharAr(10)
+Dim FileMgr
+Dim ImageCtrl
+Dim oConn
+Dim CCOCreator
+Dim gbDebug
+Dim gbInteractive
+Dim gbInter
+Dim g_Atmr
+Dim g_Ftmr
+Dim g_Rtmr
+Dim g_ATottmr
+Dim g_FTottmr
+Dim g_RTottmr
+Dim g_ABatchtmr
+Dim g_FBatchtmr
+Dim g_RBatchtmr
+Dim nDefID
+Dim conn
+Dim oCurPage
+Dim bAbort
+Dim sVarName
+Dim CCO
+Dim bFail
+Dim bOverride
+Dim nReturnStatus
+Dim arRules
+Dim nCurRule
+Dim arActions
+Dim nCurAction
+Dim nDefaultRtn
+Dim nRectIndex
+Dim dictExists
+Dim dictTmp
+Dim dictPreserve
+Dim g_nRuleType
+Dim g_InitObj
+Dim g_bRulestats
+Dim nTaskStatus
+Dim g_LogInset
+Dim bEnableUI
+Dim bProcessChildren
+Dim g_bAbortOnError
+Dim g_aggrStat
+Dim gbLoadedCCO
+Dim g_sFPDBDSN
+gbLoadedCCO=""
+strBaseImageName=""
+g_sFPDBDSN=""
+
+Dim nFail
+Dim nPass
+Dim nOver
+Dim nAbort
+Dim nPreserve
+
+nFail = 1
+nPass = 0
+nOver = 3
+nAbort = -1
+
+nPreserve = True
+g_bRuleStats = False
+bEnableUI = True
+g_LogInset = 0
+bAbort = False
+g_bAbortOnError = False
+
+'TaskStatus List
+Const RetAbort 	= 0
+Const RetFinished = 2
+Const RetHold 	= 4
+Const RetPending 	= 8
+
+'DCO Constants
+Const DCO_BATCH = 0
+Const DCO_DOCUMENT = 1
+Const DCO_PAGE = 2
+Const DCO_FIELD = 3
+Const DCO_CHARACTER = 4
+
+'Note: 9.1.10.162 populated via RRX.cs
+WriteLog("rrunner: loading file v. 9.1.10.162")
+
+Dim dictInitGlobal
+Set dictInitGlobal = CreateObject("Scripting.dictionary")
+If IsAlive(dictInitGlobal) then 
+    WriteLog("Global dictInit Object created")
+Else
+    WriteLog("Allocation Error: Global dictInit Object missing")
+End if
+
+Const nRtn_Over = 1
+Const nRtn_Fail = 2
+
+bOverride = True
+nTaskStatus = RetFinished 
+
+'ADODB Constants
+Const adOpenForwardOnly = 0
+Const adOpenKeyset = 1
+Const adOpenDynamic = 2
+Const adOpenStatic = 3
+
+Const adLockReadOnly = 1
+Const adLockPessimistic = 2
+Const adLockOptimistic = 3
+
+Const adUseClient = 3
+Const adUseServer = 2
+
+'Statistics Variables
+Dim g_RRnDocDict
+Dim g_RRnPagDict
+
+Set g_RRnDocDict = CreateObject("Scripting.dictionary")
+If IsAlive(g_RRnDocDict) then 
+   WriteLog("Global RRnDocDict Object created")
+Else
+   WriteLog("Allocation Error: Global RRnDocDict Object missing")
+End if   
+
+Set g_RRnPagDict = CreateObject("Scripting.dictionary")
+If IsAlive(g_RRnPagDict) then 
+   WriteLog("Global RRnPagDict Object created")
+Else
+    WriteLog("Allocation Error: Global RRnPagDict Object missing")
+End if   
+
+
+'Elapsed Time counter
+Dim g_eTime
+g_eTime=0
+
+'QA DATA
+Dim sStateStack
+sStateStack=""
+Dim rr_xDom
+Set rr_xDom = CreateObject("MSXML2.DOMDocument")
+If IsAlive(rr_xDom) then 
+    WriteLog("Global XMLDom Object created")
+Else
+    WriteLog("Allocation Error: Global XMLDom Object missing")
+End if
+
+rr_xDom.Async=False  
+
+'Global DCO Object Dictionary
+Dim dictDCOGlobal
+Set dictDCOGlobal = CreateObject("Scripting.dictionary")
+If IsAlive(dictDCOGlobal) then 
+    WriteLog("Global dictDCOGlobal Object created")
+Else
+    WriteLog("Allocation Error: Global dictDCOGlobal Object missing")
+End if
+
+'Create DCSmart Object
+Dim g_DCSmart
+Set g_DCSmart = CreateObject("dcSmart.SmartNav")
+
+If IsAlive(g_DCSmart) then 
+	WriteLog("Smartparameter Object created")
+	g_DCSmart.DatacapRRDCO=DCO
+	g_DCSmart.DatacapRRLog=DCLogX
+	g_DCSmart.SetRRCurrentDCO(CurrentObj)
+	g_DCSmart.DatacapRRBatchPilot=Pilot
+	g_DCSmart.DatacapRRState=RRState
+else
+   WriteLog("Allocation Error: Smartparameter Object missing")
+End if
+
+Dim DCGlobalStrings
+Set DCGlobalStrings = CreateObject("Datacap.Global.Strings")
+If IsAlive(DCGlobalStrings) then 
+   WriteLog("Datacap Global Strings Object created")
+Else
+   WriteLog("Allocation Error: Datacap Global Strings Object missing")
+End if
+
+Dim DCGlobalDates
+Set DCGlobalDates = CreateObject("Datacap.Global.Dates")
+If IsAlive(DCGlobalDates) then 
+   WriteLog("Datacap Global Dates Object created")
+Else
+   WriteLog("Allocation Error: Datacap Global Dates Object missing")
+End if   
+
+Dim DCGlobalCurrency
+Set DCGlobalCurrency = CreateObject("Datacap.Global.Currency")
+If IsAlive(DCGlobalCurrency) then 
+   WriteLog("Datacap Global Currency Object created")
+Else
+   WriteLog("Allocation Error: Datacap Global Currency Object missing")
+End if   
+
+Dim DCGlobalLocale
+Set DCGlobalLocale = CreateObject("Datacap.Global.Locale")
+If IsAlive(DCGlobalLocale) then 
+   WriteLog("Datacap Global Locale Object created")
+Else
+   WriteLog("Allocation Error: Datacap Global Locale Object missing")
+End if   
+
+Dim DCGlobalBidi
+Set DCGlobalBidi = CreateObject("Datacap.Global.Bidi")
+If IsAlive(DCGlobalBidi) then 
+   WriteLog("Datacap Global Bidi Object created")
+Else
+   WriteLog("Allocation Error: Datacap Global Bidi Object missing")
+End if   
+
+
+Dim sOriginalLocaleID
+sOriginalLocaleID = ""
+
+Call UpdateLocale()
+
+'INIT RRS OBJECTS - RRX ONLY
+
+Sub ErrorHandler(strmsg)
+   'Nothing to do here
+End sub
+
+Sub InitObjects()
+
+  On Error Resume Next
+
+	Set FileMgr = CreateObject("Scripting.FileSystemObject")
+  If IsAlive(FileMgr) then 
+     WriteLog("Global FileMgr Object created")
+  Else
+     WriteLog("Allocation Error: Global FileMg Object missing")
+  End if        
+  
+	Set ImageCtrl = CreateObject("DCIMAGE.DcimageCtrl.1")
+  If IsAlive(ImageCtrl) then 
+     WriteLog("Global ImageCtrl Object created")
+  Else
+     WriteLog("Allocation Error: Global ImageCtrl Object missing")
+  End if            
+  
+	Set oConn = CreateObject("ADODB.Connection")
+	If IsAlive(oConn) then 
+     WriteLog("Global oConn Object created")
+  Else
+     WriteLog("Allocation Error: Global oConn Object missing")
+  End if            
+  
+	Set CCOCreator=CreateObject("CCO._CCOCreator")
+	If IsAlive(CCOCreator) then 
+     WriteLog("Global CCOCreator Object created")
+  Else
+     WriteLog("Allocation Error: Global CCOCreator Object missing")
+  End if       
+  
+  CCOCreator.MaxWaitTime = 5000	' wait up to 5 seconds for CCO to exist
+	
+	gbDebug = RRState.DebugMode
+	gbInteractive = RRState.Interactive
+	gbInter = RRState.Interactive
+
+  Set CCO = Nothing
+  Set CCO = CreateObject("CCO._CCOCollection")
+  If IsAlive(CCO) then 
+     WriteLog("Global CCO Object created")
+  Else
+     WriteLog("Allocation Error: Global CCO Object missing")
+  End if            
+
+  'Log the batch xml
+  Call Writelog("Pilot XML:" & vbcrlf & Pilot.ExportXML() & vbcrlf)
+End sub
+
+Call InitObjects()
+  
+Sub InitPage()
+  'Find current parent page and load CCO if it has a cco file
+  Dim oPage
+  On Error Resume Next
+   
+  
+  If IsAlive(CurrentObj) then ' ---- Added for Quattro compatibility to fix error described in SPR 23678 (update "7.6.41")
+     WriteLog("InitPage")
+     Set oPage = CurrentObj
+     
+     While oPage.ObjectType<>2 and oPage.ObjectType>0
+        Set oPage = oPage.Parent    
+     Wend
+     
+     If oPage.ObjectType=0 then Exit Sub
+     
+     ' Some comments about this loading of the CCO here.
+     ' This is loaded every time rules start on a page / field.
+     ' Meaning that for every page this is loaded.  So there is a lot of loading here.
+     ' If there is only one page in the batch and multiple rules in the task profile, then the same page is loaded over and over again
+     ' Not only is this wasted work when the original could be reused, it is making a com call, and we have see problems with com objects
+     ' not getting released or running out of memory on large rulesets. It is not know if this code here is a probelm but it might be contributing.
+     ' Another issue is that all this work to load the page is mostly useless.  Most actions do not need this page loaded.  The locate action
+     ' library needs it and maybe one or two more action libraries need it.  Most of the VB action libraries do not need it and none of the C# actions
+     ' need it, yet, the page is loaded over and over.  It would be good to change this so it is only loaded by action libraries that need it.
+     ' That will actually reduce a ton of unneeded loads.  The only downside is that there could be someone who wrote a custom action
+     ' that needs this loaded.  I have these ideas for that problem.
+     ' a) Create a public action to do this load, so if people have a custom action, they could call our action first in the rules.
+     ' b) Document how to make this load, so people simply do it in their custom code.
+     ' c) Create a SETUP DCO environment variable that can be checked for a value.  If it is set, then the load is performed,
+     '    then people who have the custom action can add the variable to their setup DCO.  The down side is we have to check that variable over and over. That means using COM objects again.
+     '
+     ' One more idea I have is when loading the CCO, check to see if the same CCO is already loaded, that would reduce some unneeded loading, but still, most of the loading will still be unnecessary.
+     
+     Call LoadCCO(oPage)
+     
+     Set oCurPage = Nothing  ' I believe this is intended to force an unload.
+     Set oCurPage = oPage
+  Else
+     Call Writelog("CurrentObj is Nothing")     
+  End if
+  
+End Sub
+ 
+Sub LoadCCO(oPage)
+  Dim sVar
+  Dim strBaseImageName
+  Dim bFound
+
+  On Error Resume Next
+
+  bFound=False
+  sVar="DATAFILE"
+        
+  If oPage.FindVariable(sVar)<0 Then sVar="IMAGEFILE"
+  
+  If oPage.FindVariable(sVar)>=0 Then  				
+  
+     'Initially it was hardcoded to 3 considering image extension to be always 3 characters. 
+     'Modified it with realExt variable which will work for any number of characters in extension.
+     Dim aPath
+     Dim realExt
+     aPath =Split(oPage.ImageName,".")
+     Dim l
+     l=UBound(aPath)
+     'Get the last item of an array which will be the real extenstion of an image.
+     realExt = aPath(l)
+
+     Dim filenameAndPath
+     filenameAndPath = Left(oPage.Variable(sVar), Len(oPage.Variable(sVar)) - Len(realExt))
+
+     Dim period
+     period = "."
+     Dim lastchar
+     lastchar = right(filenameAndPath,1)
+     Call Writelog("Last: " & lastchar & " Ext: '" & realExt & "'")
+     
+     If ("." = lastchar) Then
+         period = ""       ' The period is already there, so do not add it again
+     End If
+     
+     strBaseImageName = filenameAndPath & period & "cco"   ' Build the new path to the CCO file based on the page file name.
+     
+     If ("ForceCCOReload" = gbLoadedCCO) Then
+        gbLoadedCCO = ""
+        RRState.OnActionSuccess="Call OnActionSuccess()"  ' Reset to the standard call. Removes the call to gbLoadedCCO = "ForceCCOReload"  Refer to SharedRecognitionTools for more information
+        WriteLog("VBSCCOReload")
+     End If
+        
+     'Check if CCO matches Loaded CCO
+     If ucase(gbLoadedCCO)=ucase(strBaseImageName) and strBaseImageName<>"" then Exit Sub
+
+     'If Not IsAlive(CCOCreator) then 
+        'Writelog ("RRunner LoadCCO: CCOCreator is not alive")
+     'End If
+    
+     Call Writelog("RRunner LoadCCO attempt to load CCO file: '" & strBaseImageName & "'")
+     'If FileMgr.FileExists(strBaseImageName) Then
+        'Writelog ("RRunner LoadCCO: strBaseImageName exists.")
+     'End If
+
+     If FileMgr.FileExists(strBaseImageName) Then
+        If Not IsAlive(CCOCreator) then Set CCOCreator=CreateObject("CCO._CCOCreator")
+        
+        If Not IsAlive(CCOCreator) then
+            WriteLog("Error: Could not allocate CCOCreator")
+        End If
+
+        If IsAlive(DCLogX) Then
+           'WriteLog("Set DCLogX")
+           CCOCreator.LogX = DCLogX ' requires debug version of CCOCreator
+           If Err.Number <> 0 then WriteLog("Err " & Err.Description)
+
+           If oPage.FindVariable("CCOFILE") >= 0 Then
+              'WriteLog("Set MaxWaitTime")
+              CCOCreator.MaxWaitTime = 5000	' wait up to 5 seconds for CCO to exist
+              If Err.Number <> 0 then WriteLog("Err " & Err.Description)
+           End If
+        End If
+        
+        'Writelog ("RRunner LoadCCO: Going to set CCO to Nothing") 
+  
+        Set CCO=Nothing
+                
+        CCOCreator.MaxWaitTime = 5000	' wait up to 5 seconds for CCO to exist
+        'WriteLog("rrunner loading CCO")
+        Set CCO=CCOCreator.Load(strBaseImageName)
+        If IsAlive(CCO) Then 'Added for Quattro compatibility SPR# 25101 update 7.6.46
+           'Call Writelog("Loaded CCO 1:'" & strBaseImageName & "'" & ", count=" & CCO.Count)
+           Writelog ("RRunner LoadCCO: Loaded CCO.")
+           if (CCO.Count < 1) then WriteLog("Loaded empty CCO")
+           bFound=True
+           gbLoadedCCO=strBaseImageName
+           Call CCO.SetCurrentPosition(1,1)
+        Else
+           Writelog ("Error: CCO object Is Nothing")
+        End if
+    End if
+    
+    If TrapError("Getting Data File name for " & oPage.Id)=False Then
+    End If
+       
+  End if
+
+   If bFound=False then  
+      'create empty cco for pages with no images or data 
+      If IsAlive(CCOCreator) then 
+         'Writelog ("RRunner LoadCCO: Checking if CCO object is IsAlive.")
+         If IsAlive(CCO) then 
+            'Call Writelog("RRunner LoadCCO: Old CCO Count is'" & CCO.Count & "'")
+            'consider the max CCO count at root level be less than 50000
+            If (CCO.Count > 0 And CCO.Count < 50000) then 
+               'Writelog ("RRunner LoadCCO: Setting CCO object to Nothing.")
+               Set CCO=Nothing
+
+               'block added to try to handle the crash exit during setting CCO to Nothing
+               If Err.Number <> 0 then WriteLog("Err " & Err.Description)
+            End If   
+            
+         End If
+      End If   
+	  
+	    'Writelog ("RRunner LoadCCO: CreateObject CCO._CCOCollection")
+	    Set CCO=CreateObject("CCO._CCOCollection")
+   End If
+
+
+End Sub
+
+'------ Initialize Timers on load ------
+g_ATottmr=cdbl(0)
+g_FTottmr=cdbl(0)
+g_RTottmr=cdbl(0)
+g_ABatchtmr=cdbl(0)
+g_FBatchtmr=cdbl(0)
+g_RBatchtmr=cdbl(0)
+
+g_Atmr=cdbl(Timer)
+g_Ftmr=cdbl(Timer)
+g_Rtmr=cdbl(Timer)
+
+Call InitPage()      
+
+Sub InitDStudio()
+  'Initialize the Pilot.ProjectPath() property for use in DStudio.
+  'Must point to the DCO setup folder with Paths.ini as the target filename.
+  Dim sPath
+  Dim oDCOSetup
+  
+  On Error Resume Next
+  
+  If IsAlive(Pilot) Then
+    If Pilot.ProjectPath="" then
+      Set oDCOSetup = DCO.SetupObject()
+      sPath=FileMgr.GetParentFolderName(oDCOSetup.Path)
+      sProjPath=FileMgr.BuildPath(sPath,"Paths.ini")
+      Pilot.ProjectPath=sProjPath
+      Set oDCOSetup = Nothing
+    End if
+  End if
+  
+End Sub
+
+Call InitDStudio()
+
+'------ Initialize On Load -------
+RRState.OnProcessStart="Call OnProcessStart()"
+RRState.OnActionStart="Call OnActionStart()"
+RRState.OnActionFailure="Call OnActionFailure()"
+RRState.OnActionSuccess="Call OnActionSuccess()"
+RRState.OnFunctionStart="g_Ftmr=cdbl(Timer)"
+RRState.OnFunctionFailure="Call OnFunctionEnd()"
+RRState.OnFunctionSuccess="Call OnFunctionEnd()"
+RRState.OnRuleStart="Call OnRuleStart()"
+RRState.OnRuleFailure="Call StatCounter():Call OnRuleEnd()"
+RRState.OnRuleSuccess="Call StatCounter():Call OnRuleEnd()"
+RRState.OnRuleSetStart="Call OnRuleSetStart()"
+RRState.OnRuleSetEnd="Call OnRuleSetEnd()"
+RRState.OnProcessEnd="Quit()"
+Writelog("Init OnRule...")
+
+ 'Reset RRS Data Elements
+  RRState.Pop("nTaskStatus")
+  RRState.Data("ActionAbortLog")="False"
+  
+  
+
+  
+  RRState.Data("bOverride")="True"
+  RRState.Data("bAbort")="False"
+  RRState.Data("stats_nDocs")=cstr(0)
+  RRState.Data("stats_nPages")=cstr(0)
+  RRState.LogicResult=1
+  Writelog("Init End")
+  
+
+Sub OnProcessStart() 
+  RRState.OnActionStart="Call OnActionStart()"
+  RRState.OnActionFailure="Call OnActionFailure()"
+  RRState.OnActionSuccess="Call OnActionSuccess()"
+  RRState.OnFunctionStart="g_Ftmr=cdbl(Timer)"
+  RRState.OnFunctionFailure="Call OnFunctionEnd()"
+  RRState.OnFunctionSuccess="Call OnFunctionEnd()"
+  RRState.OnRuleStart="Call OnRuleStart()"
+  RRState.OnRuleFailure="Call StatCounter():Call OnRuleEnd()"
+  RRState.OnRuleSuccess="Call StatCounter():Call OnRuleEnd()"
+  RRState.OnRuleSetStart="Call OnRuleSetStart()"
+  RRState.OnRuleSetEnd="Call OnRuleSetEnd()"
+  RRState.OnProcessEnd="Quit()"
+  
+ 'Reset RRS Data Elements
+  RRState.Pop("nTaskStatus")
+  RRState.Data("ActionAbortLog")="False"
+  
+   
+  RRState.Data("bOverride")="True"
+  
+  
+  RRState.Data("bAbort")="False"
+  RRState.Data("stats_nDocs")=cstr(0)
+  RRState.Data("stats_nPages")=cstr(0)
+  RRState.LogicResult=1
+
+End Sub
+
+Sub OnActionStart() 
+  On Error Resume Next
+
+  'Enable Dynamic Locale
+  Call UpdateLocale()
+  'Initialize Action Timer
+  g_Atmr=cdbl(Timer)
+  
+End Sub
+
+Sub OnActionFailure() 
+  On Error Resume Next
+  
+  'TEST
+  Call QAStateData("False")
+    
+  Call OnActionEnd()
+  
+  
+  
+End Sub
+
+Sub OnActionSuccess() 
+  On Error Resume Next
+  
+  'TEST
+  Call QAStateData("True")
+    
+  Call OnActionEnd()
+   
+  
+End Sub
+
+Sub OnActionEnd() 
+  
+    Dim sTime
+    Dim bBypassAbort 
+    
+    sTime=rr_eTimer(g_Atmr)
+    
+    g_Atmr=cdbl(0)
+    g_ATottmr=g_ATottmr+sTime
+       
+    'Check for unhandled action error
+    Call ErrorHandler("RRunner OnActionEnd() has caught an error from the previous action.")
+    
+    If (bAbort=True or RRState.Data("bAbort")="True") and  RRState.LogicResult<>-1 then
+        If RRState.Data("ActionAbortLog")<>"True" then  
+          Writelog("ATTENTION: This action has set the Task to Abort at the COMPLETION of the Ruleset. (bAbort=True)")
+        Else
+          Writelog("ATTENTION: An action run earlier in this ruleset has set the Task to Abort at the completion of the Ruleset. (bAbort=True)")
+        End if
+        'flag to only log the message once
+        RRState.Data("ActionAbortLog")="True" 
+    End if
+
+    If cstr(nTaskStatus)=cstr(0) or cstr(RRState.Data("nTaskStatus"))=cstr(RetAbort) then
+        RRState.LogicResult=-1
+    End if
+
+    Writelog("Action esec='" & FormatNumber(sTime,5,True) & "'")
+
+
+End Sub
+
+Sub OnFunctionEnd() 
+    On Error Resume Next
+  Dim sTime
+        
+  sTime = rr_eTimer(g_Ftmr)    
+      
+  g_Ftmr=cdbl(0)
+  g_FTottmr=g_FTottmr+sTime
+  If sTime<>cdbl(0) then Writelog("Function esec='" & FormatNumber(sTime,5,True) & "'")
+    
+  sStateStack=""
+ 
+  
+End Sub
+
+Sub OnRuleStart() 
+   'Initialize Rule Timer
+   On Error Resume Next
+   g_Rtmr=cdbl(Timer)
+   Call InitPage()
+   
+   If IsAlive(g_DCSmart) then g_DCSmart.DatacapRRCurrentDCO = CurrentObj
+   
+
+End Sub
+
+Sub OnRuleSetStart() 
+Dim sValue
+
+On Error Resume Next        
+        
+If IsAlive(g_DCSmart) then 
+	g_DCSmart.DatacapRRState=RRState
+	g_DCSmart.DatacapRRLog=DCLogX
+	g_DCSmart.DatacapRRBatchPilot=Pilot
+	g_DCSmart.DatacapRRDCO=DCO
+	g_DCSmart.DatacapRRCurrentDCO = CurrentObj
+End if
+
+sValue = Pilot.ExportXML()
+
+Call Writelog("OnRuleSetStart Pilot XML:" & vbcrlf & sValue & vbcrlf)
+
+
+End Sub
+
+Sub OnRuleSetEnd() 
+If bAbort=True then nTaskStatus=retAbort
+
+  'Sync Abort variables
+  If RRState.Data("bAbort")="True" Then nTaskStatus=cstr(0) 
+  If cstr(nTaskStatus)=cstr(0) then RRState.Data("bAbort")="True"
+  If cstr(nTaskStatus)<>cstr(RetFinished) And cstr(RRState.Data("nTaskStatus"))<>cstr(RetFinished) then RRState.Data("nTaskStatus")=nTaskStatus
+
+  'Setup Data to always have bOverrride value of True or False
+  If RRState.Data("bOverride")<>"False" then RRState.Data("bOverride")="True"
+  
+  'Reset loaded CCO & ImageCtrl  
+  gbLoadedCCO=""
+  ImageCtrl.Filename="" 
+ 
+  Call writelog("RuleSet finished with TaskStatus '" & cstr(nTaskStatus) & "'")
+
+  'write RRState xml to log file
+  Call Writelog("Total Ruleset Action   esec:'" & FormatNumber(g_ATottmr,5,True) & "'")
+  Call Writelog("Total Ruleset Function esec:'" & FormatNumber(g_FTottmr,5,True) & "'")
+  Call Writelog("Total Ruleset Rule     esec:'" & FormatNumber(g_RTottmr,5,True) & "'")
+  
+  g_ABatchtmr=g_ABatchtmr+cdbl(g_ATottmr)
+  g_FBatchtmr=g_FBatchtmr+cdbl(g_FTottmr)
+  g_RBatchtmr=g_RBatchtmr+cdbl(g_RTottmr)
+  
+  If g_ABatchtmr>g_ATottmr then Call Writelog("Total Profile Action   esec:'" & FormatNumber(g_ABatchtmr,5,True) & "'")
+  If g_FBatchtmr>g_FTottmr then Call Writelog("Total Profile Function esec:'" & FormatNumber(g_FBatchtmr,5,True) & "'")
+  If g_RBatchtmr>g_RTottmr then Call Writelog("Total Profile Rule     esec:'" & FormatNumber(g_RBatchtmr,5,True) & "'")
+  
+  g_ATottmr=cdbl(0)
+  g_FTottmr=cdbl(0)
+  g_RTottmr=cdbl(0)
+
+  Dim sValue
+  sValue = Pilot.ExportXML()
+
+  Call Writelog("OnRuleSetEnd Pilot XML:" & vbcrlf & sValue & vbcrlf)
+
+  If IsAlive(g_DCSmart) then g_DCSmart.DatacapRRCleanupTime = true
+
+
+End Sub
+
+Sub OnRuleEnd() 
+  'Only used in RRX environment
+  nDefaultRtn = nRtn_Over 
+
+  Call RestoreLocale() ' Make sure we are back to the original locale
+
+  Dim sTime
+  sTime = rr_eTimer(g_Rtmr)   
+       
+  g_Rtmr=cdbl(0)
+  g_RTottmr=g_RTottmr+sTime
+        
+  Call Writelog("rrRuleEnd OVERRIDEABLE:" & RRState.Data("bOverride"))
+  
+  If cstr(nTaskStatus)=cstr(0) then 
+     RRState.LogicResult=-1
+  End if
+  
+  
+  Set oBatch = CurrentObj    ' Find the batch node 
+  While oBatch.ObjectType > 0
+      Set oBatch = oBatch.Parent    
+  Wend
+  oBatch.DeleteVariable("nDefaultRtn")	' Delete this variable because we do not want it to persist anymore, clean up for the next run so it doesn't persist the value.
+  
+  If sTime<>cdbl(0) then Writelog("Rule esec='" & FormatNumber(sTime,5,True) & "'")
+  
+  If IsAlive(g_DCSmart) then g_DCSmart.DatacapRRCurrentDCO = Nothing
+  
+
+End Sub
+
+Sub OnRuleFailure() 
+   'Only used in RRX environment
+   On Error Resume Next
+
+   Call Writelog("OnRuleFailure...") 
+
+   'Set CurrentObj status :'CurrentObj.Status=nFail
+   Call rrFailNodes(CurrentObj)
+
+   Set oBatch = CurrentObj    ' Find the batch node - 
+   While oBatch.ObjectType > 0
+       Set oBatch = oBatch.Parent
+   Wend
+
+   rrlogicDefaultRtn = oBatch.Variable("nDefaultRtn") ' If SetIsOverriable was called in RuleRunnerLogic, this would be set.
+
+   'Set Override/Non-Override flag
+   If (nDefaultRtn = nRtn_Fail) or ("2" = rrlogicDefaultRtn) Then  ' Check the rrunner and RulerRunnerLogic methods of setting this.
+       RRState.Data("bOverride")="False"
+       Call Writelog("rrRuleFailure set OVERRIDEABLE:" & RRState.Data("bOverride") & ", rr=" & cstr(nDefaultRtn) & ", rrl=" & rrlogicDefaultRtn)
+   else
+       Call Writelog("rrRuleFailure OVERRIDEABLE:" & RRState.Data("bOverride") & ", rr=" & cstr(nDefaultRtn) & ", rrl=" & rrlogicDefaultRtn)
+   End If
+
+End Sub
+
+Sub rrFailNodes(oNode) 
+	Dim oParent
+    
+    On Error Resume Next
+    
+    'Only used in RRX environment
+    If oNode is Nothing then Exit Sub
+        
+    'Set Node to Fail status
+    If oNode.Status=nPass then 
+      oNode.Status=nFail
+      Call Writelog("rr Setting " & oNode.ID & " to Status '" & nFail & "'")
+    Else
+      Call Writelog("rr " & oNode.ID & " is not Status '" & nPass & "' ,will not set to Status '" & nFail & "'" )
+    End if
+    
+    'Check for Parent Node to set status
+    If oNode.Variable("victim")<>"yes" then
+        If oNode.ObjectType<>DCO_BATCH then
+      
+            Set oParent=oNode.Parent()
+            If oParent.Status<>nFail then 
+                Call rrFailNodes(oParent)
+            End if
+
+            Set oParent=Nothing 
+        End if
+    Else
+        Call Writelog(oNode.ID & " is Victim (Start Node)")
+    End if
+    
+
+End Sub
+
+Sub StatCounter() 
+	 Dim ObjID  
+   Dim ObjType
+   Dim PagID
+   Dim DocID
+   Dim oParent
+   Dim etime
+   
+   DocID = ""
+   PagID = ""
+   ObjID = Trim(CurrentObj.ID)
+   If len(ObjID)=0 then Exit Sub
+     
+   Select Case CurrentObj.ObjectType
+		Case 1
+      'Document
+      DocID=ObjID
+      
+		Case 2
+      'Page
+      PagID=ObjID
+
+  End Select
+
+  'Aggregate Statistic
+  If g_aggrStat= True Then
+    Set oParent=CurrentObj
+    While (DocID="" or PagID="") AND oParent.ObjectType>0
+      If oParent.ObjectType=2 then PagID=oParent.ID
+      If oParent.ObjectType=1 then DocID=oParent.ID
+      Set oParent=oParent.Parent
+    Wend
+  End if
+  
+  If PagID<>"" then
+	  If Not g_RRnPagDict.Exists(PagID) then
+      Call g_RRnPagDict.Add(PagID,1)
+    End if
+  End if
+  
+  If DocID<>"" then
+    If Not g_RRnDocDict.Exists(DocID) Then
+      Call g_RRnDocDict.Add(DocID,1)
+    End if
+  End if
+  
+  Writelog("DocCount " & g_RRnDocDict.Count & ",  PageCount " & g_RRnPagDict.Count)
+
+  RRState.Data("stats_nDocs")=cstr(g_RRnDocDict.Count)
+  RRState.Data("stats_nPages")=cstr(g_RRnPagDict.Count)
+  Set oParent = Nothing
+  
+
+End Sub
+
+Function DetermineLocale()
+		
+  ' Determine the locale that should be used.  First check hr_locale for the current object.  
+  ' If not set, the current thread locale is returned
+  ' The locale Name is returned, not the LCID
+	
+  On Error Resume Next
+
+  Dim sLocale
+  Dim sCurLocale
+  
+  'Find the locale variable, if it is set.  This value will override the current thread's locale.  Returns as 'Name'
+  sLocale = CurrentObj.Variable("hr_locale")
+  sLocale = trim(sLocale)
+	  
+  If len(sLocale)>0 and (Not sLocale="-1") then
+     Writelog("hr_locale = " & sLocale)
+     DetermineLocale = sLocale
+     Exit Function
+  End if
+  
+  sCurLocale = Trim(cStr(GetLocale()))  ' Returns as LCID
+  DetermineLocale = DCGlobalLocale.Name(sCurLocale)
+  WriteLog("Current Locale: '" & sCurLocale & " (" & DetermineLocale & ")' " & DCGlobalLocale.Description(sCurLocale))   
+  Exit Function
+
+End Function
+		
+Function RestoreLocale()
+		
+  ' Set the locale back to the original locale.
+	
+  On Error Resume Next
+
+  if (sOriginalLocaleID = "") Then
+    Exit Function
+  End if
+
+  'writelog("Restoring locale: " & sOriginalLocaleID)
+  SetLocale(sOriginalLocaleID) ' Reset to the original locale.
+  sOriginalLocaleID = ""
+
+  Exit Function
+
+End Function
+		
+Sub UpdateLocale() 
+  On Error Resume Next
+  
+  Dim sLocaleName
+  Dim sLocaleLCID
+  Dim sCurLocale
+  Dim sCurLocaleName
+    
+  sLocaleName = DetermineLocale    ' Returns Name  
+  sLocaleLCID = Cstr(DCGlobalLocale.Lcid(sLocaleName))
+  sCurLocale  = Cstr(GetLocale())  ' Returns LCID
+  sCurLocaleName = DCGlobalLocale.Name(sCurLocale)
+  
+  if (sOriginalLocaleID = "") Then
+    sOriginalLocaleID = sCurLocale
+    'writelog("Saving original locale: " & sOriginalLocaleID)
+  End if
+  
+  'Check current locale - exit if matched
+  If sCurLocale = sLocaleLCID then
+    ' WriteLog("rrunner: No change to RRS Locale '" & sCurLocale & " (" & sCurLocaleName & ")' " & DCGlobalLocale.Description(sCurLocale)) 
+    Exit Sub
+  End if
+  
+  If err.number<>0 then 
+    Writelog("Error in UpdateLocale A. Err:" & Err.Number & " Description:" & Err.Description)
+    Err.Clear
+  End if
+    
+  'Update Script to new locale
+  SetLocale(sLocaleLCID)
+  WriteLog("rrunner: Changed RRS Locale from '" & sCurLocale  & " (" & sCurLocaleName & ")' " & "' to '" & sLocaleLCID & " (" & sLocaleName & ")' " & DCGlobalLocale.Description(sLocaleLCID)) 
+  
+  If err.number<>0 then 
+    Writelog("Error in UpdateLocale B. Err:" & Err.Number & " Description:" & Err.Description)
+    WriteLog("Error after attempting: rrunner: Existing RRS Locale '" & GetLocale() & "'. Setting Locale to '" & sLocaleLCID & "'.") 
+    Err.Clear
+  Else
+    Writelog("Dynamic Locale: locale set to: '" & sLocaleName & "'")
+  End if
+  
+  'Update action variables
+  RRState.Data("hr_locale")=sLocaleName
+  If err.number<>0 then 
+    Writelog("Error in UpdateLocale C. Err:" & Err.Number & " Description:" & Err.Description)
+    Err.Clear
+  End if
+  
+  Pilot.TaskVar("hr_locale")=sLocaleName
+  If err.number<>0 then 
+    Writelog("Error in UpdateLocale D. Err:" & Err.Number & " Description:" & Err.Description)
+    Err.Clear
+  End if
+   
+  'WriteLog("Node Locale '" & GetLocale() & "'")
+
+End Sub
+
+Function QAStateData(result)
+		
+    Dim sFunct
+    Dim sAction  
+    Dim oNode
+    Dim sNode
+    
+    On error resume next
+      
+    If cstr(RRState.Data("QA"))<>"1" then Exit Function 
+  
+	  sXML = RRState.XML
+
+		If rr_xDom.LoadXML(sXML) Then
+      
+			'Get Function id
+      sNode="//func"
+			Set oNode=rr_xDom.SelectSingleNode(sNode)
+		  If IsAlive(oNode) Then
+				sFunct = oNode.GetAttribute("id")
+        RRState.Data("LastFunctionName")=sFunct
+			End If
+		   					
+      'Get Action id
+      sNode="//func/a"
+			Set oNode=rr_xDom.SelectSingleNode(sNode)
+		  If IsAlive(oNode) Then
+				sAction = oNode.GetAttribute("id")
+        RRState.Data("LastActionName")=sAction
+			End If                                                 
+                                
+      RRState.Data("LastActionResult")=result                        
+                                
+      If cstr(RRState.Data("QAS"))="1" then
+        RRState.Data("QAStackLog")=RRState.Data("QAStackLog") & sAction & " --> " & result & vbcrlf
+      End if
+                                
+		Else
+			Writelog("QAStateData failed to load XML")
+		End If
+
+		Set oNode=Nothing
+    
+    writelog(RRState.xml)
+    
+
+End Function
+		
+Sub Log(sMessage) 
+	bOut = Writelog(sMessage)
+
+End Sub
+
+Sub SetEnableUI(bOnOff) 
+	bEnableUI = bOnOff
+
+End Sub
+
+Function dummy(returnWhat)
+		
+		dummy = returnWhat
+		
+End Function
+		
+Function CMyLng(sValue)
+		
+	CMylng=0
+	If Trim(CStr(sValue))="" Then Exit Function
+	If Not IsNumeric(sValue) Then Exit Function
+	CMyLng = CLng(sValue)
+
+End Function
+		
+Sub SetDefID(defaultID) 
+	nDefID = defaultID
+
+End Sub
+
+Sub SetRR_ID(defaultID,oPage,oCCO) 
+	nDefID = defaultID
+	If IsObject(oPage) Then Set oCurPage=oPage
+	If IsObject(oCCO) Then Set CCO=oCCO
+
+End Sub
+
+Function bPreserve()
+		
+	bPreserve = True
+	If dictPreserve.Exists(g_nRuleType) Then
+		bPreserve = CBool(dictPreserve(g_nRuleType))
+		'Writelog("Preserve Status :" & CStr(bPreserve))
+	End If	
+
+End Function
+		
+Function GetTaskStatus()
+		
+	If bAbort = True Then nTaskStatus = RetAbort
+	GetTaskStatus = nTaskStatus
+
+End Function
+		
+Function GetAbort()
+		
+	GetAbort = False
+	If bAbort = True Then GetAbort = True
+	If nTaskStatus = RetAbort Then GetAbort= True
+
+End Function
+		
+Function SetCurRule(nIndex)
+		
+	nCurRule = nIndex	
+
+End Function
+		
+Function GetOverride()
+		
+	GetOverride=bOverride
+
+End Function
+		
+Function GetReturnStatus()
+		
+	GetReturnStatus=nReturnStatus
+
+End Function
+		
+Sub InitReturnStatus(Stat) 
+	nReturnStatus = Stat
+	bOverride=True
+
+End Sub
+
+Sub SetRuleStatistics(bEnabled) 
+	g_bRuleStats = bEnabled
+
+End Sub
+
+Function GetDocCount()
+		
+	GetDocCount = g_RRnDocDict.Count 
+
+End Function
+		
+Function GetPagCount()
+		
+	GetPagCount = g_RRnPagDict.Count
+
+End Function
+		
+Function GetDataArray(sSQL)
+		
+	Dim arRes
+	Dim rs
+		
+  On Error Resume Next  
+    
+  Const adOpenStatic = 3   
+  Const adUseClient = 3
+  Const adLockOptimistic = 3 
+  Const adLockBatchOptimistic = 4 
+    
+		GetDataArray=arRes
+	
+		If InitFPDB=False Then Exit Function
+	  	
+    'Remove leading & trailing spaces
+    sSQL=Trim(sSQL)
+  
+    If Instr(Ucase(conn.Provider),ucase("OraOLEDB"))>0 or Instr(Ucase(conn.Provider),Ucase("MSDAORA"))>0 Then
+       'Remove "invalid" character semicolon if last character for Oracle DB's
+       If instrrev(sSQL,";")=len(sSQL) Then
+            sSQL=Trim(left(sSQL,len(sSQL)-1))
+       End If
+    End If	
+
+		If InStr(sSQL, "SELECT")=1 Then
+      Set rs = CreateObject("ADODB.RecordSet")
+      rs.CursorLocation = adUseClient
+      rs.Open sSQL, conn, adOpenStatic, adLockBatchOptimistic
+      Set rs.ActiveConnection = Nothing
+		Else
+      conn.Execute(sSQL)
+      Exit Function
+		End If
+		
+		If DBErrTrap(conn, "GetDataArray1") Then
+			If IsAlive(rs) then rs.Close()
+			Set rs=Nothing
+			Exit Function
+		End If
+
+		nCount=0
+
+		If rs.EOF Then
+			'Writelog(Space(4) & "No rows selected.")
+			rs.Close()
+			Set rs=Nothing
+			Exit Function
+		End If
+	
+		nCount=0
+		
+		rs.MoveFirst()
+
+		While Not rs.EOF
+			nCount=nCount+1
+			rs.MoveNext()
+		Wend
+
+		rs.MoveFirst
+		nCount=nCount-1
+		nFields=rs.Fields.Count-1
+		ReDim arRes(nCount, nFields)
+
+		For i=0 To nCount
+			For j=0 To nFields
+				arRes(i,j)=rs.Fields(j).Value
+				If DBErrTrap(conn,"GetDataArray2") Then
+					rs.Close()
+					Set rs=Nothing 
+					Exit Function
+				End If
+			Next
+			rs.MoveNext
+		Next
+
+		rs.Close()
+		Set rs=Nothing
+		
+	GetDataArray=arRes
+	
+
+End Function
+		
+Function ModifySQLByDBType(oConnect,byval sSQL)
+		
+		
+	On Error Resume Next
+	Dim provider
+	provider = UCase(oConnect.Provider)
+	
+    'Remove leading & trailing spaces
+    sSQL=Trim(sSQL)
+  
+    If Instr(provider,"ORAOLEDB")>0 or Instr(provider,"MSDAORA")>0 Then
+       'For Oracle DBs remove 'invalid' character (semicolon) if last character
+       If instrrev(sSQL,";")=len(sSQL) Then
+            sSQL=Trim(left(sSQL,len(sSQL)-1))
+       End If
+    End If
+    
+    ModifySQLByDBType = sSQL
+	
+
+End Function
+		
+Function Init(sDSN,bInteractive,bDeb,sVar)
+		
+	Dim sConnStr
+	Init=False
+	bInter=bInteractive
+	bDebug=bDeb	
+			
+	Init=False
+	
+	On Error Resume Next
+	
+  If Not gbRRX then
+	Call Writelog("rrunner.dcs " & rr_Version)
+	End if
+	
+	nTaskStatus = RetFinished
+	sVarName=sVar
+	Set conn=CreateObject("ADODB.Connection")
+	
+  g_sFPDBDSN=sDSN
+  
+	If Not gbRRX then
+
+    If InitFPDB=False Then
+        Call Writelog("Init Connection Error:" & Err.Description)
+        Writelog("No fingerprint/RulesDB connection Established. ABORTING!!")
+        nTaskStatus = RetAbort
+	      Err.Clear
+      	Exit Function
+	  End If
+  
+  End if 
+	  
+  If Not IsAlive(CCOCreator) then 
+    Set CCOCreator=CreateObject("CCO._CCOCreator")
+  End if
+  
+	If IsNull(CCOCreator) Or TrapError("CCO Creator Failure") Then
+		nTaskStatus = RetAbort
+		Writelog("CCOCreator Failure in INIT function")	
+		Exit Function
+	End If
+	
+  CCOCreator.MaxWaitTime = 5000	' wait up to 5 seconds for CCO to exist
+  
+  'Initialize Statistic Vars
+	g_RRnDocDict.RemoveAll
+	g_RRnPagDict.RemoveAll
+  g_aggrStat=True
+  
+	Set dictTmp=CreateObject("Scripting.Dictionary")
+  If IsAlive(dictTmp) then 
+     WriteLog("dictTmp Object created")
+  Else
+     WriteLog("Allocation Error: dictTmp Object missing")
+  End if
+
+	Set dictExists=CreateObject("Scripting.Dictionary")
+  If IsAlive(dictExists) then 
+     WriteLog("dictExists Object created")
+  Else
+     WriteLog("Allocation Error: dictExists Object missing")
+  End if
+  
+	Set dictPreserve=CreateObject("Scripting.Dictionary")
+  If IsAlive(dictPreserve) then 
+     WriteLog("dictPreserve Object created")
+  Else
+     WriteLog("Allocation Error: dictPreserve Object missing")
+  End if
+	
+	'Progress Counter
+	g_InitObj = ""
+	g_LogInset = 0
+
+	If IsObject(dictInitGlobal) Then 
+		Dim fCall, aFCall
+		aFcall = dictInitGlobal.Keys
+		For Each fCall in aFCall
+			Dim sCParam
+			sCParam = dictInitGlobal.Item(FCall)
+			Dim sEval
+			sEval = CStr(fCall)' & "(" & sCParam & ")") 
+		
+			Dim ehwhat
+			ehwhat = CBool(Eval(sEval))
+				
+		Next
+		Call dictInitGlobal.RemoveAll	
+	Else
+		Call Writelog("No dictInitGlobal Object Found")
+	End If
+	Init=True
+	
+
+End Function
+		
+Function InitFPDB()
+		
+  ' returns False if a connection could not be established. 
+  ' returns True if connection is already open or opening the connection was successful
+
+  On Error Resume Next
+  
+  Dim sConnstr
+  
+  InitFPDB = True
+ 
+  If Not IsAlive(conn) then
+    Writelog("connection object failure")
+    InitFPDB=False
+    Exit function
+  End if
+ 
+  If conn.State=1 then Exit Function
+    
+  'Attempt fips decryption 
+  bRes = RRState.SecureCallAA("-90973811611088828","5266491093994885797",g_sFPDBDSN,sConnstr)   
+  If bRes=False Then Writelog("Value not Decrypted.")
+        
+  Call Writelog("Opening Fingerprint DB")
+  conn.Open(FormatADOConn(sConnstr))
+	  
+  If conn.State<>1 Or TrapError("Open Connection") Then 
+    InitFPDB=False
+    Writelog("WARNING: Fingerprint Database connection could not be established!")
+  Else
+    Writelog("Fingerprint/Rules Database connection established.")
+	End If
+    
+  
+End Function
+		
+Function GlobalInit()
+		
+    Dim loP
+    Dim loCurrObj
+    Dim strDSN
+    Dim sWrkKey
+    Dim sAppKey
+    Dim sGenKey
+    Dim slocale
+    
+    strDSN=""
+  
+    On Error Resume Next
+  
+    'Check for locale setting in DCO then AppSvc
+    Call AppSvc_getlocale()     
+	      
+    set loP = CurrentObj
+
+    'Check for AppSvc Fingerprint connection string value
+    If IsAlive(RRState.Application) then
+	    Writelog("Retrieving Fingerprint DB Connection string from Application Service")
+			
+		  'look for workflow name 
+		  sWrkKey="*/dco_" & RRState.WorkflowName & "/fingerprintconn:cs"
+		  Writelog("Looking for AppSvc Workflow Name key: '" & sWrkKey & "'")
+		  Call RRState.Application.vbGetKeyValue(sWrkKey,0,False,strDSN)
+		  If len(strDSN)>0 then
+		      Writelog("AppSvc Workflow fingerprintconn found.")
+              GlobalInit = Init(strDSN, gbInter, gbDebug, "TemplateID")
+              Exit Function
+          Else
+              Writelog("No AppSvc Workflow Name key found.")
+          End If
+		
+		  'look for app name 
+		  sAppKey="*/dco_" & RRState.ApplicationName & "/fingerprintconn:cs"
+		  Writelog("Looking for AppSvc Application Name key: '" & sAppKey & "'")
+		  Call RRState.Application.vbGetKeyValue(sAppKey,0,False,strDSN)
+		  If len(strDSN)>0 then
+			  Writelog("AppSvc Application name fingerprintconn.")
+              GlobalInit = Init(strDSN, gbInter, gbDebug, "TemplateID")
+              Exit Function
+          Else
+              Writelog("No AppSvc Application Name key found.")
+          End If
+		
+		  'look for general name
+		  sGenKey="*/fingerprintconn:cs"
+		  Writelog("Looking for AppSvc General key: '" & sGenKey & "'")
+	      Call RRState.Application.vbGetKeyValue(sGenKey,0,False,strDSN)
+	      If len(strDSN)>0 then
+              GlobalInit = Init(strDSN, gbInter, gbDebug, "TemplateID")
+              Exit Function
+          Else
+              Writelog("No AppSvc General key found.")
+          End If
+           
+	End if
+
+	While IsObject(loP) And Not(loP Is Nothing)
+		set loCurrObj = Nothing
+		set loCurrObj = loP
+		set loP = Nothing
+		set loP = loCurrObj.Parent()
+	Wend
+
+	If IsObject(loCurrObj) And Not(loCurrObj Is Nothing) then
+		strDSN = loCurrObj.Variable("FingerprintConn")
+        If len(trim(strDSN))>0 then
+    		    WriteLog("Fingerprint Database Connection String Found.")
+        Else
+            Writelog("No Fingerprint Database Connection String was found in the Setup DCO.")
+	    End if
+        GlobalInit = Init(strDSN, gbInter, gbDebug, "TemplateID")
+	End if
+
+
+End Function
+		
+Function AppSvc_getlocale()
+		
+
+     On Error Resume Next
+
+     Dim slocale
+
+    'Check for locale setting in DCO then AppSvc
+    slocale = DCO.Variable("hr_locale")
+    
+    If slocale = "" or slocale="-1" and IsAlive(RRState.Application) then
+     
+      Writelog("Retrieving locale setting from Application Service")
+			
+		  'look for workflow name 
+		  sWrkKey="*/dco_" & RRState.WorkflowName & "/locale"
+		  Writelog("Looking for AppSvc Workflow Name key: '" & sWrkKey & "'")
+		  Call RRState.Application.vbGetKeyValue(sWrkKey,0,False,slocale)
+		  If len(slocale)>0 then 
+        DCO.Variable("hr_locale")=slocale
+        Writelog("Batch locale set to '" & slocale & "' from Application Service.") 
+        Exit Function
+		  End if
+      slocale=""
+      
+		  'look for app name 
+		  sAppKey="*/dco_" & RRState.ApplicationName & "/locale"
+		  Writelog("Looking for AppSvc Application Name key: '" & sAppKey & "'")
+		  Call RRState.Application.vbGetKeyValue(sAppKey,0,False,slocale)
+		  If len(slocale)>0 then 
+        DCO.Variable("hr_locale")=slocale
+        Writelog("Batch locale set to '" & slocale & "' from Application Service.") 
+        Exit Function
+		  End if
+		  slocale=""
+      
+		  'look for general name
+		  sGenKey="*/locale"
+		  Writelog("Looking for AppSvc General key: '" & sGenKey & "'")
+	    Call RRState.Application.vbGetKeyValue(sGenKey,0,False,slocale)
+	    If len(slocale)>0 then 
+        DCO.Variable("hr_locale")=slocale
+        Writelog("Batch locale set to '" & slocale & "' from Application Service.") 
+        Exit Function
+		  End if          
+                  
+      Writelog("No locale setting found in the Application Service.") 
+
+  End if
+    
+  
+End Function
+		GlobalInit()
+Sub InsertFailStats(nTemp,nAction,sBatch,sImage,sResult) 
+	Dim sSQL
+
+	If Not g_bRuleStats = True Then Exit Sub
+
+	If sBatch="" Or sImage="" Or sResult="" Then
+		Writelog("Unable to insert statistic. Some fields empty.")
+		Exit Sub
+	End If
+	
+	On Error Resume Next
+
+  If InitFPDB=False then Exit Sub
+
+	If CLng(nTemp) < CLng(555) Then nTemp = CLng(555)	
+
+	sSQL="INSERT INTO RULESTATS (ST_TEMPLATEID, ST_ACTIONID, ST_BATCHID, ST_IMAGE, ST_RESULT) VALUES (" &_
+			CStr(nTemp) & ", " & CStr(nAction) & ", '" & sBatch & "', '" & sImage & "', '" & sResult & "');"
+	
+	Writelog(Space(5) & "Executing : " & sSQL)
+	conn.Execute(sSQL)
+	TrapError("InsertFailStats")
+
+End Sub
+
+Sub WriteDataFile(DcoObj) 
+	Dim sDataFile
+	Dim sExt
+	Dim nTime
+	nTime=timer	
+		
+	On Error Resume Next	
+		
+	sDataFile = ""
+	exit sub
+	If DcoObj.ObjectType=3 and DcoObj.Variable("DATAFILE")<>"" Then
+		  If DcoObj.Write(DcoObj.Variable("DATAFILE")) = False then
+        Writelog("Unable to Write file:'" & DcoObj.Variable("DATAFILE") & "' for object '" & DcoObj.ID & "'. ABORTING TASK. ")
+        nTaskStatus = RetAbort
+	    End if
+  End if 
+	
+	If DcoObj.ObjectType <> 2 Then Exit Sub
+	If DcoObj.NumOfChildren=0 Then Exit Sub
+	
+	sDataFile = DcoObj.Variable("DATAFILE")
+	
+	If sDataFile = "" Then
+		sDataFile = DcoObj.Variable("IMAGEFILE")	
+		sDataFile =	left(sDataFile,len(sDataFile)-3) & "xml"
+		DcoObj.Variable("DATAFILE")=sDataFile	
+	End if  
+	  
+	If DcoObj.Write(sDataFile)=False Then
+		 Writelog("Unable to Write file:'" & sDataFile & "' for object '" & DcoObj.ID & "'. ABORTING TASK ")
+     nTaskStatus = RetAbort
+	End if
+	Writelog("Write File eTime:" & cstr(rr_eTimer(ntime)))
+
+End Sub
+
+Function Quit()
+		
+	
+  bReturn=true
+    
+	If bReturn=False then 
+		Call AbortBatch()
+		RRState.Data("nTaskStatus")=RetAbort
+		Call Writelog("ERROR Writing '" & Pilot.Dcofile & "' Data files. Aborting.")
+		Call Writelog("DCO Last Error:'" & DCO.GetLastError() & "'.")
+	End if
+
+  On Error Resume Next
+  
+  If IsAlive(conn)Then
+		If conn.State=1 Then conn.Close()
+	End If
+  Set conn=Nothing
+  
+  If IsAlive(oConn)Then
+		If oConn.State=1 Then oConn.Close()
+	End If
+  Set oConn=Nothing
+  
+  If IsAlive(g_DCSmart) then g_DCSmart.DatacapRRCleanupTime = true
+  Set g_DCSmart = Nothing
+  
+	Set CCOCreator=Nothing
+  Set CCO=Nothing
+  
+  Call dictExits.RemoveAll()
+	Set dictExists=Nothing
+  
+  Call dictTmp.RemoveAll()
+	Set dictTmp=Nothing
+	  
+  Call dictPreserve.RemoveAll()
+  Set dictPreserve=Nothing
+    
+  Call dictInitGlobal.RemoveAll()
+  Set dictInitGlobal=Nothing
+  
+  Call g_RRnDocDict.RemoveAll()
+  Set g_RRnDocDict=Nothing
+  
+  Call dictDCOGlobal.RemoveAll()
+  Set dictDCOGlobal=Nothing
+  
+  Set g_DCSmart = Nothing
+
+  Set DCGlobalStrings = Nothing
+  Set DCGlobalDates = Nothing
+  Set DCGlobalCurrency = Nothing
+  Set DCGlobalLocale = Nothing
+  Set DCGlobalBidi = Nothing
+  
+  
+  Set FileMgr = Nothing
+  Set ImageCtrl = Nothing
+  Set oConn = Nothing
+  Set oFsys = Nothing
+  Set rr_xDom = Nothing  
+
+  'Clear errors from cleanup
+  Err.Clear
+  
+
+End Function
+		
+Function TrapError(sFrom)
+		
+	TrapError=False
+	
+	If Err.number=0 Then
+		Exit Function
+	End If
+
+	sMessage="*** Error #'" & CStr(Err.Number) & "' (" & Err.Description & ") in sub/function:" & sFrom 
+	Call Writelog(sMessage)
+	
+	Err.Clear
+	TrapError=True
+	
+
+
+End Function
+		
+Function DBErrTrap(ConnectionObj,sDescription)
+		
+	Dim sStr
+	Dim oErr
+	Dim sNumString	
+
+	DBErrTrap = False
+	
+	If ConnectionObj.Errors.Count > 0 Then
+		sStr = vbCrLf
+		sNumString = ""
+
+		For Each oErr In ConnectionObj.Errors
+		
+      Select Case cstr(oErr.Number)
+      
+        Case "0","265929","-2147217887" 
+			
+				Call WriteLog("DB Connection WARNING! Err number: " & oErr.Number & "  Desc: " & oErr.Description)
+				ConnectionObj.Errors.Clear
+				DBErrTrap = False
+				Exit Function
+			  
+        Case Else	
+				  sNumString = sNumString & oErr.Number & Space(1)
+        
+			End Select
+		
+			Call WriteLog("*------------------- DATABASE ERROR ------------------")			
+			Call WriteLog("* " & sDescription)
+			Call WriteLog("* Description: " & oErr.Description)
+	 		Call WriteLog("*  Numeric ID: " & CStr(oErr.Number)) 
+			Call WriteLog("* Data Source: " & oErr.Source)
+	   		Call WriteLog("*-------------------- DATABASE ERROR -----------------")
+   		 	
+	 	Next 'Err  	
+	 	  		
+ 		DBErrTrap = True
+ 		ConnectionObj.Errors.Clear
+   		If ConnectionObj.Errors.Count <> 0 Then Call Writelog("Error Obj Not Cleared") 
+		sDescription = sNumString
+ 	End If	
+
+End Function
+		
+'================================== Action Utility Functions =================
+
+Function WriteLog(byval txtmsg)
+		
+
+		If IsAlive(DCLogX) Then	Call DCLogX.Write(Space(1) & txtmsg)
+
+
+End Function
+		
+Function DeBugLog(byval txtmsg)
+		
+
+	If Not bDebug Then Exit Function
+
+		If IsAlive(DCLogX) Then	Call DCLogX.Write(Space(1) & txtmsg)
+
+
+End Function
+		
+Function Convert4Xml(sTextMsg)
+		
+	Convert4Xml = Replace(sTextMsg    ,"&", "&amp;") 
+	Convert4Xml = Replace(Convert4Xml ,"<", "&lt;") 
+	Convert4Xml = Replace(Convert4Xml ,">", "&gt;") 	 
+	Convert4Xml = Replace(Convert4Xml ,"'", "&apos;")
+	Convert4Xml = Replace(Convert4Xml ,Chrw(34),"&quot;")
+
+End Function
+		
+Function DCOMessage(txtmsg)
+		
+
+	On Error Resume next
+		
+	If Not CurrentObj.AddVariable("MESSAGE",txtmsg) Then 
+		CurrentObj.Variable("MESSAGE") = txtmsg
+	End If
+
+
+End Function
+		
+Function lenT(value)
+		
+      lenT=-1
+      
+      if IsAlive(DCGlobalStrings) then
+        LenT=clng(DCGlobalStrings.LengthInTextElements(value))
+      End if
+      
+      
+End Function
+		
+Function InstrT(searchin,searchfor,startindex,compareoption)
+		
+      InstrT=-1 
+      
+      startindex=cint(startindex)
+      compareoption=cint(compareoption)
+      
+      if IsAlive(DCGlobalStrings) then
+        InstrT=clng(DCGlobalStrings.InstrTextElements(searchin, searchfor, startindex, compareoption))
+      End if
+      
+      
+End Function
+		
+Function rr_EscapeRegExProtectedChars(FindStr)
+		
+        
+  'Check for and protect against RegEx reserved characters 
+       
+  On Error Resume Next
+
+  FindStr = Replace(FindStr,"*","\*")
+  FindStr = Replace(FindStr,"\","\\")
+  FindStr = Replace(FindStr,"^","\^")
+  FindStr = Replace(FindStr,"$","\$")
+  FindStr = Replace(FindStr,"+","\+")
+  FindStr = Replace(FindStr,"?","\?")
+  FindStr = Replace(FindStr,".","\.")
+  FindStr = Replace(FindStr,"[","\[")
+  FindStr = Replace(FindStr,"]","\]")
+  FindStr = Replace(FindStr,"(","\(")
+  FindStr = Replace(FindStr,")","\)")
+  FindStr = Replace(FindStr,"|","\|")
+  FindStr = Replace(FindStr,"{","\{")
+  FindStr = Replace(FindStr,"}","\}")
+  FindStr = Replace(FindStr,",","\,")
+  FindStr = Replace(FindStr,"-","\-")
+
+  'pm_removeprotectedchars=FindStr
+  rr_EscapeRegExProtectedChars = FindStr
+
+
+End Function
+		
+Function MessageID(Message,Identifier)
+		
+
+	On Error Resume next
+		
+	CurrentObj.Variable("MESSAGE") = Message
+	
+  Identifier = Trim(Identifier)
+  If len(Identifier)>0 then
+  		  CurrentObj.Variable("MessageID") = Identifier
+	End if
+  
+
+End Function
+		
+Function MessageIDParameter(Value,ValueType,Index)
+		
+
+	On Error Resume next
+	
+  MessageIDParameter=True
+  
+  Dim sParamName
+  Dim sParamType
+  sParamText = "MessageParamText_" & cstr(Index) 'MessageParamText_0'
+  sParamType = "MessageParamType_" & cstr(Index) 'MessageParamType_0'
+  
+  Dim ResolvedValue
+  Dim RX
+  Dim sMessage
+  Dim bTypes
+  bTypes=False
+  
+  'permitted 'Type' values:
+  Dim Types
+  Types = Array("job", "task", "shortcut", "field", "workflow", "appname", "pagetype", "doctype", "text", "variable")    
+  
+  'check Type is a an allowed value 
+  For t = 0 to (ubound(Types)-1)
+    If lcase(ValueType)=Types(t) Then
+      bTypes=True
+      Exit For
+    End if
+  Next 't
+  
+  If (BTypes=False) Then
+    Writelog("Type '" & ValueType & "' is not a member of the allowed types:'" & Join(Types,",") & ".")
+    Exit Function
+  End if
+  
+  'check for duplicate Parameter index     
+  If CurrentObj.FindVariable(sParamText)>=0 or CurrentObj.FindVariable(sParamType)>=0 Then
+    Writelog("Reusing Parameter index. Existing value '" & CurrentObj.Variable(sParamText) & "' and type '" &  CurrentObj.Variable(sParamType) & "' will be replaced.")
+  end if
+  
+  'save MessageParamType variable & value to DCO node
+  CurrentObj.Variable(sParamText) = Value
+  CurrentObj.Variable(sParamType) = ValueType
+       
+  'resolve values as allowed; eg SmartParameter
+  Writelog("Resolving Value '" & Value & "'...")
+  ResolvedValue = MetaWord(Value)
+  If Len(ResolvedValue) = 0 Then ResolvedValue = Value 
+  
+  'Perform Message Substitution
+  sMessage = CurrentObj.Variable("MESSAGE")
+  If Len(sMessage)=0 then
+    Writelog("The 'MESSAGE' variable is empty. Exiting Action.")
+    Exit Function
+  Else
+    Writelog("Current 'MESSAGE' value:'" & sMessage & "'.")
+  End if
+  
+  Dim sPattern
+  sPattern = "{" & cstr(Index) & "}"
+  
+  writelog("pattern:'" &  sPattern & "'.")
+  'sResult = DCGlobalStrings.RemoveReplace(sMessage,cint(nStartIndex-1),sInsertString,cint(nMaxMatches), CurrentObj)
+	sNewMessage = Replace(sMessage, sPattern, ResolvedValue)
+  writelog("replace:" & sNewMessage)  
+    
+  If Trim(sMessage) <> Trim(sNewMessage) then
+    sMessage = sNewMessage
+    Writelog("Substitution successful. New 'MESSAGE' value: '" & sMessage & "'.")
+  Else
+    Writelog("A Substitution was not successfull. Please check your settings if a substitution was supposed to occur.")
+	End if
+  
+  'save MessageParamText variable & value to DCO node
+  CurrentObj.Variable("MESSAGE") = sMessage
+  CurrentObj.Variable(sParamText) = ResolvedValue
+  
+
+End Function
+		
+Function GetFieldValue()
+		
+
+	If Not IsObject(CurrentObj) Or CurrentObj Is Nothing Then Exit Function
+	
+	If CurrentObj.ObjectType<3 Then 
+		GetFieldValue = CurrentObj.Variable("Text")
+	Else
+		GetFieldValue = CurrentObj.Text
+	End if
+
+
+End Function
+		
+Function GetFieldConf()
+		
+
+	If Not IsObject(CurrentObj) Or CurrentObj Is Nothing Then Exit Function
+		 
+	GetFieldConf = CurrentObj.ConfidenceString
+	
+
+End Function
+		
+Function SetFieldValue(NewValue)
+		
+
+		Exit Function
+	
+
+End Function
+		
+Function GetProjectName()
+		
+	If strProjectName = "" Then
+		strPath = Trim(Pilot.ProjectPath)
+		strExt = FileMgr.GetExtensionName(strPath)
+		If strPath <> "" Then
+			strProjectName = Left(strPath,Len(strPath)-Len(strExt)-1)
+		End If
+	End If
+	GetProjectName = strProjectName
+
+End Function
+		
+Sub ErrorHandler(DescString) 
+	Dim eStr
+
+	If Err.Number <> 0 Then		
+		Writelog(" ")
+		Writelog(String(60,"*"))
+		Writelog("*       ERROR! --> '" & DescString & "' ")
+		Writelog("* DESCRIPTION: " & Err.Description)
+		Writelog("*  NUMERIC ID: " & CStr(Err.Number))
+		Writelog("*      SOURCE: " & Err.Source)
+		Writelog(String(60,"*"))
+		Writelog(" ")
+		
+		If g_bAbortOnError=True Then nTaskStatus = RetAbort
+		
+		Err.Clear
+	End If
+
+
+End Sub
+
+Function ShowRect(leftX,topY,rightX,bottomY)
+		
+	If nRectIndex>-1 Then
+		Call ImageCtrl.EraseRect(nRectIndex)
+	End If
+
+	nRectIndex = ImageCtrl.DrawRect(leftX-2,topY-2,rightX+2,bottomY+2,3,RGB(0,0,255),RGB(255,0,0),"")
+
+	'refreshes the image
+	ImageCtrl.Zoom = ImageCtrl.Zoom 
+	
+	ShowRect = True
+
+End Function
+		
+Function PreserveStatus(bInter,bDebug,bOFF)
+		
+	nPreserve=bOFF
+
+  	If Not dictPreserve.Exists(g_nRuleType) Then 
+  		Call dictPreserve.Add(g_nRuleType,nPreserve)
+  	Else
+  		dictPreserve(g_nRuleType) = nPreserve
+  	End If
+  
+	PreserveStatus = nPreserve
+
+End Function
+		
+Function ObjectCount(Obj,ObjType)
+		
+	Dim nCount
+	Dim I
+	Dim sObj
+	
+	ObjectCount=cint(0)
+	
+	Set sObj=Obj
+	If sObj.ObjectType = ObjType Then
+		ObjectCount=cint(1)
+	Else
+		If sObj.ObjectType < ObjType Then
+			nCount=sObj.NumOfChildren
+			For I=0 To nCount-1
+				ObjectCount=ObjectCount + Cint(ObjectCount(sObj.GetChild(I),ObjType))
+			Next
+		End If
+	End If
+	Set sObj = Nothing
+
+End Function
+		
+Function IsAlive(vbObj)
+		
+	IsAlive=False
+	If IsEmpty(vbObj) Then
+		Exit Function
+	End If
+	If IsObject(vbObj)=False Then
+		Exit Function
+	End If
+	If vbObj Is Nothing Then
+		Exit Function
+	End If
+	IsAlive=True
+
+End Function
+		
+Function ProcessChildrenFirst(bInter,bDebug)
+		
+	bGoUp = True
+	ProcessChildrenFirst = True
+
+End Function
+		
+Function FormatADOConn(strParam)
+		
+	Dim sConnStr
+	Dim sProvider
+	Dim sDSN
+	Dim sCatalog
+	Dim sUID
+	Dim sPWD
+	Dim sDBNTA
+	Dim aConnParse
+	Dim i
+	Dim RX
+	Dim sTEST
+
+	On Error Resume Next
+	
+	FormatADOConn = strParam
+				
+	'Find Connection Sections via Keywords	
+	Set RX = CreateObject("VBScript.RegExp")
+	RX.IgnoreCase = True
+	RX.Global = True
+	
+	aConnParse = Split(strParam,";")
+	
+	For i = 1 to (ubound(aConnParse)+1)
+		  RX.Pattern=" *PROVIDER *="
+		  If RX.Test(aConnParse(i-1)) then
+			  sProvider = Trim(RX.replace(aConnParse(i-1),""))
+		  End if
+
+      RX.Pattern = " *CATALOG *="
+		  If RX.Test(aConnParse(i-1)) then
+			  sCatalog = trim(RX.replace(aConnParse(i-1),""))
+		  End if
+
+      RX.Pattern = " *DBNTA *="
+		  If RX.Test(aConnParse(i-1)) then
+			  sDBNTA = trim(RX.replace(aConnParse(i-1),""))
+		  End if
+
+		  RX.Pattern = " *DSN *="
+		  If rx.Test(aConnParse(i-1)) then
+			  sDSN = trim(RX.replace(aConnParse(i-1),""))
+		  End if
+              
+      RX.Pattern = " *UID *="
+		  If rx.Test(aConnParse(i-1)) then
+			  sUID = trim(RX.replace(aConnParse(i-1),""))
+		  End if
+         
+      RX.Pattern = " *PWD *="
+		  If rx.Test(aConnParse(i-1)) then
+			  sPWD = trim(RX.replace(aConnParse(i-1),""))
+		  End if
+  		
+      RX.Pattern = " *SQLTEST *="
+      If rx.Test(aConnParse(i-1)) then
+		    sTEST = RX.replace(aConnParse(i-1),"")
+		  End if
+	Next 'i
+
+    'Remove SQLTEST entry	
+    RX.Pattern = " *SQLTEST *=" & sTEST & ";"
+    strParam = trim(RX.replace(strParam,""))
+       
+    Set RX = Nothing
+
+    If Ucase(Trim(sTEST))="YES" or Ucase(Trim(sTEST))="1" then
+        writelog("Passthrough FormatADOConn string:'" & strParam & "' ")    
+	      FormatADOConn = strParam  
+        Exit Function
+    End if
+
+	Select Case Ucase(sProvider)
+		Case "MSSQL"
+			sConnStr = "Provider=SQLOLEDB;Server=" & sDSN & ";Database=" & sCatalog & ";"
+			If Ucase(sDBNTA) = "YES" Then
+				sConnStr = sConnStr & "Integrated Security=sspi;"
+				sPWD=""
+				sUID=""
+            Else
+                sConnStr = sConnStr & "UID=" & sUID & ";PWD=" & sPWD & ";"
+			End if
+		Case "MSACCESS"
+			sConnStr = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & sDSN & ";"
+		Case "ORACLE"
+			sConnStr = "Provider=OraOLEDB.Oracle;Data Source=" & sDSN & ";" 
+			sConnStr = sConnStr & "User Id=" & sUID & ";"
+			sConnStr = sConnStr & "Password=" & sPWD & ";"
+			
+		Case "MSORACLE"
+			sConnStr = "Provider=MSDAORA;Data Source=" & sDSN & ";"
+			sConnStr = sConnStr & "User Id=" & sUID & ";"
+			sConnStr = sConnStr & "Password=" & sPWD & ";"
+
+		Case "ODBCMSSQL","ODBCMSACCESS","ODBCORACLE","ODBCMSORACLE"
+			sConnStr = "DSN=" & sDSN & ";UID=" & sUID & ";PWD=" & sPWD & ";"
+		Case ""
+			If len(sDSN)=0 and ubound(aConnParse)=0 then sConnStr = "DSN=" & strParam & ";"
+		Case Else
+			'Other provider string!
+			sConnStr = strParam
+	End Select
+	
+	FormatADOConn = sConnstr
+
+
+End Function
+		
+Function FormatTMConn(strParam)
+		
+	Dim sConnStr
+	Dim sProvider
+	Dim sDSN
+	Dim sDataSource
+	Dim sDatabase
+	Dim sCatalog
+	Dim sUID
+	Dim sPWD
+	Dim sDBNTA
+	Dim aConnParse
+	Dim i
+	Dim RX
+
+
+	On Error Resume Next
+
+	FormatTMConn = strParam
+				
+	'Find Connection Sections via Keywords	
+	Set RX = CreateObject("VBScript.RegExp")
+	RX.IgnoreCase = True
+	RX.Global = True
+	
+	strParam = strParam & ";"
+	aConnParse = Split(strParam,";")
+	
+	For i = 1 to ubound(aConnParse)
+  
+		RX.Pattern = " *DATASOURCE *="
+    If RX.Test(aConnParse(i-1)) then  
+			sDataSource = trim(RX.replace(aConnParse(i-1),""))		
+		End if	
+
+		RX.Pattern = " *DATABASE *="
+    If RX.Test(aConnParse(i-1)) then
+      sDatabase = trim(RX.replace(aConnParse(i-1),""))
+		End if
+    
+		RX.Pattern = " *PROVIDER *="
+    If RX.Test(aConnParse(i-1)) then  
+			sProvider = Trim(RX.replace(aConnParse(i-1),""))
+		End if
+		
+		RX.Pattern = " *CATALOG *="
+    If RX.Test(aConnParse(i-1)) then  
+			sCatalog = trim(RX.replace(aConnParse(i-1),""))
+		End if
+    
+		RX.Pattern = " *DBNTA *="
+    If RX.Test(aConnParse(i-1)) then  
+			sDBNTA = trim(RX.replace(aConnParse(i-1),""))
+		End if
+    
+		RX.Pattern = " *DSN *="
+    If RX.Test(aConnParse(i-1)) then  
+			sDSN = trim(RX.replace(aConnParse(i-1),""))
+		End if
+    
+		RX.Pattern = " *UID *="
+    If RX.Test(aConnParse(i-1)) then  
+			sUID = trim(RX.replace(aConnParse(i-1),""))
+		End if
+    
+		RX.Pattern = " *PWD *="
+    If RX.Test(aConnParse(i-1)) then  
+			sPWD = trim(RX.replace(aConnParse(i-1),""))
+		End if
+	Next 'i
+
+	Set RX = Nothing
+
+	Select Case UCase(sProvider)
+		Case "SQLOLEDB"
+			sConnStr = "PROVIDER=MSSQL;DSN=" & sDSN & ";CATALOG=" & sDatabase & ";"
+			If instr(ucase(strParam),"SSPI")>0  Then
+				sConnStr=sConnStr & "DBNTA=yes;"
+			Else
+				sConnStr=sConnStr & ";UID=" & sUID & ";PWD=" & sPWD & ";"
+			End if
+		Case "MICROSOFT.JET.OLEDB.4.0"
+			sConnStr = "PROVIDER=MSACCESS;DSN=" & sDataSource & ";UID=" & sUID & ";PWD=" & sPWD & ";"
+		Case "ORAOLEDB.ORACLE"
+			sConnStr = "PROVIDER=ORACLE;DSN=" & sDataSource & ";UID=" & sUID & ";PWD=" & sPWD & ";"
+		Case "MSDAORA"
+			sConnStr = "PROVIDER=MSORACLE;DSN=" & sDataSource & ";UID=" & sUID & ";PWD=" & sPWD & ";"			
+		'Case "ODBCMSSQL","ODBCMSACCESS","ODBCORACLE","ODBCMSORACLE"
+		'	sConnStr = "DSN=" & sDSN & ";UID=" & sUID & ";PWD=" & sPWD & ";"
+		Case ""
+			If len(sDSN)=0 and ubound(aConnParse)=0 then 
+				sConnStr = "PROVIDER=ODBCMSACCESS;DSN=" & strParam & ";"
+			Else
+				sConnStr = "PROVIDER=ODBCMSACCESS;DSN=" & strParam & ";UID=" & sUID & ";PWD=" & sPWD & ";"
+			End if
+		Case Else
+			'Other provider string!
+			sConnStr = strParam
+			Writelog("String may not be a valid aTM connection string.")
+	End Select
+	
+	'writelog("FormatTMConn string:'" & sConnstr & "' ")
+	FormatTMConn =  sConnstr	
+	
+
+End Function
+		
+Function CheckAnchor(bInter,bDebug,strParam)
+		
+	Dim oAnc
+	CheckAnchor = False
+	
+	Set oAnc = CurrentObj.FindChild(strParam)
+
+	If oAnc Is Nothing Then
+		WriteLog("Anchor field (" & strParam & ") not found!")
+		Exit Function
+	Else
+		rtn = oAnc.GetPosition(A,B,C,D)
+
+		If Not rtn Or (A+B+C+D) <= 0 Then
+			Writelog("Anchor field (" & strParam & ") position not set!")
+			Exit Function
+		End If
+		CheckAnchor = True
+	End If
+
+	Set oAnc = Nothing
+
+End Function
+		
+Function CheckDICT(DCOobject)
+		
+	Dim FieldValue
+	
+  If DCOObject.Objecttype<DCO_Field then
+    CheckDICT = DCOObject.Variable("Text")
+  Else
+    CheckDICT = DCOobject.Text
+	End if
+	
+	FieldValue = u_DCODict(DCOobject,1)
+  
+  If len(FieldValue)>0 then CheckDICT=FieldValue
+
+
+End Function
+		
+Function u_DCODict(DCONode,DictType)
+		
+	
+  On Error Resume Next
+
+  If Not IsAlive(g_DCSmart) then
+     Writelog("Datacap Smart Parameter object not found")
+	   Exit function
+  End if 
+  
+  u_DCODict=g_DCSmart.u_DCODict(DCONode,DictType)
+  
+
+End Function
+		
+Sub RRCopyChars(oSource,oDest,nStart,nLen) 
+  ' Merges Characters from oSource to oDest (DCO Field) nodes
+  ' Includes character position and confidence information
+  ' NOTE: WILL APPEND TO EXISTING CHARACTERS IN oDEST node!!
+	
+	Dim x,y
+	Dim cObj_S
+	Dim cObj_D
+	Dim nFields
+	Dim Cleft ,Ctop ,Cright ,Cbottom
+	Dim Fleft ,Ftop ,Fright ,Fbottom
+	Dim SPos, aPosition
+		
+	If oSource is Nothing then Exit Sub
+	If oDest is Nothing then Exit Sub
+	If Not Isnumeric(nstart) then Exit Sub
+	If Not Isnumeric(nLen) then Exit Sub
+
+	Fleft = ""
+	Ftop = ""
+	Fright=""
+	Fbottom=""
+	
+	On Error Resume Next
+	
+	'Character Index begins after any child fields
+	nFields = oSource.NumOfChildren - len(oSource.Text)
+
+	nStart=nStart+nFields
+
+	For x = nStart to (nLen+nStart-1)
+		Set cObj_S = oSource.GetChild(x-1)
+		Set cObj_D = oDest.AddChild(4,"",-1)
+		
+		If Not cObj_S is Nothing and Not cObj_D is Nothing then 
+					
+			cObj_D.CharValue(0)= cObj_S.CharValue(0)
+			cObj_D.CharConfidence(0) = cObj_S.CharConfidence(0)
+
+			SPos=cObj_S.Variable("Position")
+			cObj_D.Variable("Position")=SPos	
+			
+			aPosition = Split(SPos, ",")
+			For i=0 To UBound(aPosition)
+				aPosition(i)=CLng(aPosition(i))
+			Next
+
+			If Ubound(aPosition)>=3 Then
+				Cleft=aPosition(0)
+				Ctop=aPosition(1)
+				Cright=aPosition(2)
+				Cbottom=aPosition(3)
+			End if
+				
+			If Not(Cleft=0 and Ctop=0 and Cright=0 and Cbottom=0) Then 			
+						
+				If Fleft="" then FLeft=Clng(Cleft)
+				If Clng(Cleft)<Fleft then FLeft=Clng(Cleft)
+				If Ftop="" then Ftop=Clng(Ctop)
+				If Clng(Ctop)<Ftop then Ftop=Clng(Ctop)
+				If Fright="" then Fright=Clng(Cright)
+				If Clng(Cright)>Fright then Fright=Clng(Cright)
+				If Fbottom="" then Fbottom=Clng(Cbottom)
+				If Clng(Cbottom)>Fbottom then Fbottom=Clng(Cbottom)
+	
+			End if
+		End if
+	Next 'x
+
+	If Fleft="" then FLeft=Clng(0)		
+	If Ftop="" then Ftop=Clng(0)
+	If Fright="" then Fright=Clng(0)
+	If Fbottom="" then Fbottom=Clng(0)
+
+	oDest.Variable("Position") = cstr(Fleft) & "," & cstr(Ftop) & "," & cstr(Fright) & "," & cstr(Fbottom)
+	Set cObj_S = Nothing
+	Set cObj_D = Nothing
+	
+
+End Sub
+
+Sub RRCopyPos(oSource,oDest,nStart,nLen) 
+' Merges Positions from oSource to oDest (DCO Field) nodes
+' NOTE: WILL APPEND TO EXISTING POSITION IN oDEST node!!	
+	
+	Dim x,y
+	Dim cObj_S
+	Dim cObj_D
+	Dim nFields
+	Dim Cleft ,Ctop ,Cright ,Cbottom
+	Dim Fleft ,Ftop ,Fright ,Fbottom
+	Dim FPosition
+		
+	If oSource is Nothing then Exit Sub
+	If oDest is Nothing then Exit Sub
+	If Not Isnumeric(nstart) then Exit Sub
+	If Not Isnumeric(nEnd) then Exit Sub
+
+	Fleft = ""
+	Ftop = ""
+	Fright=""
+	Fbottom=""
+
+	'Character Index begins after any child fields
+	nFields = oSource.NumOfChildren - len(oSource.Text)
+
+	'Find Current Position Info
+	FPosition = oDest.Variable("Position")
+	If FPosition = "0,0,0,0" then FPosition = ""
+	aPosition = Split(FPosition, ",")
+	For i=0 To UBound(aPosition)
+		aPosition(i)=CLng(aPosition(i))
+	Next
+
+	If Ubound(aPosition)>=3 Then
+		Fleft=aPosition(0)
+		Ftop=aPosition(1)
+		Fright=aPosition(2)
+		Fbottom=aPosition(3)
+	End if
+	
+	nStart=nStart+nFields
+	
+	For x = nStart to (nLen+nStart-1)
+		Set cObj_S = oSource.GetChild(x-1)
+				
+		If Not cObj_S is Nothing then 
+							
+			SPos=cObj_S.Variable("Position")
+						
+			aPosition = Split(SPos, ",")
+			For i=0 To UBound(aPosition)
+				aPosition(i)=CLng(aPosition(i))
+			Next
+
+			If Ubound(aPosition)>=3 Then
+				Cleft=aPosition(0)
+				Ctop=aPosition(1)
+				Cright=aPosition(2)
+				Cbottom=aPosition(3)
+			End if
+			
+			If Not(Cleft=0 and Ctop=0 and Cright=0 and Cbottom=0) Then 			
+						
+				If Fleft="" then FLeft=Clng(Cleft)
+				If Clng(Cleft)<Fleft then FLeft=Clng(Cleft)
+				If Ftop="" then Ftop=Clng(Ctop)
+				If Clng(Ctop)<Ftop then Ftop=Clng(Ctop)
+				If Fright="" then Fright=Clng(Cright)
+				If Clng(Cright)>Fright then Fright=Clng(Cright)
+				If Fbottom="" then Fbottom=Clng(Cbottom)
+				If Clng(Cbottom)>Fbottom then Fbottom=Clng(Cbottom)
+	
+			End if
+		End if
+	Next 'x
+
+	If Fleft="" then FLeft=Clng(0)		
+	If Ftop="" then Ftop=Clng(0)
+	If Fright="" then Fright=Clng(0)
+	If Fbottom="" then Fbottom=Clng(0)
+				
+	oDest.Variable("Position") = cstr(Fleft) & "," & cstr(Ftop) & "," & cstr(Fright) & "," & cstr(Fbottom)
+	Set cObj_S = Nothing
+	
+
+End Sub
+
+Sub RRCopyImage(oSource,oTarget) 
+	
+' Ensures that the target field's child fields will retain the correct IMAGEFILE properties 
+' when overwriting the target with data from a page other than its original.
+	
+	
+	Dim nChildren
+	Dim oChild	
+		
+	If oTarget.Variable("Position")="0,0,0,0" then oTarget.Variable("Position")=oSource.Variable("Position")
+	If oTarget.Variable("IMAGEFILE")<>oSource.Variable("IMAGEFILE") Then
+				
+		'Update Child Fields with correct IMAGEFILE Variable. Must be performed before updating parent field, or 
+		'child will reflect same ImageFile value as Target field. Only update child if child is same value as 
+		'parent because child may have different ImageFile as parent.
+				
+		nChildren = oTarget.NumOfChildren - Len(oTarget.Text)
+		For n = 1 to nChildren
+			Set oChild = oTarget.GetChild(n-1)
+			If Not(oChild is Nothing) Then
+				If oChild.Variable("IMAGEFILE")=oTarget.Variable("IMAGEFILE") Then
+					oChild.Variable("IMAGEFILE")=oTarget.Variable("IMAGEFILE")
+					If len(Trim(oTarget.Variable("IMAGEHEIGHT")))<>"" then oChild.Variable("IMAGEHEIGHT")=oTarget.Variable("IMAGEHEIGHT")
+				End if
+			End if
+		Next 'oChild
+		Set oChild=Nothing
+		
+		oTarget.Variable("IMAGEFILE")=oSource.Variable("IMAGEFILE")
+		If len(trim(oSource.Variable("IMAGEHEIGHT")))<>"" Then oTarget.Variable("IMAGEHEIGHT")=oSource.Variable("IMAGEHEIGHT")
+	End if
+	
+
+End Sub
+
+' DCO NAVIGATION
+
+Function RReturnNamedComponent(byVal sFindObjID)
+		
+' Finds First Object matching ID by first searching children of 
+' the calling object. If the calling object is a field the search will 
+' check through each level in the current page back to the parent page.
+' If the calling object is a page, the function will check back to the 
+' parent document.
+' Sets the ObjectType backwards search limit.
+
+	Dim oNode	
+	Dim iNum
+	Dim rNode
+	Dim iType
+	Dim VarId
+	Dim aObjID	
+	
+	
+	On Error Resume Next
+	
+	
+	iType = 2
+
+	Set RReturnNamedComponent = Nothing
+	Set oNode = CurrentObj
+
+	If Not IsObject(oNode) Then Exit Function
+	
+	'If the calling object is a page, set the backlimit to the document.
+	If oNode.ObjectType = 2 Then iType = 1
+		
+	'Check for & strip out variable name in sFindObjID argument. 
+	'Flag is the Decimal '.' character (period).
+		VarID = DCOFindVar(sFindObjID)
+    If len(VarID)>0 then
+        ObjID = replace(sFindObjID,"."&VarID,"")
+    Else
+        ObjID = sFindObjID
+    End if
+			
+	'Check Each node Level Back to Parent Page	 
+	While oNode.ObjectType >= iType
+				 
+		If oNode.Type = ObjId Then
+			Set RReturnNamedComponent = oNode
+			Set oNode = Nothing
+			Exit Function
+		End if	
+			
+		Set rNode = rr_SearchChildren(oNode, ObjID)
+
+		If Not(rNode Is Nothing) Then 
+			Set RReturnnamedcomponent = rNode
+			Set rNode = Nothing
+			Set oNode = Nothing	
+			Exit Function
+		End If
+
+		Set oNode = oNode.Parent()			
+		If Not IsObject(oNode) Then 
+			Set oNode = Nothing
+			Exit Function
+		End if
+
+	Wend
+
+	Set rNode = Nothing
+	Set oNode = Nothing
+		
+
+End Function
+		
+Function RReturnNamedValue(byVal sFindObjID)
+		
+	Dim oNode
+	Dim iNum
+	Dim rtnObj
+	Dim iType
+	Dim VarId
+	Dim aObjID	
+	
+	On Error Resume Next
+	
+	Set oNode = Nothing
+			
+	'Check for variable in sFindObjID argument. Flag is the Decimal '.' character (period).
+	VarID = DCOFindVar(sFindObjID)
+		
+	Set oNode = RReturnNamedComponent(sFindObjID)	
+		
+	If Not(oNode Is Nothing) Then 
+		If Len(VarID)=0 then
+			RReturnNamedValue = CheckDICT(oNode)
+		Else
+			RReturnNamedValue = oNode.Variable(VarID)
+		End if
+	End If
+
+	Set oNode = Nothing
+			
+
+End Function
+		
+Function rr_SearchChildren(oDCO,byVal ObjID)
+		
+	Dim i
+	Dim oDCOChild
+		
+	Set rr_SearchChildren = Nothing
+
+	For i = 1 To (oDCO.NumOfchildren-Len(oDCO.Text))
+		Set oDCOChild = oDCO.GetChild(i-1)
+			
+		If IsObject(oDCOChild) Then
+			If oDCOChild.Type = ObjID Then
+				Set rr_SearchChildren = oDCOChild
+				Exit Function			
+			End If
+				
+			If Len(oDCOChild.Text) <> oDCOChild.NumOfChildren Then 
+				Set rr_SearchChildren = rr_SearchChildren(oDCOChild, ObjID)								
+			End If
+
+			If Not IsObject(rr_SearchChildren) Then Exit Function
+		End If
+	Next 'i
+
+
+End Function
+		
+'New META UTILITY FUNCTIONS:
+
+Function DCONav(sFindNode)
+		
+'Utility Function Returns DCO object based on Metacharacter string
+'Special Characters:
+'   a) ..\	navigate back 1 node (parent node)
+'   b) .	value following period is a variable name - ignored in this function
+'   c) \	next node (child)
+'	d) @B	Root Batch Node
+'	e) @D Root Document Node
+'	f) @P	Root Page Node
+'	g) @F	Root Field Node
+
+	On Error Resume Next	
+  
+  If Not IsAlive(g_DCSmart) then
+     Writelog("Datacap Smart Parameter object not found")
+	   Exit function
+  End if 
+
+  Set DCONav=g_DCSmart.DCONav(sFindNode)	
+		
+
+End Function
+		
+Function DCOFindVar(byVal sFindObjID)
+		
+
+    On Error Resume Next
+	
+    If Not IsAlive(g_DCSmart) then
+       Writelog("Datacap Smart Parameter object not found")
+	     Exit function
+    End if 
+    
+	  DCOFindVar=g_DCSmart.DCOFindVar(sFindObjID)
+   	    
+
+End Function
+		
+Function DCONavGetValue(byVal sFindObjID)
+		
+	On Error Resume Next
+	  
+  If Not IsAlive(g_DCSmart) then
+     Writelog("Datacap Smart Parameter object not found")
+	   Exit function
+  End if 
+  
+	DCONavGetValue=g_DCSmart.DCONavGetValue(sFindObjID)
+  			
+
+End Function
+		
+Function DCONavSetValue(byVal sFindObjID,byVal sNewValue)
+		
+	On Error Resume Next
+	
+  If Not IsAlive(g_DCSmart) then
+     Writelog("Datacap Smart Parameter object not found")
+	   Exit function
+  End if 
+
+	DCONavSetValue=g_DCSmart.DCONavSetValue(sFindObjID,sNewValue)
+			
+
+End Function
+		
+Function MetaWord(sArgument)
+		
+		
+    On Error Resume Next
+
+   If Not IsAlive(g_DCSmart) then
+     Writelog("Datacap Smart Parameter object not found")
+	   Exit function
+   End if 
+  
+   MetaWord=g_DCSmart.MetaWord(sArgument)
+	  
+
+End Function
+		
+Function DCONavType()
+		
+
+	On Error Resume Next
+
+  If Not IsAlive(g_DCSmart) then
+     Writelog("Datacap Smart Parameter object not found")
+	   Exit function
+  End if 
+
+  DCONavType=g_DCSmart.DCONavType()
+   		
+
+End Function
+		
+'END DCO NAVIGATION
+
+Function Status_Preserve_ON(bInter, bDebug) 
+   
+    RRState.OnRuleFailure="Call StatCounter():Call OnRuleEnd()"
+    RRState.OnRuleSuccess="Call StatCounter():Call OnRuleEnd()"
+    RRState.OnRulesetStart="Call OnRuleSetStart()"    
+
+	Status_Preserve_ON = True
+
+End Function
+
+Function Status_Preserve_OFF(bInter, bDebug) 
+    RRState.OnRuleStart="Call OnRuleStart():If CurrentObj.Status=nFail then CurrentObj.Status=nPass:CurrentObj.DeleteVariable(""MESSAGE""):nDefaultRtn = nRtn_Over"    
+    RRState.OnRuleSuccess="Call StatCounter():Call OnRuleEnd()"    
+    
+    RRState.OnRuleFailure="Call StatCounter():Call OnRuleFailure():Call OnRuleEnd()"
+                                                     
+    RRState.OnRuleSetStart="Call OnRuleSetStart():RRState.OnRuleFailure="""":RRState.OnRuleStart=""Call OnRuleStart()"""
+    
+  
+	Status_Preserve_OFF = True
+	Writelog("Initializing Calling Object to status " & nPass)
+	CurrentObj.Status = nPass
+  CurrentObj.DeleteVariable("MESSAGE")	
+
+End Function
+
+Function DebugMode_ON(bInter, bDebug) 
+  bDebug = True
+	DebugLog("DebugMode ON")
+	DebugMode_ON = True
+
+End Function
+
+Function DebugMode_OFF(bInter, bDebug) 
+	Debuglog("DebugMode OFF")
+	bDebug = False
+	DebugMode_OFF = True
+
+End Function
+
+Function CheckAllIntegrity(bInter, bDebug) 
+	Dim LastChecked
+	Dim rtn
+
+	CheckAllIntegrity = True
+	
+	rtn = DCO.CheckIntegrity(LastChecked)
+	
+	If rtn <> 0 Then
+		If Not LastChecked Is Nothing Then
+			WriteLog("CheckIntegrity returned : " & rtn & vbCrLf & Space(5) & "ID of last checked: " & LastChecked.ID) 
+		End If
+		CheckAllIntegrity = False
+	End If
+
+End Function
+
+Function CheckDocCount(bInter, bDebug) 
+	Dim nD
+	Dim nDD
+	Dim ED
+	Dim aD
+	Dim vD		
+			
+	nD = Trim(Pilot.ExpectedDocs)
+	If nD="" or Not(isnumeric(nD)) then nD=0
+	
+	ED = Trim(DCO.Variable("ED"))
+	If ED="" or Not(isnumeric(ED)) then ED=0
+		
+	If cint(nD)<=cint(1) and cint(ED)>0 then
+		Writelog("DCO variable ED value found. Setting Pilot.ExpectedDocs to " & cstr(ED))
+		nD = ED		
+		Pilot.ExpectedDocs = clng(nD)
+	End if
+
+	aD = Trim(Pilot.AdjustedDocs)
+	If aD="" or Not(isnumeric(aD)) then aD=0
+		
+	vD = Trim(DCO.Variable("AD"))
+	If vD="" or Not(isnumeric(vD)) then vD=0
+
+	If cint(aD)=cint(0) and cint(vD)>0 then
+		Writelog("DCO variable AD value found. Setting Pilot.AdjustedDocs to " & cstr(vD))
+		aD = vD		
+		Pilot.AdjustedDocs = clng(aD)
+	End if
+
+	WriteLog("Expected documents:" & nD & ".")
+	If aD>0 then 
+		WriteLog("Adjusted documents:" & aD & ".")
+		nD=aD
+	End if 
+	 
+	nDD = ObjectCount(DCO, 1)
+
+	WriteLog("Found " & cstr(nDD) & " documents")
+
+	If cint(nDD) <> cint(nD) Then 
+		WriteLog("Expected documents count does not match actual documents count!")
+		CheckDocCount = False
+	Else
+		CheckDocCount = True
+	End If
+
+
+End Function
+
+Function CheckPageCount(bInter, bDebug) 
+	Dim nP
+	Dim nPP
+	Dim aP
+	Dim vP
+		
+	nP = Trim(Pilot.ExpectedPages)
+	If nP="" or Not(isnumeric(nP)) then nP=0
+	
+	nP = Trim(DCO.Variable("EP"))
+	If nP="" or Not(isnumeric(nP)) then nP=0
+
+	If cint(nP)=cint(0) and Len(EP)>0 then
+		Writelog("DCO variable EP value found. Setting Pilot.ExpectedDocs to " & cstr(EP))
+		nP = EP
+		Pilot.ExpectedPages = clng(nP)
+	End if
+
+	aP = Trim(Pilot.AdjustedPages)
+	If aP="" or Not(isnumeric(aP)) then aP=0
+		
+	vP = Trim(DCO.Variable("AP"))
+	If vP="" or Not(isnumeric(vP)) then vP=0
+
+	If cint(aP)=cint(0) and Len(vP)>0 then
+		Writelog("DCO variable AP value found. Setting Pilot.AdjustedPages to " & cstr(vP))
+		aP = vP		
+		Pilot.AdjustedPages = clng(aP)
+	End if
+
+	WriteLog("Expected Pages:" & nP & ".")
+	If aP>0 then 
+		WriteLog("Adjusted pages:" & aP & ".")
+		nP=aP
+	End if 
+	 
+	nPP = ObjectCount(DCO, 2)
+
+	WriteLog("Found " & cstr(nPP) & " pages")
+
+	If cint(nPP) <> cint(nP) Then 
+		WriteLog("Expected pages count does not match actual pages count!")
+		CheckPageCount = False
+	Else
+		CheckPageCount = True
+	End If
+
+End Function
+
+Function Task_RaiseCondition(bInter, bDebug, strParam) 
+' Strparam is a CSV value
+' 1) is the childindex
+' 2) is the Condition to set the child to.			
+	
+	Dim aStrparam
+	Dim nChildIndex
+	Dim nConditionIndex
+
+	Task_RaiseCondition= False
+
+	aStrParam = Split(strParam & ",",",")
+	nChildIndex = aStrParam(0)	
+	nConditionIndex = aStrParam(1)
+
+	If Not IsNumeric(nChildIndex) Then Exit Function
+	If Not IsNumeric(nConditionIndex) Then Exit Function
+
+	nConditionIndex = CLng(nConditionIndex)
+	nChildIndex= CLng(nChildIndex)
+
+	Pilot.ChildCondition(nChildIndex) = nConditionIndex
+
+	Task_RaiseCondition= True
+
+End Function
+
+Function Task_NumberOfSplits(bInter, bDebug, nNumOfSplits) 
+	Task_NumberOfSplits= False
+	If Not IsNumeric(nNumOfSplits) Then
+		Writelog("NumOfSplits Value is not Numeric.")
+		Exit Function
+	End If
+	pilot.ChildrenQuantity=(CLng(nNumOfSplits))
+	Writelog("Setting Task Number Of Splits to : " & nNumOfSplits)
+	Task_NumberOfSplits= True
+
+End Function
+
+Function SetTaskStatus(bInter, bDebug, StrParam)  
+ 'use global variable nTaskStatus to send status to RuleRunner
+ Const RetAbort = 0
+ Const RetFinished = 2
+ Const RetPending = 8
+ Const RetHold = 4
+   if(isNumeric(StrParam)) then
+      nTaskStatus = cint(StrParam)
+        RRState.Data("nTaskStatus")=StrParam
+      Writelog("Set status of task to " & StrParam)
+      SetTaskStatus = true
+   else
+     Writelog("Action's parameter is not numeric")
+     SetTaskStatus = false 
+   end if
+
+End Function
+
+Function SkipChildren(bInter, bDebug) 
+	
+    RRState.SkipChildren=True
+	SkipChildren = True
+	bprocesschildren = False
+
+End Function
+
+Function SetExpectedDocs(bInter, bDebug, StrParam) 
+  'This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by rrSet.">
+  'DEPRICATED use --> rrSet(@B.ED,value)
+  
+	SetExpectedDocs = False
+	
+	StrParam = Trim(StrParam)
+	
+	If Not IsNumeric(StrParam) then 
+		Writelog("Value Must be Numeric.")
+		Exit Function
+	End if
+	SetExpectedDocs = True
+	DCO.Variable("ED") = StrParam
+	Pilot.ExpectedDocs = StrParam
+				
+
+End Function
+
+Function SetExpectedPages(bInter, bDebug, StrParam) 
+  'This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by rrSet.">
+  'DEPRICATED use --> rrSet(@B.EP,Value)
+  
+	SetExpectedPages = False
+	
+	StrParam = Trim(StrParam)
+	
+	If Not IsNumeric(StrParam) then 
+		Writelog("Value Must be Numeric.")
+		Exit Function
+	End if
+	SetExpectedPages = True
+	DCO.Variable("EP") = StrParam
+	Pilot.ExpectedPages = StrParam
+			
+
+End Function
+
+Function AbortOnError(bInter, bDebug, StrParam) 
+	AbortOnError = True
+
+	StrParam = Trim(StrParam)
+
+	Select Case ucase(strparam)
+		Case "TRUE"
+			Writelog("Setting Task to Abort On Errors")
+			g_bAbortOnError = True
+		Case "FALSE"
+			Writelog("Setting Task to Continue On Errors")
+			g_bAbortOnError = False
+		Case Else
+			AbortOnError = False
+			Writelog("Invalid Parameter. Expecting 'True' or 'False', received '" & StrParam & "'.")
+	End Select		
+	
+  
+End Function
+
+Function PilotMessage_Set(bInter, bDebug, StrParam) 
+
+  Dim sSmartParam
+
+  sSmartParam = MetaWord(StrParam)
+  If len(sSmartParam)="" then 
+     Writelog("Smart Parameter parsing did not return a value. Defaulting message to the Action argument.")
+     sSmartParam =StrParam
+  End if
+	CurrentObj.Variable("MESSAGE")= Trim(sSmartParam)	
+	PilotMessage_Set=True
+
+End Function
+
+Function PilotMessage_Clear(bInter, bDebug) 
+	
+	CurrentObj.DeleteVariable("MESSAGE")	
+	CurrentObj.DeleteVariable("MessageID")
+
+    'TODO:  somehow CurrentObj.GetVariableName(index) sometimes return empty string and miss the MessageParam variable names, so use for loop for 20 message variables
+	For index = 0 To 20
+		rc = CurrentObj.DeleteVariable("MessageParamType_"&index)
+		if rc = false then
+			Exit For
+		End if
+		rc = CurrentObj.DeleteVariable("MessageParamText_"&index)
+		if rc = false then
+			Exit For
+		End if		
+	Next	
+	
+	PilotMessage_Clear=True
+
+End Function
+
+'BEGIN META ACTION SECTION
+
+Function rrSet(varSource,varTarget)
+		
+  ' rr_Set was replaced by rrSet so we could use the "f" tag with unique parameters.
+
+  Dim aStrParam
+	Dim sSource
+	Dim sDestination
+	Dim sValue
+	
+	On Error Resume Next
+	
+	rrSet = False
+		
+	sSource = Trim(varSource)
+	sDestination = Trim(varTarget)
+	
+	If len(sSource) = 0 Then sSource = DCONavType()
+	If len(sDestination) = 0 Then sDestination = DCONavType()
+
+  ' If sSource = sDestination Then we don't care, perform the copy anyway.		
+		
+	sValue = MetaWord(sSource)    
+	rrSet = DCONavSetValue(sDestination,sValue)
+	
+	Call ErrorHandler("rrSet") 
+  
+End Function
+		
+Function rr_Set(bInter, bDebug, StrParam) 
+
+  'This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by rrSet."
+  'DEPRECATED 8.1.0.81 5.18.2011
+  
+  Dim aStrParam
+	Dim sSource
+	Dim sDestination
+	Dim sValue
+	
+	On Error Resume Next
+	
+	rr_Set = False
+		
+	aStrParam = Split(StrParam & ",",",")
+	sSource = Trim(aStrParam(0))
+	sDestination = Trim(aStrParam(1))
+  
+  rr_Set = rrSet(sSource, sDestination)
+	
+	Call ErrorHandler("rr_Set") 
+		
+
+End Function
+
+Function rrSet_ID(SourceValue,TargetDCO)
+		
+  
+  Dim aStrParam
+	Dim sSource
+	Dim sDestination
+	Dim sValue
+	
+	On Error Resume Next
+	
+	rrSet_ID = False
+		
+	sSource = Trim(SourceValue)
+	sDestination = Trim(TargetDCO)
+	
+	If len(sSource) = 0 Then sSource = DCONavType()
+	If len(sDestination) = 0 Then sDestination = DCONavType()
+		
+	sValue = MetaWord(sSource)    
+  
+  Set oTarget = DCONav(sDestination)
+	If Not IsAlive(oTarget) then 
+		Writelog("Copy to node not found.")
+		rrSet_ID=False
+		Exit Function
+	End if
+  
+	oTarget.ID = sValue
+	
+  If Err=0 then rrSet_ID=True
+  
+	Call ErrorHandler("rrSet_ID") 
+  
+End Function
+		
+Function rr_Get(bInter, bDebug, StrParam) 
+	Dim sValue
+	Dim sSource
+	Dim sDestination
+	
+	On Error Resume Next
+	
+	rr_Get = False
+		
+	sSource = StrParam
+		
+	If len(sSource) = 0 Then sSource = DCONavType()
+	If len(sDestination) = 0 Then sDestination = DCONavType()
+	
+  ' This condition will occur only if no parameter is supplied.
+	If sSource = sDestination Then 
+		Writelog("A parameter is required for rr_Get(). Exiting Action.")
+		Exit Function
+	End if
+		
+	sValue = MetaWord(sSource)
+	rr_Get = DCONavSetValue(sDestination, sValue)
+	
+	Call ErrorHandler("rr_Get") 
+		
+
+End Function
+
+Function rrContains(SearchForValue,SearchInValue,caseSensitive)
+		
+  'Text that the action is looking for in the current field.
+  'This action determines if a field represented by the bound object of the 
+  'Document Hierarchy contains some or all of the parameter's text value, without additional unspecified text. 
+
+  On Error Resume Next
+
+	rrContains = False
+  
+  sSearchFor = Trim(SearchForValue)
+	sSearchIn = Trim(SearchInValue)
+  
+  caseSensitive = Trim(caseSensitive)
+  If len(caseSensitive) = 0 then caseSensitive="FALSE"
+  
+	If len(sSearchFor) = 0 Then sSearchFor = DCONavType()
+	If len(sSearchIn) = 0 Then sSearchIn = DCONavType()
+	
+  If sSearchFor = sSearchIn Then 
+    Writelog("Search For and Search In reference the same component. Returning True.")
+    rrContains = True
+    Exit Function
+  End if
+		
+	sValueSearchFor = MetaWord(sSearchFor)
+	sValueSearchIn = MetaWord(sSearchIn)
+  	
+  Writelog("'Checking if: '" & sValueSearchFor & "' is in '" & sValueSearchIn & "'.")    
+
+  if (UCase(caseSensitive) = "FALSE") Then 
+     writelog("Case insensitive comparison")
+     sValueSearchIn = ucase(sValueSearchIn)
+     sValueSearchFor = ucase(sValueSearchFor)
+  End if	
+    
+  If instr(sValueSearchIn, sValueSearchFor)>0 Then
+		rrContains = True
+	End If
+		
+  Call ErrorHandler("rrContains") 
+
+End Function
+		
+Function rrCompareCase(object1,object2,caseSensitive)
+		
+    
+  Dim aStrParam
+	Dim sSourceA
+	Dim sSourceB
+	Dim sValueA
+	Dim sValueB
+	
+	On Error Resume Next
+	
+	rrCompareCase = False
+		
+	sSourceA = Trim(object1)
+	sSourceB = Trim(object2)
+  caseSensitive = Trim(caseSensitive)
+	
+	If len(sSourceA) = 0 Then sSourceA = DCONavType()
+	If len(sSourceB) = 0 Then sSourceB = DCONavType()
+	
+  If sSourceA = sSourceB Then 
+    Writelog("Source A and B reference the same component. Returning True.")
+    rrCompareCase = True
+    sSourceA = ""
+	  sSourceB = ""
+    Exit Function
+  End if
+		
+	sValueA = MetaWord(sSourceA)
+	sValueB = MetaWord(sSourceB)
+	
+	Writelog("Case Sensitive = '" & UCase(caseSensitive) & "' Comparing: '" & sValueA & "' = '" & sValueB & "'")
+	
+  dim compareType  
+  compareType = 0
+  if (UCase(caseSensitive) = "FALSE") Then 
+     writelog("Case insensitive comparison")
+     compareType = 1
+  End if
+  
+  If StrComp(sValueA, sValueB, compareType) = 0 Then
+    rrCompareCase = True
+	End if
+  
+	'If sValueA = sValueB Then
+	'	rrCompare = True
+	'End if
+	
+  sSourceA = ""
+	sSourceB = ""
+  sValueA = ""
+  sValueB = "" 
+  
+	Call ErrorHandler("rrCompareCase") 
+  
+End Function
+		
+Function rrCompare(object1,object2)
+		
+  ' rr_Compare was replaced by rrCompare so we could use the "f" tag with unique parameters.
+	
+	On Error Resume Next
+	
+	rrCompare = rrCompareCase(object1, object2, "TRUE")  
+	
+	Call ErrorHandler("rrCompare") 
+  
+End Function
+		
+Function rr_Compare(bInter, bDebug, StrParam) 
+ 
+  'qi="This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by rrCompare."
+  'DEPRECATED 8.1.0.18 5.18.2011 
+
+	Dim aStrParam
+	Dim sSourceA
+	Dim sSourceB
+	Dim sValueA
+	Dim sValueB
+	
+	On Error Resume Next
+	
+	rr_Compare = False
+		
+	aStrParam = Split(StrParam & ",",",")
+	sSourceA = Trim(aStrParam(0))
+	sSourceB = Trim(aStrParam(1))
+	
+	rr_Compare = rrCompare(sSourceA, sSourceB)
+	
+	Call ErrorHandler("rr_Compare") 
+
+End Function
+
+Function rrCompareNotCase(object1,object2,caseSensitive)
+		
+  
+  On Error Resume Next
+	
+	if rrCompareCase(object1, object2, caseSensitive) Then
+     rrCompareNotCase = False
+  Else
+     rrCompareNotCase = True
+  End if
+
+	Call ErrorHandler("rrCompareNot") 
+  
+End Function
+		
+Function rrCompareNot(object1,object2)
+		
+  ' rr_Copy was replaced by rrCopy so we could use the "f" tag with unique parameters.
+  
+  On Error Resume Next
+	
+	if rrCompare(object1, object2) Then
+     rrCompareNot = False
+  Else
+     rrCompareNot = True
+  End if
+
+	Call ErrorHandler("rrCompareNot") 
+  
+End Function
+		
+Function rr_Compare_Not(bInter, bDebug, StrParam) 
+	On Error Resume Next
+	
+  'This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by rrCompareNot"
+  'DEPRECATED v8.1.0.18 5.18.2011
+  
+	if rr_Compare(bInter, bDebug, StrParam) Then
+     rr_Compare_Not = False
+  Else
+     rr_Compare_Not = True
+  End if
+
+	Call ErrorHandler("rr_Compare_Not") 
+
+End Function
+
+Function rrCompareCaseLength(object1,object2,caseSensitive,length,fromStart)
+		
+
+	On Error Resume Next
+  Dim nLen
+  
+  rrCompareCaseLength = false
+	
+  if (Not (isNumeric(StrParam))) then
+     writelog("length parameter '" & length & "' is not numeric.  Returning false")
+     Exit Function   
+  end if
+
+  nLen = cint(length)
+  
+  if (nLen <= 0) Then
+     writelog("length parameter is 0.  Comparing entire string.")
+     rrCompareCaseLength = rrCompareCase(object1, object2, caseSensitive)  
+     Exit Function
+  End if
+ 
+  Dim sObj1
+  Dim sObj2
+ 
+  sObj1 = MetaWord(object1)
+  Writelog("Object1 = " & sObj1)
+  sObj2 = MetaWord(object2)
+  Writelog("Object2 = " & sObj2)
+
+  if (UCASE(fromStart) = "TRUE") Then
+     sObj1 = Left(sObj1, nLen)
+     sObj2 = Left(sObj2, nLen)
+     writelog("Comparing From Start: '" & sObj1 & "' and '" & sObj2 & "'.")
+  else
+     sObj1 = Right(sObj1, nLen)
+     sObj2 = Right(sObj2, nLen)
+     writelog("Comparing From End: '" & sObj1 & "' and '" & sObj2 & "'.")
+  End if
+  
+	rrCompareCaseLength = rrCompareCase(sObj1, sObj2, caseSensitive)  
+	
+	Call ErrorHandler("rrCompare") 
+  
+End Function
+		
+Function rrCompareNotCaseLength(object1,object2,caseSensitive,length,fromStart)
+		
+
+	On Error Resume Next
+
+  If (rrCompareCaseLength(object1, object2, caseSensitive, length, fromStart)) Then
+     rrCompareNotCaseLength = False
+  else
+     rrCompareNotCaseLength = True
+  End If
+	
+	Call ErrorHandler("rrCompareNotCaseLength") 
+  
+End Function
+		
+Function rrCopy(varSource,varTarget)
+		
+  ' rr_Copy was replaced by rrCopy so we could use the "f" tag with unique parameters.
+    
+	Dim sSource
+	Dim sTarget
+	Dim oSource
+	Dim oTarget
+	Dim sOrigImageN
+	Dim sOrigImageH
+	Dim oChild
+	Dim nChildren
+	
+	On Error Resume Next
+
+	rrCopy = True
+		
+	sSource = Trim(varSource)
+	sTarget = Trim(varTarget)
+	
+	If len(sSource) = 0 Then sSource = DCONavType()
+	If len(sTarget) = 0 Then sTarget = DCONavType()
+	
+	If sSource = sTarget Then 
+		Writelog("Source and Target are to the same component. Exiting Action.")
+		Exit Function
+	End if
+		
+	Set oSource = DCONav(sSource)
+	If Not IsAlive(oSource) then 
+		Writelog("Copy from node not found.")
+		rrCopy=False
+		Exit Function
+	End if
+	
+	Set oTarget = DCONav(sTarget)
+	If Not IsAlive(oTarget) then 
+		Writelog("Copy to node not found.")
+		rrCopy=False
+		Exit Function
+	End if
+	
+	'Get Target original
+		
+	'Target original values
+	oTarget.Text=""
+	oTarget.Variable("Position")="0,0,0,0"
+	
+	'Check Source has value
+	If oSource.Text="" then 
+		Writelog("Source field has no value.")
+		Exit Function
+	End if
+	
+	Writelog("Copying Node: '" & oSource.ID & "' value:'" & oSource.Text & "' image:'" & oSource.Variable("IMAGEFILE") & "' to '" & oTarget.ID & "'")
+	
+	Call RRCopyChars(oSource,oTarget,1,len(oSource.Text))
+	Call RRCopyPos(oSource,oTarget,1,len(oSource.Text))
+	Call RRCopyImage(oSource,oTarget)
+		
+	Writelog("New Target Value:'" & oTarget.Text & "'  Position:'" & oTarget.Variable("Position") & "' image:'" & oTarget.Variable("IMAGEFILE") & "'")		
+				
+	Call ErrorHandler("rrCopy")   
+  
+End Function
+		
+Function rr_Copy(bInter, bDebug, StrParam) 
+
+  'This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by rrCopy."
+  'DEPRECATED v8.1.0.18 5.18.2011
+  
+	Dim aStrParam
+	Dim sSource
+	Dim sTarget
+	
+	On Error Resume Next
+		
+	aStrParam = Split(StrParam & ",",",")
+	sSource = Trim(aStrParam(0))
+	sTarget = Trim(aStrParam(1))
+
+  rr_Copy = rrCopy(sSource, sTarget)
+				
+	Call ErrorHandler("rr_Copy") 		
+
+End Function
+
+Function rrAppend(varSource,varTarget)
+		
+  ' rr_Append was replaced by rrAppend so we could use the "f" tag with unique parameters.
+  Dim sSource
+  Dim sTarget
+  Dim oSource
+  Dim oTarget
+  Dim sOrigImageN
+  Dim sOrigImageH
+  Dim oChild
+  Dim nChildren
+  Dim oChar
+  Dim i
+
+	On Error Resume Next
+
+	rrAppend = True
+		
+	sSource = Trim(varSource)
+	sTarget = Trim(varTarget)
+	
+	If len(sSource) = 0 Then sSource = DCONavType()
+	If len(sTarget) = 0 Then sTarget = DCONavType()
+	
+	If sSource = sTarget Then 
+		Writelog("Source and Target are to the same component. Exiting Action.")
+		Exit Function
+	End if
+		
+	sValue = MetaWord(sSource)
+	If Len(sValue)=0 then 
+		Writelog("Source argument or object does not have a value. Exiting.")
+		rrAppend=False
+		Exit Function
+	End if
+	
+	Set oTarget = DCONav(sTarget)
+	If Not IsAlive(oTarget) then 
+		Writelog("Append to node not found.")
+		rrAppend=False
+		Exit Function
+	End if
+		
+  Writelog("Start Value of Target:'" & oTarget.Text & "'")
+
+	For i = 1 to Len(sValue)
+		Set oChar = oTarget.AddChild(4,"",-1)
+		
+		If Not oChar is Nothing then 
+					
+			oChar.CharValue(0)= Clng(ASCW(Mid(sValue,i,1)))
+			oChar.CharConfidence(0) = Clng(9)
+			bRes = oChar.SetPosition(clng(0),clng(0),clng(0),clng(0))
+				
+		End if
+	Next 'x
+
+	Set oChar = Nothing
+			
+  Writelog("End Value of Target:'" & oTarget.Text & "'")
+  
+	Call ErrorHandler("rrAppend")   
+  
+End Function
+		
+Function rr_Append(bInter, bDebug, StrParam) 
+
+  'This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by rrAppend."
+  'DEPRECATED v8.1.0.18 5.18.2011
+  
+  Dim aStrParam
+  Dim sSource
+  Dim sTarget
+
+	On Error Resume Next
+
+	aStrParam = Split(StrParam & ",",",")
+	sSource = Trim(aStrParam(0))
+	sTarget = Trim(aStrParam(1))
+
+  rr_Append = rrAppend(sSource, sTarget)
+
+	Call ErrorHandler("rr_Append") 
+
+End Function
+
+Function rrPrepend(varSource,varTarget)
+		
+  ' rr_Append was replaced by rrAppend so we could use the "f" tag with unique parameters.  
+	Dim sSource
+	Dim sTarget
+	Dim oSource
+	Dim oTarget
+	Dim sOrigImageN
+	Dim sOrigImageH
+	Dim oChild
+	Dim nChildren
+	Dim oChar
+  Dim i
+
+	On Error Resume Next
+
+	rrPrepend = True
+		
+	sSource = Trim(varSource)
+	sTarget = Trim(varTarget)
+	
+	If len(sSource) = 0 Then sSource = DCONavType()
+	If len(sTarget) = 0 Then sTarget = DCONavType()
+	
+	If sSource = sTarget Then 
+		Writelog("Source and Target are to the same component. Exiting Action.")
+		Exit Function
+	End if
+		
+	sValue = MetaWord(sSource)
+	If Len(sValue)=0 then 
+		Writelog("Source argument or object does not have a value. Exiting.")
+		rrPrepend=False
+		Exit Function
+	End if
+	
+	Set oTarget = DCONav(sTarget)
+	If Not IsAlive(oTarget) then 
+		Writelog("Append to node not found.")
+		rrPrepend=False
+		Exit Function
+	End if
+		
+  Writelog("Start Value of Target:'" & oTarget.Text & "'")
+
+	For i = 1 to Len(sValue)
+		Set oChar = oTarget.AddChild(4,"",i-1)
+		
+		If Not oChar is Nothing then 
+					
+			oChar.CharValue(0)= Clng(ASCW(Mid(sValue,i,1)))
+			oChar.CharConfidence(0) = Clng(9)
+			bRes = oChar.SetPosition(clng(0),clng(0),clng(0),clng(0))
+				
+		End if
+	Next 'x
+
+	Set oChar = Nothing
+			
+  Writelog("End Value of Target:'" & oTarget.Text & "'")
+
+	Call ErrorHandler("rrPrepend") 
+  
+End Function
+		
+Function rr_Prepend(bInter, bDebug, StrParam) 
+  
+  'This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by rrPreped."
+  'DEPRECATED v8.1.0.18 5.18.2011
+  
+  Dim aStrParam
+	Dim sSource
+	Dim sTarget
+
+	On Error Resume Next
+
+	aStrParam = Split(StrParam & ",",",")
+	sSource = Trim(aStrParam(0))
+	sTarget = Trim(aStrParam(1))
+
+	rr_Prepend = rrPrepend(sSource, sTarget)
+
+	Call ErrorHandler("rr_Prepend") 
+
+End Function
+
+'END META ACTION SECTION
+
+Function rr_WriteNode(bInter, bDebug) 
+		
+	Dim sNodeFileName	
+	
+	On Error Resume Next 
+	
+	rr_WriteNode=True
+	
+	sNodeFileName=Pilot.BatchDir & "\" & CurrentObj.ID & ".xml"
+		
+	CurrentObj.Variable("DATAFILE")=sNodeFileName
+		
+
+End Function
+
+Function rr_AbortBatch(bInter, bDebug) 
+  	rr_AbortBatch = False
+    
+    Call AbortBatch()  
+
+
+End Function
+
+Sub AbortBatch() 
+  ' Sets the Batch to Abort
+  
+    Writelog("Setting Batch to stop processing rules and end with status ABORTED.")
+    
+    bAbort = True
+    nTaskStatus = RetAbort 
+      RRState.Data("bAbort")="True"
+      RRState.LogicResult=-1  
+
+
+End Sub
+
+Function GotoNextRule(bInter, bDebug) 
+  '"This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by GoToNextFunction."
+	'This action has been deprecated. It has been replaced by "GoToNextFunction".
+	GoToNextRule = False
+	GoToNextRule = GoToNextFunction()
+
+End Function
+
+Function GoToNextFunction()
+		
+	GoToNextFunction = False
+	WriteLog("GoToNextFunction returning " & GoToNextFunction & " so next function in the RuleSet will run.") 
+	'Call ErrorHandler("Function GoToNextFunction") 
+
+End Function
+		
+Function SetReturnValue(bInter, bDebug, StrParam) 
+	on error resume next
+  
+  SetReturnValue = False
+  
+  StrParam = Trim(StrParam)  
+  if (ucase(StrParam) = "TRUE") then
+    SetReturnValue = True
+  end if      
+  Writelog("SetReturnValue returns: " & SetReturnValue)
+  
+End Function
+
+Function SetIsOverrideable(bInter, bDebug, StrParam) 
+   '  Specifies that if the validation fails for the current object, If it is non-overrideable 
+   '  or overrideable by the user.
+   '  This status may prevent an operator from overriding a field's validations 
+   '  and then continuing to subsequent pages.
+   
+   ' IMPORTANT! - THIS IS A DUPLICATE NAMED METHOD WHICH ALSO EXISTS IN VALIDATIONS.  Which one is called is determined by the load order, 
+  ' It doesn't matter which one is called out in Datacap Studio.  THIS IS A VB LIMITATION and why we should NEVER have duplicate named VB actions.
+  ' BOTH THE Validation and rrunner versions MUST be kept identical.
+   
+   'Added support for smart parameters
+   StrParam=MetaWord(StrParam)
+   writelog("Param: '" & StrParam & "'")
+   
+   Set oBatch = CurrentObj    ' Find the batch node - Even though we are likely on a field, RuleRunnerLogic will check the batch node after at the end of the rules.
+   While oBatch.ObjectType > 0
+       Set oBatch = oBatch.Parent    
+   Wend
+   
+   WriteLog("SetIsOverrideable parameter is " & StrParam)
+   If Ucase(StrParam) = Ucase("True") Then
+      nDefaultRtn = nRtn_Over
+      oBatch.Variable("nDefaultRtn")="1" ' 1 = can override - This is for compatability with RuleRunnerLogic which needs to use the DCO variable.
+      WriteLog("rr Setting Rule to Overrideable.")
+   Else
+      nDefaultRtn = nRtn_Fail
+      oBatch.Variable("nDefaultRtn")="2" ' 2 = cannot override - This is for compatability with RuleRunnerLogic which needs to use the DCO variable.
+      WriteLog("rr Setting Rule to NON Overrideable.")
+   End If
+   SetIsOverrideable = True
+	
+
+End Function
+
+Function ProcessChildren(bInter, bDebug, StrParam) 
+	Dim aStrParam
+
+  On Error Resume Next
+
+  ProcessChildren = FALSE
+
+  aStrParam = Split(StrParam,",")
+
+  If uBound(aStrParam) <> 1 then
+    Writelog("Expecting comma separated arguments (Condition,Command). Wrong number of parameters. Exiting")
+    Exit Function
+  End if
+
+  Call u_RecurseObject(CurrentObj,aStrParam(0),aStrParam(1),cint(0))
+
+  ProcessChildren = TRUE
+  
+
+End Function
+
+Function u_RecurseObject(Obj,Condition,Command,Indent)
+		
+' utility function for ProcessChildren Action
+
+	Dim i
+  Dim NextIndent
+  Dim nChildren
+  
+  On Error Resume Next
+  
+  Writelog(space(Indent) & "-- ProcessChild '" & Obj.ID & "'")
+
+  If Eval(Condition) then
+    Writelog(space(Indent) & "   * Condition Found: " & Condition)
+    Writelog(space(Indent)& "   * Executing Command: " & Command)
+    Execute(Command)
+  End if
+
+  If Err.Number<>0 then Exit function
+
+  NextIndent = Indent + cint(3)
+
+  'Count of child objects -  character obj count
+  nChildren = Obj.NumOfChildren - len(Obj.Text)
+
+  For i = 1 to nChildren
+    Call u_RecurseObject(Obj.GetChild(i-1),Condition,Command,NextIndent)
+  Next 'i
+
+
+End Function
+		
+Function SetBatchPriority(Priority)
+		
+' Sets the Batch priority for the current Batch
+   
+  On Error Resume Next
+  
+  Dim SmartVal
+  
+  SetBatchPriority=False
+  
+  SmartVal=MetaWord(Priority)
+  If Len(SmartVal)>0 then Priority=SmartVal
+  
+  If Not Isnumeric(Priority) Then 
+    Writelog("Parameter must be numeric.")
+    Exit Function
+  End if
+  
+  Priority=cInt(Priority)
+  
+  If Priority<0 Then 
+    Writelog("Parameter must be a non negative integer.")
+    Exit Function
+  End if
+  
+  Pilot.Priority=Priority 
+  
+  If Err.Number=0 then
+    SetBatchPriority=True
+    Writelog("Batch Priority set to '" & cStr(Priority) & "'")
+  End if
+ 
+
+End Function
+		
+Function SetOperatorID(OperatorID)
+		
+' Sets the Batch OperatorID for the current Batch
+   
+  On Error Resume Next
+  
+  Dim sSmartVal
+  
+  SetOperatorID=False
+      
+  SmartVal=MetaWord(OperatorID)
+  If Len(SmartVal)>0 then OperatorID=SmartVal
+    
+  Pilot.Operator=cstr(OperatorID) 
+  
+  If Err.Number=0 then
+    SetOperatorID=True
+    Writelog("Operator set to '" & OperatorID & "'")
+  End if
+ 
+
+End Function
+		
+Function SetStationID(StationID)
+		
+' Sets the Batch StationID for the current Batch
+   
+  On Error Resume Next
+  
+  Dim sSmartVal
+  
+  SetStationID=False
+      
+  SmartVal=MetaWord(StationID)
+  If Len(SmartVal)>0 then StationID=SmartVal
+  
+  Pilot.Station=cStr(StationID) 
+  
+  If Err.Number=0 then
+    SetStationID=True
+    Writelog("Station set to '" & StationID & "'")
+  End if
+ 
+
+End Function
+		
+Function rrCompareNumeric(object1,operator,object2)
+		
+      
+      Dim sSourceA
+	  Dim sSourceB
+      Dim sSourceOperator
+      Dim sValueA
+      Dim sValueB
+      Dim lValueA
+      Dim lValueB
+      
+      'Can be extend to other logical operators like <>, <= or >= if needed in future
+      Dim sValidOperators 
+      sValidOperators= "<,>,="
+      
+      Writelog("Calling rrCompareNumeric....")
+      On Error Resume Next
+            	
+	    rrCompareNumeric = False
+  
+      sSourceA = Trim(object1)
+    	sSourceB = Trim(object2)
+      sSourceOperator=Trim(operator)
+      
+       
+      	If len(sSourceA) = 0 Then sSourceA = DCONavType()
+	      If len(sSourceB) = 0 Then sSourceB = DCONavType()
+        
+        'if operator is blank then returns false.
+        If len(sSourceOperator) = 0 Then 
+          Writelog("Logical operator is a mandatory parameter. Returning false")
+          rrCompareNumeric = False   
+          Exit Function
+        End if
+        
+        sValueA = MetaWord(sSourceA)
+        sValueB = MetaWord(sSourceB)
+        
+        Writelog("Object 1: "+sValueA + " Object 2: "+sValueB+" Operator: "+sSourceOperator)
+     
+         'Check for numeric values if passed
+         If Not (IsNumeric(sValueA) and IsNumeric(sValueB)) Then
+           Writelog("Parameters used for comparison should be numeric. Returning false")
+           Exit Function
+         End if
+         
+         'Check if correct operator passed, verify from the list of valid operators
+         If Not ( (InStr(sValidOperators,sSourceOperator) > 0)) Then
+          Writelog(" Operator: "+ sSourceOperator +" is not valid operator. Allowed operators are <, > , = only. Returning false")
+          Exit Function
+         End if
+     
+     lValueA=CDbl(sValueA)
+     lValueB=CDbl(sValueB)
+      
+        Writelog("Checking condition...   " + lValueA + " "+sSourceOperator+" "+lValueB)
+          
+        Select case sSourceOperator
+            case "="
+                If lValueA = lValueB Then 
+                      Writelog("Source A and B reference the same component. Returning True.")
+                      rrCompareNumeric = True                
+                  Else
+                      Writelog("Source A and B reference the different component. Returning False.")
+                      rrCompareNumeric = False               
+                 End if
+                 Exit Function
+           case ">"
+                 If lValueA > lValueB Then 
+                    Writelog("Source A is greater than Source B. Returning True.")
+                    rrCompareNumeric = True               
+                Else
+                    Writelog("Source A is not greater than Source B. Returning False.")
+                    rrCompareNumeric = False                
+                 End if
+                 Exit Function
+           case "<"
+                 If lValueA < lValueB Then 
+                      Writelog("Source A is smaller than Source B. Returning True.")
+                      rrCompareNumeric = True                
+                  Else
+                      Writelog("Source A is not smaller than Source B. Returning False.")
+                      rrCompareNumeric = False                  
+                 End if
+                 Exit Function
+           case else
+                 Writelog("Incorrect operator. Returning false")
+                 rrCompareNumeric = False         
+                 Exit Function
+      End Select                  
+      
+      Call ErrorHandler("rrCompareNumeric")       
+      
+End Function
+		
+function tm_GetMyGroups()
+	tm_GetMyGroups = RRState.Data("rrs:atm:me:groups")
+end function
+
+function tm_GetGroupParam(group, params)
+	tm_GetGroupParam = "<!notfound!>" '-2 = no param
+	lgroup = MetaWord(group)
+	lgroups = tm_GetMyGroups()
+	a=Split(lgroups,"|")
+	ap=Split(params,"|")
+	if LBound(a) <> LBound(ap) or UBound(a) <> UBound(ap) then
+		exit function
+	end if
+	index = -1
+	found = false
+	for each g in a
+		index = index + 1
+		if 0 = StrComp(g,lgroup,1) then
+			found = true
+			exit for
+		end if
+	next
+	if found and -1 < index then
+		tm_GetGroupParam = ap(index)
+	end if
+end function
+
+function tm_GetGroupIndex(group)
+	tm_GetGroupIndex = -2 '-2 = no group
+	res = tm_GetGroupParam(group, RRState.Data("rrs:atm:me:group_indexes"))
+	if res = "<!notfound!>" then
+		exit function
+	end if	
+	tm_GetGroupIndex = CLng(res)
+end function
+
+function tm_GetGroupKey(group)
+	tm_GetGroupKey = -1
+	res = tm_GetGroupParam(group, RRState.Data("rrs:atm:me:group_keys"))
+	if res = "<!notfound!>" then
+		exit function
+	end if	
+	tm_GetGroupKey = CLng(res)
+end function
+
+function tm_GetGroupWeight(group)
+	tm_GetGroupWeight = -1
+	res = tm_GetGroupParam(group, RRState.Data("rrs:atm:me:group_weights"))
+	if res = "<!notfound!>" then
+		exit function
+	end if	
+	tm_GetGroupWeight = CLng(res)
+end function
+
+Function rrIsValidTMGroup(GroupName)
+		
+	On Error Resume Next
+	rrIsValidTMGroup = false
+	lgroup = MetaWord(GroupName)
+	lgroups = tm_GetMyGroups()
+	a=Split(lgroups,"|")
+	for each g in a
+		if 0 = StrComp(g,lgroup,1) then
+			rrIsValidTMGroup = true
+			exit for
+		end if
+	next
+	if false = rrIsValidTMGroup then
+		call WriteLog("rrIsValidTMGroup: group " & lgroup & " is NOT valid")
+	else
+		call WriteLog("rrIsValidTMGroup: group " & lgroup & " is valid")
+	end if
+    
+End Function
+		
+Function rrAddTMGroup2Batch(GroupName,IgnoreFailure)
+		
+	On Error Resume Next
+	lgroup = MetaWord(GroupName)
+	rrAddTMGroup2Batch = false
+	if IgnoreFailure = false and not rrIsValidTMGroup(GroupName) then
+		call WriteLog("error: invalid group " & lgroup)
+		exit function
+	end if 
+	grkey = tm_GetGroupKey(GroupName)
+	if -1 < grkey then
+		toset = RRState.Data("rrs:atm:batch:bp_key_str")
+		toset = toset & "|" & CStr(grkey)
+		RRState.Data("rrs:atm:batch:bp_key_str") = toset
+		call WriteLog("added " & lgroup & " group to batch; batch is assigned to these group keys: " & toset)
+		rrAddTMGroup2Batch = true
+	else
+		call WriteLog("error: couldn't get key for group " & lgroup)
+		rrAddTMGroup2Batch = IgnoreFailure
+	end if
+    
+End Function
+		
+Function rr_eTimer(start_Timer)
+		
+    
+    sTime=cdbl(0) 
+    
+    Dim end_Timer
+    end_Timer = cdbl(Timer)
+    
+    sTime = end_Timer-cdbl(start_Timer)
+    
+    if sTime<0 then 
+      sTime=sTime-cdbl(86400)
+    End if
+    
+    rr_eTimer=sTime
+    
+    
+End Function
+		'namespace ()
+                'include (rrunner)
+
+'************************************************************************
+' Vscan Actions 
+'------------------------------------------------------------------------
+' Licensed Materials - Property of IBM
+' â€œRestricted Materials of IBMâ€
+' 5725-C15 5725-C69
+'
+' Â© Copyright IBM Corp. 1994, 2020 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+'-----------------------------------------------------------------------------
+'
+'Note: 9.1.10.50 populated via RRX.cs
+WriteLog("VScan file v. 9.1.10.50")
+'
+'********************************************************************
+
+gReinitVScanUponRescan = FALSE              'Testing only, true to re-enumerate, etc.
+
+Dim sIniFileName
+
+'Default values 
+'Note: default values can be overridden by actions
+
+If isObject(Pilot) then SourceDir=FileMgr.GetParentFolderName(Pilot.ProjectPath)   
+
+InboxFolder=""                   
+MaxImageFiles=32767                        'SetMaxImageFiles( "N" ) - max of 32767
+FileOption=0                               'LeaveImageFileUntouched means FileOption = 0
+                                           'DeleteImageFile  means    FileOption    =  1
+                                           'CopyImageFileWithExtention( "FileExt" )  = 2
+                                           'MoveImageFileToDirectory( "FileMoveDir") = 3
+FileMoveDir=""
+FileExt=".tio"
+MultiPageTif=False
+CheckSubDir=False                           'SearchInSubdirectory(1)
+ImageExtension="tif"
+
+bAuto = true
+
+Dim bDocumentStructurePresents
+bDocumentStructurePresents = False
+
+' Some tasks need a Document structure. This object is created by AddDocument rule
+' and can be used to handle AP (actual page)
+Dim oDoc 
+Set oDoc = Nothing
+
+Dim gSortType
+gSortType = "Name"
+Dim gSortOrder
+gSortOrder = "ASC"
+
+Const PerformPageFalse = 0
+Const PerformPageOK = 1
+Const PerformPageAbort = 2
+Const PerformPageFinish = 3
+
+Const adInteger = 3
+Const adDate = 7
+Const adBSTR = 8
+Const adWChar = 130
+Const adVarChar = 200
+Const adVarWChar = 202
+
+
+'***************************
+'GLOBAL VSCAN VARIABLES
+
+Dim oIn
+Dim oOut
+Dim oOutLook
+Dim oDCName
+Dim g_bAltDCName
+g_bAltDCName=false   ' Default to use traditional naming.  i.e. TM000001, TM000002, etc.
+
+' Note: Uses these global variables declared in rrunner.rrx for nTaskStatus settings
+'  RetAbort = 0
+'  RetFinished = 2
+'  RetPending = 8
+'  RetHold = 4
+
+'FileOptions Constants 
+Const FILE_LEAVEALIVE = 0
+Const FILE_DELETE = 1
+Const FILE_COPY = 2
+Const FILE_MOVE = 3
+Const FILE_RENAME = 4
+
+Dim stats_Time
+Dim stats_Timer
+
+stats_StartTime = Now
+stats_StartTimer = Timer
+
+Dim extFileArray
+
+'==> BEGIN MISC UTILITES
+
+
+Sub InitVscanGlobalObjects() 
+  On Error Resume Next
+
+  Set oOutLook = new CMailFolder 
+  If Err.number <> 0 Then 
+    WriteLog("Couldn't create a MailFolder handler.")
+    Err.Clear
+  End if
+      
+  Set oIn = new CScanFilesCollection        
+  If Err.number <> 0 Then 
+    WriteLog("Couldn't create a Scan File Collection.")
+    Call ErrorHandler("class CScanFilesCollection")
+    Err.Clear
+  End if
+
+  Set oOut = new CProcessImage
+  If Err.number <> 0 Then 
+    WriteLog("Couldn't create a Process-Image object.")
+    Call ErrorHandler("class CProcessImage")
+    Err.Clear
+  End if
+  
+  Set oDCName = Createobject("Datacap.DCName.NameLib")
+  If Err.number <> 0 Then 
+    WriteLog("Couldn't create a DCName object.")
+    Set oDCName = nothing
+    Err.Clear
+  End if
+
+End Sub
+
+InitVscanGlobalObjects()
+
+'***********************************************************************************
+'CMailFolder
+'***********************************************************************************
+
+Class CMailFolder
+
+  ' copy attachmants from     txtInboxFolder  - mail subfolder in Inbox folder
+  '                             |
+  '                             V
+  '                      to   sImageDir       - regular folder
+  ' after processing delete mail
+   
+  Private OutLook   ' outlook applications
+  Private ns              ' MAPI namespace
+  Private fs              ' default MAPI folder
+  Private fauto           ' subfolder of Inbox, wich includes mesages with image attachments
+  Private txtInboxFolder  ' name of subfolder in Inbox folder
+  Private sImageDir '
+  Private bInitializeComplete
+
+  'Initialize & Terminate ---------------------------------------------- 
+  Private Sub Class_Initialize  ' Initialize event.
+         
+    On Error Resume Next
+
+    bInitializeComplete = False
+    ReadDefaultSetup()
+
+    'If setup file is empty we will initialize it from rules
+    if (txtInboxFolder="") Then exit Sub
+    
+    InitializeOutlook(txtInboxFolder)
+    bInitializeComplete = True
+  End Sub
+
+  Private Sub Class_Terminate    ' Terminate event.
+    'do nothing
+  End Sub
+
+  'Private methods -----------------------------------------------------
+  Public Sub InitializeOutlook(my_InBoxFolder)
+           
+    Call Writelog("Initializing MailFolder Object")
+    txtInboxFolder = my_InBoxFolder
+    Set OutLook=CreateObject("Outlook.Application")
+    If PopupRuntimeError("Unable to create Outlook object!") Or OutLook is Nothing Then
+      Call Writelog("unable to create Outlook object")
+      Exit Sub
+    End If
+    Set ns=OutLook.GetNamespace("MAPI")
+    If PopupRuntimeError("Unable to get MAPI namespace!") Or ns Is Nothing Then
+      Call WriteLog("Unable to get MAPI namespace!")
+      Set OutLook = Nothing
+      Exit Sub
+    End If
+
+    Set fauto=GetPublicSubFolder(my_InboxFolder)
+
+    If PopupRuntimeError("Unable to get source mail subfolder!") Or fauto Is Nothing Then
+      Call Writelog("Unable to get source mail subfolder!" & VbCrLf &_
+      "    Check, please, your InboxFolder settings" &_
+      " in ini file: "  & txtInboxFolder & VbCrLf &_
+      "     must be the same as subfolder name in your Inbox directory")
+      Set OutLook = Nothing
+      Exit Sub
+    End If
+
+'move this function  in action       SaveAttachmentsAndDeleteMail()
+    bInitializeComplete = True
+    Set OutLook = Nothing
+    Call Writelog("completed initialization of MailFolder object")
+  End Sub
+
+  Private Sub ReadDefaultSetup
+
+    txtInboxFolder = InboxFolder
+    writelog("Read setup settings. Messages with an image attachment are in mail subfolder: " & txtInboxFolder)
+    sImageDir = SourceDir
+    writelog("Read setup settings. Directory with source images: " & sImageDir)
+
+    ' check existing directory 
+    ' AND insert DRIVER LETTER 
+    If (Not FileMgr.FolderExists(sImageDir) ) Then
+      WriteLog("Folder '" & sImageDir & "' does not exist.")
+      Exit Sub
+    Else 
+      Dim folder
+      Set folder = FileMgr.GetFolder(sImageDir)
+      sImageDir = folder.Path
+      Set folder = Nothing
+    End if
+
+  End Sub
+
+  'Public methods -----------------------------------------------------
+  Public Function GetPublicSubFolder(strSubFolder)  
+   ' strSubFolder - whole path inside Outlook or on Exchange server p1/p2/p3
+   ' Function uses global object ns
+
+    on error resume next
+
+    Dim strPassedPath
+    strPassedPath = ""
+    Dim aPathArray
+    Dim arExistingRootFolderNames
+
+    If (strSubFolder ="") Then
+      writelog("unable to get Public SubFolder because SubFolder path is empty")
+      Set GetPublicSubFolder = Nothing
+      Exit Function
+    End If
+    '   check for trivial error - first symbol is "/" or last symbol is "/"
+    If (Mid(strSubFolder,1,1) = "/") Then
+      strSubFolder = Right(strSubFolder, Len(strSubFolder) - 1 )
+      writelog("Fixed first character in path: the path name should not begin with /")
+    End If
+    nLen = Len(strSubFolder)
+    If (Mid(strSubFolder,nLen,1) = "/") Then
+      strSubFolder = Left(strSubFolder, nLen - 1 )
+      writelog("Fixed last character in path: the path name should not finish with /")
+    End If
+
+    aPathArray = split(strSubFolder,"/")
+    If (IsArray(aPathArray)) Then
+      nCount = uBound(aPathArray)
+      writelog("path piece is " & aPathArray(0))  
+      strPassedPath = aPathArray(0)
+
+      ' check all upper level folders
+      Set oTopFolders = ns.folders
+      if (PopupRunTimeError("Cannot get top level folders")) Then
+        Set GetPublicSubFolder = Nothing
+        Exit Function             
+      end if
+
+      if (oTopFolders is Nothing) then
+        writelog("Can not get the topmost level folder list")
+        Set GetPublicSubFolder = Nothing
+        Exit Function
+      end if
+ 
+      if (oTopFolders.Count = 0) then
+        writelog("Topmost folder list is empty")
+        Set GetPublicSubFolder = Nothing
+        Exit Function
+      end if
+
+      writelog("Names of top folders")
+      for i = 1 to oTopFolders.Count
+        strMatched = "not matched"
+        'if (lcase(aPathArray(0)) = lcase(oTopFolders.item(i).name)) then strMatched = "matched"
+        if (StrComp(aPathArray(0), oTopFolders.item(i).name, 1) = 0) then strMatched = "matched"
+        writelog "     " & i &".  " & (oTopFolders.item(i).name) &"    " & strMatched 
+      next
+
+      Set moveFolder = ns.Folders(aPathArray(0))
+      If (PopupRunTimeError("Cannot get folder "& aPathArray(0))) Then
+        Set GetPublicSubFolder = Nothing
+        Exit Function             
+      End if
+
+      If moveFolder Is Nothing Then
+        writelog("ERROR: unable to find path on Exchange Server: '" & strPassedPath & "'")
+        Set GetPublicSubFolder = Nothing
+        Exit Function
+      End If
+      For i=1 To uBound(aPathArray)
+        writelog("path piece is " & aPathArray(i))
+        strPassedPath = strPassedPath & "/" & aPathArray(i) 
+        ' check all subfolders
+        Set oSubFolders = moveFolder.folders
+        if (PopupRunTimeError("Cannot get subfolder list of "& moveFolder.name)) Then
+          Set GetPublicSubFolder = Nothing
+          Exit Function             
+        end if
+
+        if (oSubFolders is Nothing) then
+          writelog("Cannot get the sub folder list of "& moveFolder.name)
+          Set GetPublicSubFolder = Nothing
+          Exit Function
+        end if
+ 
+        if (oSubFolders.Count = 0) then
+          writelog("subfolder list is empty")
+          Set GetPublicSubFolder = Nothing
+          Exit Function
+        end if
+
+        writelog("Names of subfolders of " & moveFolder.name)
+        for k = 1 to oSubFolders.Count
+          strMatched = "not matched"
+          'if (lcase(aPathArray(i)) = lcase(oSubFolders.item(k).name)) then strMatched = "matched"
+          if (StrComp(aPathArray(i), oSubFolders.item(k).name, 1) = 0) then strMatched = "matched"
+          writelog "     " & k &".  " & (oSubFolders.item(k).name) &"    " & strMatched 
+        next
+        
+        if (PopupRunTimeError("Cannot manage subfolder list "& moveFolder.name)) Then
+          Set GetPublicSubFolder = Nothing
+          Exit Function             
+        end if
+
+        Set moveFolder = moveFolder.Folders(aPathArray(i))
+        if (PopupRunTimeError("Cannot get subfolder "& aPathArray(i))) Then
+          Set GetPublicSubFolder = Nothing
+          Exit Function             
+        end if
+
+        If moveFolder Is Nothing Then
+          writelog("ERROR: unable to find out path on Exchange Server: " & strPassedPath)
+          Set GetPublicSubFolder = Nothing
+          Exit Function
+        End If       
+      Next
+    Else
+      writelog("Unable to parse Public SubFolder: " & strSubFolder)
+      Set GetPublicSubFolder = Nothing
+      Exit Function
+    End If  
+    Set GetPublicSubFolder = moveFolder
+  End Function
+
+
+  Public Sub SaveAttachmentsAndDeleteMail()
+   On Error Resume Next
+    If (bInitializeComplete) Then
+      For Each Item In fauto.Items
+        For Each Att In Item.Attachments 
+          sPath = sImageDir & "\" & Att.FileName
+          WriteLog("Process attachment " & Att.FileName)
+     ' SPR 23510 - check if attachment filename already exists, rename don't overwrite
+       If FileMgr.FileExists(sPath) Then
+        sExt = FileMgr.GetExtensionName(Att.FileName)
+        sBase = Left(Att.FileName, Len(Att.FileName)-Len(sExt))
+  
+         For j = 1 to 1000
+         sPath = sImageDir & "\" & sBase & CStr(j) & "." & sExt
+          If Not FileMgr.FileExists(sPath) Then
+          Exit For
+         End If
+        Next 'j
+       End If
+       Err.Clear
+          WriteLog("Save attachment as " & sPath)
+       Att.SaveAsFile(sPath)
+          If PopupRuntimeError("Unable to save attachment!") Then
+            Exit Sub
+          End If
+          WriteLog("next att")
+        Next ' Attachment
+        Item.UnRead=False
+        Item.Move(ns.GetDefaultFolder(3))  'Delete Mail
+        WriteLog("next email")
+      Next ' email item
+    Else
+      Call writeLog("MailFolder class has not been initialized by default.")
+    End If
+  End Sub 
+
+
+  Public Sub SetInboxFolder(StrParam)
+    if StrParam <> "" Then
+      txtInboxFolder = StrParam
+
+      Set fauto = GetPublicSubFolder(txtInboxFolder)
+
+      If PopupRuntimeError("Unable to get source mail subfolder!") Or _
+                        fauto is Nothing Then
+        WriteLog("Unable to get source mail subfolder !" & VbCrLf &_
+        "    Check, please, your InboxFolder settings" &_ 
+        "     must be the same as subfolder name in your Inbox directory")
+        Exit Sub
+      End If
+      writelog("Action changes: Messages with an image attachment are in mail subfolder: " & txtInboxFolder)
+      bInitializeComplete = True
+    else
+      writelog("Unable to change mail source folder: StrParam is empty")
+    End if
+  End Sub
+
+  Public Sub SetSourceDir(StrParam) 
+    sImageDir = StrParam 
+    writelog("Action changes: Directory with source images: " & sImageDir)
+  End Sub
+
+End Class 'CMailFolder
+'***********************************************************************************
+
+
+'***********************************************************************************
+'CProcessImage
+'***********************************************************************************
+Class CProcessImage
+
+  Private chkMultiTif  ' suppose, were is no mix with singleTiff and multiTiff images
+  Private chkTree
+  Private nMaxImageFiles  ' the number of files per batch
+  Private sBatchDir    ' path of batch folder
+
+'  Private nIdx
+  Private nScanned  ' the current scanned image
+  Private nProcessedFiles ' the current image files
+  Private sImageExtension ' default image extension(s)
+
+  Private bProcessAsFile
+
+
+  'Construction & Destruction -----------------------------------------
+
+  Private Sub Class_Initialize  ' Initialize event.
+    writelog("Initializing CProcessImage Object")
+
+    ReadDefaultSetup()
+    nScanned = 0  
+    bProcessAsFile = 0 'False
+    nProcessedFiles = nScanned
+  End Sub
+
+  Private Sub Class_Terminate    ' Terminate event.
+    'do nothing
+  End Sub
+
+ 
+  'Private methods ----------------------------------------------------
+
+  Private Sub ReadDefaultSetup
+
+    chkMultiTif = MultiPageTif
+    writelog("Read setup settings. images are multipage tiff: " & chkMultiTif)
+
+    nMaxImageFiles = MaxImageFiles
+    writelog("Read setup settings. Max image files in one batch: " & nMaxImageFiles)
+
+    sImageExtension = ImageExtension ' lcase(ImageExtension)
+    if (Not InStr(sImageExtension,".")) Then sImageExtension = "." & sImageExtension
+    if (InStr(sImageExtension,",")>4) Then sImageExtension = replace(sImageExtension,",",",.")
+    sImageExtension = replace(sImageExtension,",..",",.")
+    writelog("Read setup settings. Process images with extension: " & sImageExtension)
+         
+  End Sub
+
+  '------------------------------------------
+
+  Private Function bAddPageToDCO(sBaseName)
+    'COMMENT: works but does not involved yet
+
+    sDir = Pilot.BatchDir
+    sTarget = sDir & "\" & sBasename & sImageExtension ' ".tif"
+    Set Page = DCO.AddChild(2, sBaseName, -1)
+    WriteLog("Page added: " & sBaseName)
+    If Not Pilot.IsObjectEmpty(Page) Then
+      Page.Type = "Other"
+      Page.Status = 49
+      Page.ImageName = sTarget
+      If Not Page.AddVariableString("PageName", GetPageName(sTarget)) Then
+         Call Page.Variable("PageName", GetPageName(sTarget))
+      End If
+      if (Not Page.AddVariableString("ScanSrcPath",sTarget)) Then
+        ' what is for rerun tasks
+        call Page.Variable("ScanSrcPath",sTarget)
+        writelog("Fixed ScanSrcPath to value " & sTarget)
+      end if
+
+      If chkTree Then
+        Pilot.ChildrenChanged(DCO)
+        Pilot.ActiveObject=Page
+      End If
+
+      Set Page=Nothing
+      bAddPageToDCO = True
+    Else 
+      WriteLog("ERROR! Cannot add page to DCO" & vbCrlf & "TASK ABORTS!!!!")
+      bAddPageToDCO = False
+    End If
+  End Function 'bAddPageToDCO
+
+'------------------------------------------
+
+Private Function PerformImagesAsFile(sFile)
+
+  PerformImagesAsFile = false
+  If ( trim(sFile) = "" ) Then
+     Exit Function
+  End If
+  
+  If nProcessedFiles < nMaxImageFiles then
+     WriteLog("PerformImagesAsFile Processing: " & sFile)
+     sExtn = sImageExtension ' lcase(sImageExtension)
+     If instr(sImageExtension,",")>0 then sExtn = "." &  FileMgr.GetExtensionName(sFile)  ' lcase(FileMgr.GetExtensionName(sFile))        
+     
+     sDir = Pilot.BatchDir
+     sBasename = Left("TM000000", 8 - Len(CStr(nScanned+1))) + CStr(nScanned+1)
+   
+     If g_bAltDCName=True then 
+        WriteLog("Use Alternate Name")
+        If IsAlive(oDCName) then
+           sBasename = oDCName.GetChildSibling("00000000.", cint(nScanned))  
+        Else 
+           WriteLog("oDCName is not available")
+           sBasename = right("00" & cstr(nScanned+1),2) & "000000"  ' Use traditional namming scheme.
+        End if
+     End if
+
+     If Not Instr(sExtn,".")=1 then sExtn = "." & sExtn
+        
+     sTarget = sDir & "\" & sBasename & sExtn 
+     writelog("process images as file " & sTarget)
+     call FileMgr.copyFile(sFile,sTarget)
+
+     ' if where is no document add page to upper level
+     if (oDoc is Nothing) Then
+        Set Page = DCO.AddChild(2, sBaseName, -1)
+     else
+        Set Page = oDoc.AddChild(2, sBaseName, -1)
+     end if
+     WriteLog("Page added: " & sBaseName)
+
+     If Not Pilot.IsObjectEmpty(Page) Then
+        Page.Type = "Other"
+        Page.Status = 49
+        Page.ImageName = sTarget
+        If Not Page.AddVariableString("PageName", GetPageName(sFile)) Then
+            Call Page.Variable("PageName", GetPageName(sFile))
+        End If
+        if (Not Page.AddVariableString("ScanSrcPath",sFile)) Then
+           ' what is for rerun tasks
+           call Page.Variable("ScanSrcPath",sFile)
+           writelog("Fixed ScanSrcPath to value " & sFile)
+        end if
+        If chkTree Then
+           Pilot.ChildrenChanged(DCO)
+           Pilot.ActiveObject=Page
+        End If
+        Set Page=Nothing
+     Else 
+        WriteLog("ERROR! Cannot add page to DCO" & vbCrlf & "Task Aborting.")
+     End If
+
+     nScanned = nScanned + 1
+     nProcessedFiles = nScanned
+     PerformImagesAsFile = PerformPageOK
+  else
+     PerformImagesAsFile = PerformPageFinish
+     exit Function
+  end if
+
+End Function 'PerformImagesAsFile
+
+  '------------------------------------------
+
+  Private Function PerformSinglePage(sFile)
+
+    Dim sPrevError
+    Dim sCurError
+    Dim nW
+    Dim nH
+    Dim nbpp
+        
+    sPrevError = ""
+    sCurError = ""
+    nW = -1
+    nH = -1
+    nbpp = -1
+        
+    On Error Resume Next
+  
+    PerformSinglePage = PerformPageFalse
+    If ( sFile<>"" ) Then
+      If ( nProcessedFiles < nMaxImageFiles) Then
+        WriteLog("PerformSinglePage Processing: " & sFile)
+        sDir = Pilot.BatchDir
+        sExtn = "." & FileMgr.GetExtensionName(sFile) ' lcase(FileMgr.GetExtensionName(sFile))
+        sBasename = Left("TM000000", 8 - Len(CStr(nScanned+1))) + CStr(nScanned+1)
+        sTarget = sDir & "\" & sBasename & sExtn ' sImageExtension ' ".tif"
+
+        Pilot.RepaintPause(100)
+               
+        ImageCtrl.FileName = sFile
+
+        'Assert
+        if (StrComp(ImageCtrl.FileName, sFile, 1) <> 0) Then 
+          writelog("Assert: Unable to manage: " & sFile)
+          writelog("Custom error: " & ImageCtrl.GetLastMessage())
+        end if
+      
+        'get image info - negative values in log indicates an error
+        call ImageCtrl.GetImageInfo(nW, nH, nbpp)
+        writelog("Image width: " & nW & " height: " & nH & " Pixel depth: " & nbpp )
+
+        if (LCase(sImageExtension) = ".gif") Then
+          call ImageCtrl.Save(sTarget,4) '?????
+        Elseif (LCase(sImageExtension) = ".jpg") Then
+          call ImageCtrl.Save(sTarget,13) 
+        Else
+          ' clean up  previous error
+          sPrevError = ImageCtrl.GetLastError()
+            if ( Not ImageCtrl.Save(sTarget) ) then
+                writelog("Unable to save as tif file '" & sTarget & "'")
+                sCurError = ImageCtrl.GetLastError()
+                writelog("Custom errors: " & sPrevError & VbCrLf & "Current error: " &sCurError)
+                
+                'assume this is color image
+                if ( Not ImageCtrl.Save(sTarget,40)) then
+                  writelog("Unable to save as color tif file too" & sTarget )
+                  sCurError = ImageCtrl.GetLastError()
+                  writelog("Custom error: " & sCurError)
+                  PerformSinglePage = PerformPageAbort
+                  ImageCtrl.Filename=""
+                  ImageCtrl.GetNumPages("")
+                  exit function
+                end if
+            end if
+        End If
+
+        ' if where is no document add page to upper level
+        if (oDoc is Nothing) Then
+          Set Page = DCO.AddChild(2, sBaseName, -1)
+        else
+          Set Page = oDoc.AddChild(2, sBaseName, -1)
+        end if
+        WriteLog("Page added: " & sBaseName)
+
+        If Not Pilot.IsObjectEmpty(Page) Then
+          Page.Type = "Other"
+          Page.Status = 49
+          Page.ImageName = sTarget
+          If Not Page.AddVariableString("PageName", GetPageName(sFile)) Then
+              Call Page.Variable("PageName", GetPageName(sFile))
+          End If
+          if (Not Page.AddVariableString("ScanSrcPath",sFile)) Then
+              ' what is for rerun tasks
+              call Page.Variable("ScanSrcPath",sFile)
+              writelog("Fixed ScanSrcPath to value " & sFile)
+          end if
+          If chkTree Then
+              Pilot.ChildrenChanged(DCO)
+              Pilot.ActiveObject=Page
+          End If
+          Set Page=Nothing
+        Else 
+          WriteLog("ERROR! Cannot add page to DCO" & vbCrlf & "TASK ABORTS!!!!")
+        End If
+           
+        nScanned = nScanned + 1
+        nProcessedFiles = nScanned
+        PerformSinglePage = PerformPageOK
+      else
+        PerformSinglePage = PerformPageFinish
+        ImageCtrl.Filename=""
+        ImageCtrl.GetNumPages("")
+        exit Function
+      End if
+    End If
+    ImageCtrl.Filename=""
+    ImageCtrl.GetNumPages("")
+  End Function 'PerformSinglePage
+
+  '------------------------------------------
+
+  Private Function PerformMultiPage(sFile)
+    Dim sPrevError
+    Dim sCurError
+    
+    On Error Resume Next
+
+    sPrevError = ""
+    sCurError = ""
+
+    PerformMultiPage = PerformPageFalse
+    sDir = Pilot.BatchDir
+
+    'slight validation - multipage can be only tiff
+    If (LCase(sImageExtension) = ".gif" or LCase(sImageExtension) = ".jpg") Then
+      WriteLog("Critical error: Unable to process GIF or JPG files with the Multipage Option enabled.")
+      PerformMultiPage = false
+      Exit function
+    End If
+
+    If ( sFile<>"" ) Then
+      If ( nProcessedFiles < nMaxImageFiles) Then
+        WriteLog("PerformMultipage Processing: " & sFile)
+
+        Pilot.RepaintPause(100)
+
+        nP = ImageCtrl.GetNumPages(sFile)     'ImageCtrl.FileName = sFile
+
+        If (nP > 1) Then
+          WriteLog("Multi-page Tiff with " & nP & " pages detected.")
+        Elseif (nP=1) Then
+          Writelog("Single page Tiff detected.")
+        Else
+          Writelog("Error loading Image for page detection.")
+        End If
+
+        For i = 0 To nP-1
+            ImageCtrl.LoadPage(i)
+            sBasename = Left("TM000000", 8 - Len(CStr(nScanned+1))) + CStr(nScanned+1)
+            
+            If NOT Left(sImageExtension, 1)= "." then   ' Add period if there isn't one.    
+                sImageExtension = "." & sImageExtension 
+            End if
+            
+            sTarget = sDir & "\" & sBasename & sImageExtension '".tif"
+            nX=0
+            nY=0
+            nB=0
+            Call ImageCtrl.GetImageInfo(nX, nY, nB)
+            WriteLog(CStr(nX) & " : " & CStr(nY) & " : " & CStr(nB))
+
+            ' clean up  previous error
+            sPrevError = ImageCtrl.GetLastError()
+            If Not ImageCtrl.Save(sTarget) Then 
+              writelog("Unable to save as tif file" & sTarget )
+              ' try to save as color image
+              sCurError = ImageCtrl.GetLastError()
+              writelog("Custom errors: " & sPrevError & VbCrLf & "Current error: " & sCurError)
+              If Not ImageCtrl.Save(sTarget,40) Then 
+                WriteLog("Unable to save as color tif file too" & sTarget)
+                sCurError = ImageCtrl.GetLastError()
+                writelog("Custom error: " & sCurError)
+                PerformMultiPage = PerformPageAbort
+                ImageCtrl.Filename=""
+                ImageCtrl.GetNumPages("")
+                exit function
+              end if
+            end if    
+
+            ' if where is no document add page to upper level
+            if (oDoc is Nothing) Then
+              Set Page = DCO.AddChild(2, sBaseName, -1)
+            else
+              Set Page = oDoc.AddChild(2, sBaseName, -1)
+            end if
+
+            WriteLog("Page added: " & sBaseName)
+            If Not Pilot.IsObjectEmpty(Page) Then
+              Page.Type = "Other"
+              Page.Status = 49
+              Page.ImageName = sTarget
+              If Not Page.AddVariableString("PageName", GetPageName(sFile)) Then
+                  Call Page.Variable("PageName", GetPageName(sFile))
+              End If
+              if (Not Page.AddVariableString("ScanSrcPath",sFile)) Then
+                ' what is for rerun tasks
+                call Page.Variable("ScanSrcPath",sFile)
+                writelog("Fixed ScanSrcPath to value " & sFile)
+              end if
+              If chkTree Then
+                Pilot.ChildrenChanged(DCO)
+                Pilot.ActiveObject=Page
+              End If
+              Set Page=Nothing
+            Else 
+              WriteLog("ERROR! Cannot add page to DCO" & vbCrlf & "Task will Abort")
+            End If 
+
+            nScanned = nScanned + 1
+        Next ' 
+        
+        ImageCtrl.GetNumPages("")
+        nProcessedFiles = nProcessedFiles + 1
+        PerformMultiPage = PerformPageOK
+      Else
+        PerformMultiPage =PerformPageFinish ' PerformPageFalse
+        ImageCtrl.Filename=""
+        Exit Function
+      End if 
+    End If
+    ImageCtrl.Filename=""
+    ImageCtrl.GetNumPages("")
+  End Function 'PerformMultiPage
+
+
+  'Public methods -----------------------------------------------------
+
+  Public Sub SetMultipageTiff(bParam)
+    chkMultiTif = bParam
+    if (chkMultiTif) Then
+      writelog("Action changes: images are multipage tiff.")
+    else
+      writelog("Action changes: images are one page tiff.")
+    end if
+  End Sub
+  
+  '------------------------------------------
+
+  Public Sub SetDoNotOpenInputFiles(bParam)
+    bProcessAsFile = bParam
+    if (bProcessAsFile) Then
+      writelog("Action changes: image files will be processed without opening as image but as files.")
+      If gReinitVScanUponRescan Then chkMultiTif = False
+    else
+      writelog("Action changes: image files will be processed by opening as image.")
+    end if
+  End Sub
+
+  '------------------------------------------
+
+  Public Function Perform(sFile)
+
+    If (bProcessAsFile=True) Then
+      if (chkMultiTif) Then    
+        writelog("Can not use the Multipage tif processing option with the Process-As-File option.")
+        Exit Function
+      End if
+      Perform = PerformImagesAsFile(sFile)
+      Exit Function
+    End if
+
+    If (chkMultiTif=True) Then
+      Perform = PerformMultiPage(sFile)
+    Else
+      Perform = PerformSinglePage(sFile)
+    End if  
+  End Function
+  
+  '------------------------------------------
+
+  Public Function GetMaxImageFiles()
+    GetMaxImageFiles = nMaxImageFiles
+  End Function  
+
+ '------------------------------------------
+ ' Given a filename with a path, return the file name without the file extension
+ ' input: c:\dataca\apt\imagedir\abc.xyz.tif
+ ' output: abc
+  Public Function GetPageName(sFile)
+
+    Dim DotChar
+    Dim SlashChar
+    DotChar = "."
+    SlashChar = "\"
+
+    WriteLog("GetPageName input: " & sFile)  
+    GetPageName = sFile
+    SlashPos = InStrRev(sFile, SlashChar)
+    IF (SlashPos > 0) THEN
+        GetPageName = Mid(sFile, SlashPos+1)
+    END IF
+    DotPos = InStr(GetPageName, DotChar)
+    IF (DotPos > 0) THEN
+        GetPageName = Mid(GetPageName, 1, (DotPos-1))
+    END IF
+    WriteLog("GetPageName output: " & GetPageName)
+    
+  End Function 
+  
+  '------------------------------------------
+
+  Public Sub SetMaxImageFiles(n)
+    nMaxImageFiles = n
+    writelog("Action changes: Max image files in one batch: " & nMaxImageFiles)
+  End Sub  
+
+  '------------------------------------------
+
+  Public Sub SetImageExtension(strParam)
+    writelog("Action changes: Process images with extension: " & sImageExtension)
+    sImageExtension = strParam ' lcase(strParam)
+  End Sub ' SetImageExtension
+  
+  Public Sub ResetNumProcessed
+    nProcessedFiles = 0
+    nScanned = 0
+  End Sub
+
+End Class 'CProcessImage
+
+
+'-----------------------------------------------------------------------------------
+'  CScanFilesCollection
+'-----------------------------------------------------------------------------------
+
+Class CScanFilesCollection
+
+  Private nFileOption
+  Private txtFileMove     'folder to move(copy) files in
+  Private mFileExt  ' new file extension
+
+  ' copy or move images  from sImageDir       - regular folder
+  '                      or   txtInboxFolder  - mail subfolder in Inbox folder
+  '                             |
+  '                             V
+  '                      to   txtFileMove
+
+  ' and place DCO to      sDir   - batch folder
+
+
+  Private sImageDir
+  Private chkSubDir
+  Private sImageExtension 'default image extension
+  Private aFiles()
+
+
+  'Construction & Destruction -----------------------------------------
+
+  Private Sub Class_Initialize  ' Initialize event.
+  'FileOptions Constants 
+  '   FILE_LEAVEALIVE = 0
+  '   FILE_DELETE = 1
+  '   FILE_COPY = 2
+  '   FILE_MOVE = 3
+  '   FILE_RENAME = 4
+
+    Writelog("Initializing SourceFolder Object")
+    Redim Preserve aFiles(0)
+    ReadDefaultSetup()
+     
+  End Sub
+
+  '------------------------------------------
+
+  Private Sub Class_Terminate    ' Terminate event.
+    Erase aFiles()
+  End Sub
+
+  'Private methods ----------------------------------------------------
+
+  Private Sub ReadDefaultSetup
+
+    nFileOption = FileOption
+
+    strFileOption = ""
+    Select Case nFileOption
+      Case 0  strFileOption = "FILE_LEAVEALIVE"
+      Case 1  strFileOption = "FILE_DELETE"
+      Case 2  strFileOption = "FILE_COPY"
+      Case 3  strFileOption = "FILE_MOVE"
+      Case 4  strFileOption = "FILE_RENAME"
+      Case Else strFileOption = "unrecognized option"
+    End Select
+    writelog("Read setup settings. FileOption: " & strFileOption)
+
+    txtFileMove = FileMoveDir
+    writelog("Read setup settings. Move files after processing into dir: " & txtFileMove)
+
+    mFileExt = FileExt
+    writelog("Read setup settings. Change file extension after processing : " & FileExt)
+
+    chkSubDir = CheckSubDir
+    writelog("Read setup settings. Check images into subfolders: " & chkSubDir)
+
+    sImageDir = SourceDir
+    writelog("Read setup settings. Directory with source images " & sImageDir)
+
+    sImageExtension = ImageExtension ' lcase(ImageExtension)
+    if (Not InStr(sImageExtension,".")) then sImageExtension = "." & sImageExtension
+    writeLog("Read setup settings. Process image with extension " & sImageExtension)
+
+    'check existing directory
+    If ( Not FileMgr.FolderExists(sImageDir) ) Then
+      WriteLog("Folder " & sImageDir & " does not exist.")
+      Exit Sub
+    Else 
+      writeLog("Read setup settings. Directory with source images " & sImageDir)
+    End if 
+  
+  End Sub 'ReadDefaultSetup
+
+  '------------------------------------------
+
+  Private Sub EnumFiles_old(SourceDir) 'defect - deprecate this subroutine because it processes all the files in the input dir, instead of basing on the MaxImageFiles
+     ' SourceDir is path to source directory
+     ' enumerates only Tiff files 
+     ' also looks in subdirectories if option checked 
+    Dim fTempName
+    Dim fOrigName
+    Dim sExtn
+    Dim ofile
+    
+    fTempName = ""
+    fOrigName = ""
+    sExtn = ""
+    
+    On Error Resume Next
+    Err.Clear
+    
+    If FileMgr.FolderExists(SourceDir)=True Then
+      Set folder = FileMgr.GetFolder(SourceDir)
+
+      i = Ubound(aFiles)  
+
+      'create an ADODB.Recordset and call it rsFSO
+      Set rsFSO = CreateObject("ADODB.Recordset")
+
+      'create the various rows of the recordset
+      With rsFSO.Fields
+        .Append "Name", adWChar, 255
+        .Append "Type", adWChar, 255
+        .Append "DateCreated", adDate
+        .Append "DateLastAccessed", adDate
+        .Append "DateLastModified", adDate
+        .Append "Size", adInteger
+        .Append "TotalFileCount", adInteger
+        .Append "Path", adWChar, 255
+      End With
+      rsFSO.Open()
+
+      Dim sTestExt
+
+      'Iterate through files, add to RS if extn is 'tiff'
+      For Each ofile In folder.Files
+         sExtn = "." & CStr(FileMgr.GetExtensionName(ofile.Path)) ' lcase(FileMgr.GetExtensionName(ofile.Path)) 
+         sTestExt = replace(sExtn,".","")
+         If (Instr(1,sImageExtension,sTestExt,1)>0) Or (LCase(right(ofile.Path, 5))=".tiff") Then       
+        
+            'Add file to RS list
+            rsFSO.AddNew
+            rsFSO("Name") = ofile.Name
+            rsFSO("Type") = ofile.Type
+            rsFSO("DateCreated") = ofile.DateCreated
+            rsFSO("DateLastAccessed") = ofile.DateLastAccessed
+            rsFSO("DateLastModified") = ofile.DateLastModified
+            rsFSO("Size") = ofile.Size
+            rsFSO("Path") = ofile.Path
+            rsFSO.Update        
+            ' writelog("Processed file: " & ofile.Name) ' Temp for debugging
+          End if  
+        
+      Next 'ofile
+
+      'Release the File Object
+      Set ofile = Nothing
+      
+      'File I/O lock check
+      If Not (rsFSO.EOF And rsFSO.BOF) Then
+         rsFSO.MoveFirst()
+
+         While Not rsFSO.EOF
+           fOrigName = CStr(rsFSO("Path").Value) ' LCase(rsFSO("Path").Value)
+           
+           'Set ofile = FileMgr.Getfile(fOrigName)
+           
+           'call writelog("Enumfiles I/O Lock Check: '" & ofile.Name & "'")
+           
+           'Release the File Object
+           'Set ofile = Nothing
+           
+           call writelog("Enumfiles I/O Lock Check: '" & fOrigName & "'")
+        
+           fTempName = CStr(SourceDir & "\" & FileMgr.GetTempName())
+          
+           Call FileMgr.Copyfile(fOrigName, fTempName,true)           
+           If Err.Number<>0 then 
+              Writelog("File '" & fOrigName & "' is NOT copied to '" & fTempName & "' Error #:" & Err.Number & " Decription: " & Err.Description) 
+           Else
+              Writelog("Created Temp file: '" & fTempName & "' from '" & fOrigName & "'.") 
+           End if
+           
+           Call FileMgr.DeleteFile(fOrigName, true)         
+           
+       '    Dim nTry
+       '    nTry=0
+       '                          
+       '    While FileMgr.FileExists(fOrigName) and Err.Number<>0 and nTry<10
+       '       nTry = nTry + 1
+       '       wscript.sleep 500
+       '       'set WScriptShell = CreateObject("WScript.Shell")
+       '       'WScriptShell.Run "Sleep -m " & 500, 0, true
+       '    Wend
+           
+           If Err.Number<>0 then 
+              Writelog("File '" & fOrigName & "' is locked and will be ignored. " & " Error #:" & Err.Number & " Decription: " & Err.Description)
+              Err.Clear
+              rsFSO.Delete 1
+           Else
+                         
+              'Restore the original file name
+              Call FileMgr.MoveFile(fTempName, fOrigName)
+              If Err.number>0 then
+                 Writelog("Failed to Move Temp file '" & fTempName & "' to '" & fOrigName & "'. Error #:" & Err.Number & " Decription: " & Err.Description) 
+                 Err.Clear
+              End if
+           End if
+           
+           rsFso.MoveNext()
+         Wend
+      End if
+      
+      'Release the File Object
+      Set ofile = Nothing
+             
+      'Sort Records by DateCreated Descending
+      rsFSO.Sort = gSortType & " " & gSortOrder 
+
+      If Not (rsFSO.EOF And rsFSO.BOF) Then
+         rsFSO.MoveFirst()
+
+         While Not rsFSO.EOF And i < 32767
+           i = i + 1
+           Redim Preserve aFiles(Cint(i))  
+
+           aFiles(i) = rsFSO("Path").Value ' LCase(rsFSO("Path").Value)
+           ' Writelog("Sorting: " & rsFSO("Path").Value) ' Temp for debugging
+           rsFso.MoveNext()
+         Wend
+      End if 
+      
+      'Release the RecordSet
+      rsFSO.close()
+      Set rsFSO = Nothing
+  
+      Set fsubcollection = folder.SubFolders      'sub folder collection
+  
+      If fsubcollection.count <> 0 And Cbool(chkSubDir) Then
+        For Each fsub In fsubcollection
+          Call EnumFiles_old(fsub.Path)
+        Next  
+      End If
+      
+    Else
+      WriteLog("Fatal error in EnumFiles: Folder does not exist")
+    End if
+    
+    Set fsubcollection = Nothing
+    Set folder = Nothing
+    PopupRuntimeError("Error occurred in vscan.EnumFiles")     
+  End Sub 'EnumFiles_old
+
+ '------------------------------------------
+ ' Major difference between EnumFiles and EnumFiles_old is that the new EnumFiles 
+ ' calls ImageFileLocked() while constructing the rsFSO list
+  Private Sub EnumFiles(SourceDir)
+     ' SourceDir is path to source directory
+     ' enumerates only Tiff files 
+     ' also looks in subdirectories if option checked 
+    Dim fTempName
+    Dim fOrigName
+    Dim sExtn
+    Dim ofile
+    
+    fTempName = ""
+    fOrigName = ""
+    sExtn = ""
+    
+    On Error Resume Next
+    Err.Clear
+   
+    WriteLog("EnumFiles.")
+    If FileMgr.FolderExists(SourceDir)=True Then
+      Set folder = FileMgr.GetFolder(SourceDir)
+
+      i = Ubound(aFiles)  
+
+      'create an ADODB.Recordset and call it rsFSO
+      Set rsFSO = CreateObject("ADODB.Recordset")
+
+      'create the various rows of the recordset
+      With rsFSO.Fields
+        .Append "Name", adWChar, 255
+        .Append "Type", adWChar, 255
+        .Append "DateCreated", adDate
+        .Append "DateLastAccessed", adDate
+        .Append "DateLastModified", adDate
+        .Append "Size", adInteger
+        .Append "TotalFileCount", adInteger
+        .Append "Path", adWChar, 255
+      End With
+      rsFSO.Open()
+
+      Dim sTestExt
+	  Dim fileCount
+	  fileCount = i
+
+      'Iterate through files, add to RS if extn is 'tiff'
+      For Each ofile In folder.Files
+	     if (fileCount >= oOut.GetMaxImageFiles) Then Exit For
+         sExtn = "." & CStr(FileMgr.GetExtensionName(ofile.Path)) ' lcase(FileMgr.GetExtensionName(ofile.Path)) 
+         sTestExt = replace(sExtn,".","")
+         If (Instr(1,sImageExtension,sTestExt,1)>0) Or (LCase(right(ofile.Path, 5))=".tiff") Then       
+        
+            If (Not ImageFileLocked(ofile.Path)) Then
+                'Add file to RS list
+                rsFSO.AddNew
+                    rsFSO("Name") = ofile.Name
+                    rsFSO("Type") = ofile.Type
+                    rsFSO("DateCreated") = ofile.DateCreated
+                    rsFSO("DateLastAccessed") = ofile.DateLastAccessed
+                    rsFSO("DateLastModified") = ofile.DateLastModified
+                    rsFSO("Size") = ofile.Size
+                    rsFSO("Path") = ofile.Path
+                rsFSO.Update        
+                fileCount = fileCount + 1                
+            Else
+                Writelog("File '" & ofile.Name & "' is locked and will be ignored. ")
+           End if
+         End if         
+      Next 'ofile
+
+      'Release the File Object
+      Set ofile = Nothing
+            
+      'Sort Records by DateCreated Descending
+      rsFSO.Sort = gSortType & " " & gSortOrder 
+
+      If Not (rsFSO.EOF And rsFSO.BOF) Then
+         rsFSO.MoveFirst()
+
+         While Not rsFSO.EOF And i < 32767
+           i = i + 1
+           Redim Preserve aFiles(Cint(i))  
+
+           aFiles(i) = rsFSO("Path").Value ' LCase(rsFSO("Path").Value)
+           rsFso.MoveNext()
+         Wend
+      End if 
+      
+      'Release the RecordSet
+      rsFSO.close()
+      Set rsFSO = Nothing
+  
+      Set fsubcollection = folder.SubFolders      'sub folder collection
+
+      If fsubcollection.count <> 0 And Cbool(chkSubDir) Then
+         WriteLog("EnumFiles - recursive call to subdirectories")
+         For Each fsub In fsubcollection
+            Call EnumFiles(fsub.Path)
+         Next  
+      End If
+      
+    Else
+      WriteLog("Fatal error in EnumFiles: Folder does not exist")
+    End if
+    
+    Set fsubcollection = Nothing
+    Set folder = Nothing
+    PopupRuntimeError("Error occurred in vscan.EnumFiles")     
+  End Sub 'EnumFiles
+  
+   '------------------------------------------
+
+  Private Function ImageFileLocked(sFile)
+	ImageFileLocked = True
+	If (sFile<>"") Then        
+           fTempName = CStr(SourceDir & "\" & FileMgr.GetTempName())
+          
+           Call FileMgr.Copyfile(sFile, fTempName, true)           
+           If Err.Number<>0 then 
+              Writelog("ImageFileLocked error: File '" & sFile & "' is NOT copied to '" & fTempName & "' Error #:" & Err.Number & " Decription: " & Err.Description) 
+              Err.Clear
+              Exit Function
+           End if
+           
+           Call FileMgr.DeleteFile(sFile, true)                   
+           If Err.Number<>0 then 
+              Writelog("ImageFileLocked error: File '" & sFile & "' is locked. " & " Error #:" & Err.Number & " Decription: " & Err.Description)
+              Err.Clear
+           Else    
+              'Restore the original file name
+              Call FileMgr.MoveFile(fTempName, sFile)
+              If Err.number>0 then
+                 Writelog("ImageFileLocked error: Failed to move temp file '" & fTempName & "' to '" & sFile & "'. Error #:" & Err.Number & " Decription: " & Err.Description) 
+                 Err.Clear 
+              Else 
+                 Writelog("ImageFileLocked: File is not locked. '" & sFile & "'.") 
+	         ImageFileLocked = False
+              End if 'MoveFile Err.number
+           End if 'Delete Err.Number
+	End If 'sFile<>""
+	
+  End Function 'ImageFileLocked
+  
+  '------------------------------------------
+
+  Private Function ImageFileExists()
+  
+    ' this function is not in use
+    ImageFileExists = False
+    For i = 1 To ubound(aFiles)
+      If LCase(right(aFiles(i), 4)) = LCase(sImageExtension) Or LCase(right(aFiles(i), 4))="tiff" Then
+        ImageFileExists = True
+        Exit For
+      End If
+    Next
+  End Function 'ImageFileExists
+
+  '------------------------------------------
+
+  Private Sub ProcessFileOption(sFile)
+
+    PopupRunTimeError("Cleanup error before entries in ProcessFileOption")
+    On Error Resume Next
+    
+    If (sFile<>"") Then
+      Dim oFile
+      Set oFile=FileMgr.GetFile(sFile)
+       
+      writelog("Process file " & sFile & " with option " & nFileOption)
+      Select Case nFileOption
+      
+        Case FILE_LEAVEALIVE  
+           'do nothing - just will create flag files with ext ".___"
+           WriteLog("Process FileOption = Do Nothing")
+
+        Case FILE_DELETE
+          WriteLog("Process FileOption = Deleting Source file")
+          oFile.Delete
+          If PopupRunTimeError("Error deleting source file") Then
+            Set oFile = Nothing
+            Exit Sub
+          End If
+          
+        Case FILE_COPY 
+          sPath = txtFileMove
+          sExt = mFileExt
+          If Left(sExt, 1) <> "." Then
+            sExt = "." & sExt
+          End If
+
+          WriteLog("Process FileOption = Copy source file " & oFile.Path)
+          WriteLog("to folder " & txtFileMove)
+          WriteLog( "Change ext to: " & sExt)
+      
+             'Create new file path in source directory with new file extension
+          lFileName = FileMgr.GetFileName(oFile.Path)
+
+          If LCase(Right(lFileName, 4)) = LCase(sImageExtension) Then
+            lFileName = Replace(lFileName, sImageExtension, sExt)
+          Elseif LCase(Right(lFileName, 5)) = ".tiff" Then
+            lFileName = Replace(lFileName, ".tiff", sExt)
+          End if
+      
+          sPath = sPath & "\" & lFileName
+
+          'Check if file with the same name is exists
+          If ( Not FileMgr.FileExists(sPath) ) Then      
+            oFile.Copy(sPath)
+          Else
+            sSupposeFileName = ChangeNameALittle(sPath)
+            oFile.Copy( sSupposeFileName )
+            WriteLog("file Exists: " & sPath)
+            WriteLog("try to copy in another file: " & sSupposeFileName )
+          End if
+        
+          If PopupRunTimeError("Error copying source file to " & sPath) Then
+            Set oFile = Nothing
+            Exit Sub
+          End If
+  'd'      oFile.Delete
+  
+        Case FILE_MOVE
+           WriteLog("Process FileOption = Move Source File " & vbCrlf & txtFileMove)
+
+           'Check if file with the same name is exists
+           If ( Not FileMgr.FileExists(txtFileMove & "\" & oFile.Name) ) Then      
+              Call oFile.Move(txtFileMove & "\")              
+           Else              
+               WriteLog("File Exists:" & txtFileMove & "\" & oFile.Name)
+              sSupposeFileName = ChangeNameALittle(txtFileMove & "\" & oFile.Name)
+              oFile.Move(sSupposeFileName)  
+              WriteLog("Try move in another file:" & sSupposeFileName )
+           End if
+
+           If PopupRunTimeError("Error moving source file to: " & txtFileMove & "\") Then
+              Set oFile = Nothing
+              Exit Sub
+           End If
+          
+        Case FILE_RENAME
+             WriteLog("Process FileOption = Rename source file with extension " & mFileExt )
+          sPath = oFile.Path ' LCase(oFile.Path)
+          sExt = mFileExt
+          If Left(sExt, 1) <> "." Then
+            sExt = "." & sExt
+          End if
+
+             'changing file name extension
+          If LCase(Right(sPath, 4)) = LCase(sImageExtension) Then
+            sPath = Replace(sPath, sImageExtension, sExt)
+          Elseif LCase(Right(sPath, 5)) = ".tiff" Then
+            sPath = Replace(sPath, ".tiff", sExt)
+          End If
+
+             'check if file with the same name is exists
+             If ( Not FileMgr.FileExists(sPath) ) Then
+            oFile.Move(sPath)
+             Else
+            sSupposeFileName = ChangeNameALittle(sPath)
+            oFile.Move( sSupposeFileName )
+               WriteLog("file Exists: " & sPath & VbCr & "try to copy in another file: " & sSupposeFileName)
+          End If
+
+          If PopupRunTimeError("Error renaming source file") Then
+            Set oFile = Nothing
+            Exit Sub
+          End If
+        
+      End Select
+    End If
+    
+    Set oFile = Nothing
+    
+  End Sub
+
+  '------------------------------------------
+
+  Function IsExternalArrayHere
+    If (IsArray(extFileArray)) then
+      nextCount = uBound(extFileArray)
+      IsExternalArrayHere = True
+    Else
+      IsExternalArrayHere = False
+    End If
+    End Function
+
+  'Public methods -----------------------------------------------------
+
+
+  Public Function GetArray
+    If gReinitVScanUponRescan Then
+      ReDim aFiles(0)
+      Call oOut.ResetNumProcessed()
+    End If
+  
+    'Populate file collection Array
+    If (Not IsExternalArrayHere) Then
+      EnumFiles(sImageDir) 'Read image files from source directory
+    Else
+      ReDim aFiles(uBound(extFileArray)+1)
+      for i=0 to uBound(extFileArray)
+        aFiles(i+1) = extFileArray(i)
+      next ' i
+    end if
+    GetArray = aFiles
+  End Function
+  
+  '------------------------------------------
+  
+  Public Function GetFile(i)
+    if (IsNumeric(i)) Then
+      if ( ( i > uBound(aFiles)) or (i< 0) ) Then
+        PopupRunTimeError("Numeric value of GetFiles is wrong: " & i)
+        GetFile=""
+      Else
+        if (IsEmpty(aFiles)) Then
+          GetFile = ""
+        else 
+          GetFile = aFiles(i)
+        End If
+      end if
+    else
+      PopupRunTimeError("Argument of GetFiles is not numeric")
+      GetFile=""
+    end if
+  End Function
+
+  '------------------------------------------
+
+  Public Sub ReleaseFiles
+    PopupRunTimeError("Cleanup error before entries in ReleaseFiles")
+    Err.Clear
+
+    For i = 1 To ubound(aFiles)
+      ProcessFileOption(aFiles(i))
+    Next 'i
+  End sub
+
+  '------------------------------------------
+
+  Public Sub ReleaseFile(sPath)
+
+    PopupRunTimeError("Cleanup error before entries in ReleaseFile sPath")
+    Err.Clear
+     If ( sPath <> "" )   Then
+        WriteLog("Start release file: " & sPath) 'd'
+      ProcessFileOption(sPath)
+    End if 
+  End sub
+
+  '------------------------------------------
+
+  Public Sub SearchInSubDirectory(bSubDir)
+  
+    If (bSubDir) Then
+      chkSubDir = 1
+    Else
+      chkSubDir = 0
+    End if
+    
+    Redim Preserve aFiles(0)
+
+  End Sub
+
+  '------------------------------------------
+
+  Public Sub ResetFileOption(nFOption, strParam)
+
+    If ( IsNumeric(nFOption) ) Then    
+      if( nFOption = FILE_LEAVEALIVE) Then 
+        nFileOption = FILE_LEAVEALIVE
+        'we do not worry about strParam
+        WriteLog("Reset FileOption: leave image files untouched")    
+
+      elseif( nFOption = FILE_DELETE ) Then
+        'we do not worry about strParam
+        nFileOption = FILE_DELETE
+        WriteLog("Reset FileOption: delete image files")    
+
+      elseif( nFOption = FILE_COPY ) Then
+        Dim aParams,lFolder,lExtension
+        'we propose strParam is extention of copy =mFileExt
+        'Folder to copy files to (1st param). Extension to use (2nd param)
+        'Note params are CSV
+
+        aParams = Split(strParam,",")
+        lFolder = aParams(0)
+        lExtension = aParams(1)
+
+        ' we validate extension
+     
+        if (trim(lExtension)<>"") Then
+          lExtension = trim(lExtension)
+          nLen = Len(lExtension)
+          For x = nLen To 1 Step -1
+          If Mid(lExtension, x, 1) = "." Then
+            lExtension = Right(sP, x) 
+            Exit For
+          End If
+        Next
+
+        nLen = Len(lExtension)
+        if (nLen > 3) Then nLen = 3 
+          mFileExt = left(lExtension,nLen)
+        end if   
+    
+        'if Folder parameter left blank defaults to source folder (left txtFileMove)
+        If ( trim(lFolder) <> "" ) then 
+         ' we validate folder
+          If Not FileMgr.FolderExists(lFolder) Then 
+            writelog ("ResetFileOption: folder for move to " & lFolder & " does not exist")
+          Else
+            txtFileMove = lFolder
+          End if
+        Else
+          lFolder = sImageDir
+          txtFileMove = lFolder
+        End if
+
+        nFileOption = FILE_COPY
+        WriteLog("Reset FileOption: Copy files to folder " & lFolder & " with extension: " & mFileExt)
+
+      Elseif ( nFOption = FILE_MOVE ) Then
+        'we propose strParam is directory   =txtFileMove
+        ' make shure that directory exists
+        If (trim(strParam) <> "") Then
+          strParam = trim(strParam)
+          If Not FileMgr.FolderExists(strParam) Then
+             'check initial folder exists
+             Writelog ("ResetFileOption: folder for move in " & strParam & " does not exist" & VbCr & "left initial folder for move in" & txtFileMove)         
+          Else
+             txtFileMove = strParam  
+          End if
+        End if
+        nFileOption = FILE_MOVE
+
+      Elseif ( nFOption = FILE_RENAME ) Then
+        'we propose strParam is new file extension
+        If (trim(strParam) <> "") Then
+          mFileExt = trim(strParam)
+          WriteLog("Reset FileOption: Rename files with extension: " & mFileExt)
+        Else
+          WriteLog("Reset FileOption: WARNING file extension is not set, used default " & mFileExt)
+        End if
+        nFileOption = FILE_RENAME
+
+      Else
+        writelog("Warning: in ResetFileOption wrong numeric value:" & nFOption & VbCr & "will used -=File unchanged=- (0) instead")
+        'Another possibility - dont change options
+        nFileOption = FILE_LEAVEALIVE
+      End if
+      
+    Else
+      writelog("Warning: in ResetFileOption wrong non numeric value :" & nFOption & VbCr & "will used -=File unchanged=- (0) instead")
+      nFileOption = 0
+    End if
+    
+    Writelog("Action : ResetFileOption sets nFileOption = " & nFileOption)
+
+  End Sub ' ResetFileOption
+
+  '------------------------------------------
+
+  Public Sub SetSourceDir(StrParam)
+    sImageDir = StrParam
+    writelog("Action changes: Directory with source images: " & sImageDir)
+  End Sub
+
+  '------------------------------------------
+
+  Public Sub SetImageExtension(StrParam)
+    sImageExtension = strParam ' lcase(strParam)
+  End Sub
+
+
+End Class 'CScanFilesCollection
+'-----------------------------------------------------------------------------------
+
+'End Global Vscan Variables
+'***************************
+
+
+Function min(x1,x2)
+		
+  if IsNumeric(x1) And IsNumeric(x2) Then
+    if(x1<x2) then
+      min = x1
+    else
+      min = x2
+    end if
+  else
+    min = x1
+  end if
+
+End Function
+		
+Function ReportError(strMsg)
+		
+  If Not bAuto Then
+    writelog(strMsg)
+  End If
+  Call Writelog(strMsg)
+  ReportError = True
+
+End Function
+		
+Function PopupRunTimeError(strMsg)
+		
+  If err.number <> 0 Then
+    strPrompt = strMsg & vbCrLf & "Code: " & CStr(Err.number) & vbCrLf & "Description: " & Err.description
+    Call ReportError(strPrompt)
+    Call Pilot.MsgStatus(strPrompt,0)
+    AbortBatch
+    
+    err.Clear 
+    PopupRunTimeError = True   
+    Exit Function
+  End If
+  PopupRunTimeError = False
+
+End Function
+		
+Function GetLastToken(str,delim)
+		
+  ' delimiter must be one character
+  
+  Dim l_String, l_Array
+
+  
+  if( Len(delim) > 1 ) Then
+    delim = Mid(delim,1,1)
+  elseif( Len(delim) = 0 ) Then
+    delim = " "
+  end if
+
+  l_String = str
+  l_Array = Split(l_String, delim, -1, 1)
+ 
+  nLen = Ubound(l_Array)
+  GetLastToken = l_Array(nLen)
+  Call ErrorHandler("GetLastToken")
+
+End Function
+		
+Function GetFirstToken(str,delim)
+		
+  ' delimiter must be one character
+  Dim l_String, l_Array
+
+  
+  if( Len(delim) > 1 ) Then
+    delim = Mid(delim,1,1)
+  elseif( Len(delim) = 0 ) Then
+    delim = " "
+  end if
+
+  l_String = str
+  l_Array = Split(l_String, delim, -1, 1)
+ 
+  GetFirstToken = l_Array(0)
+  Call ErrorHandler("GetFirstToken")
+
+End Function
+		
+Function ChangeNameALittle(FullFileName)
+		
+' PURPOSE: changing the file name in a way : last two character of file name without extension 
+' will replace by digits from 00 to 99 get file path and file name.
+
+  nLen = Len(FullFileName)
+  For x = nLen To 1 Step -1
+    If Mid(FullFileName, x, 1) = "\" Then
+      sGetFilePath = Left(FullFileName, x)
+      Exit For
+    End If
+  Next
+  sGetFileName = GetLastToken(FullFileName, "\")
+
+'get extension and file name without extension
+  sFileExtension = GetLastToken(sGetFileName,".")
+  sFileName = GetFirstToken(sGetFileName,".")
+
+' last character of file name without extension replace by digits
+  nLenFileName = Len(sFileName)
+  If ( nLenFileName > 2 ) Then 
+    sNewFileName = Mid(sFileName,1,nLenFileName-1)
+  Else
+    sNewFileName = ""
+  End If
+  
+  ' check supposed file name
+  For i = 1 to 9999
+    sSupposeFileName = sNewFileName & i
+    'sSupposeFileName = sFileName & i     'appending number to the original filename without replacing last 2 letters of original filename    
+    ' check existing file name
+    If (Not FileMgr.FileExists(sGetFilePath & sSupposeFileName & "." & sFileExtension)) Then
+      Exit For
+    end If
+  Next 'i
+  ChangeNameALittle = sGetFilePath & sSupposeFileName & "." & sFileExtension
+  Call ErrorHandler("ChangeNameALittle")
+
+End Function
+		
+Function GetFilePath(sP)
+		
+  nLen = Len(sP)
+  For x = nLen To 1 Step -1
+    If Mid(sP, x, 1) = "\" Then
+      GetFilePath = Left(sP, x)
+      Exit For
+    End If
+  Next
+  Call ErrorHandler("GetFilePath")
+
+End Function
+		
+Function LeaveImageFileUntouched(bInter,bDebug)
+		
+  call oIn.ResetFileOption(FILE_LEAVEALIVE,"")
+  LeaveImageFileUntouched = true
+  Call ErrorHandler("LeaveImageFileUntouched")
+
+End Function
+		
+Function RenameImageFileWithExtension(bInter,bDebug,StrParam)
+		
+' StrParam is the file extension to be used for the copy
+  call oIn.ResetFileOption(FILE_RENAME, StrParam)
+
+  RenameImageFileWithExtension = true
+  Call ErrorHandler("RenameImageFileWithExtension") 
+
+End Function
+		
+Function SetImageType(bInter, bDebug, StrParam) 
+  
+'   String value of the file's identifying extension.  If you are listing multiple types, separate
+'   each one with a comma.
+'
+'   It is not necessary to include a period before each extension. The parameters are not case-sensitive.
+  
+  StrParam = MetaWord(StrParam)
+  StrParam=Replace(StrParam,".","")
+  StrParam=Replace(StrParam,Chr(32),"")
+  
+  SetImageType = False
+  
+  sExtn = Trim(StrParam) ' LCase(Trim(StrParam))
+  
+  'Remove period from extension
+  sExtn = Replace(sExtn,".","")
+  
+  If LCase(sExtn)<>"tiff" and LCase(sExtn)<>"tif" and LCase(sExtn)<>"jpg" and LCase(sExtn)<>"jpeg"then 
+     'If the input is not a single file type of tiff, tif or jpg, then disable fast mode.
+     oOut.SetDoNotOpenInputFiles(True)
+     Writelog("special or multiple extensions were provided : setting Fast Mode to TRUE.")
+  ElseIf gReinitVScanUponRescan Then
+     oOut.SetDoNotOpenInputFiles(False)
+  End if
+  
+  oIn.SetImageExtension(StrParam)
+  oOut.SetImageExtension(StrParam)
+  SetImageType = True        
+  
+  Call ErrorHandler("SetImageType")   
+
+End Function
+
+Function SetMultiPageTiff(bInter, bDebug) 
+  'Permits the use of multipage source image files.
+  oOut.SetMultiPageTiff(True)
+  SetMultiPageTiff = true
+  Call ErrorHandler("SetMultiPageTiff") 
+
+End Function
+
+Function SetFastMode(bInter, bDebug) 
+' Increases speed by preventing the Scan action from opening the files it is scanning.<br/><br/>
+'    
+'    This action is provided as backwards compatibility to older applications where this action was
+'    required to properly enable fast mode for PDF files.  SetImageType will automatically enable
+'    fast mode, if it is called with a PDF extension.
+
+ oOut.SetDoNotOpenInputFiles(True)
+  SetFastMode = true
+  Call ErrorHandler("SetFastMode") 
+
+End Function
+
+Function SearchInSubdirectory(bInter, bDebug) 
+'  Looks for source files in sub-directories of the directory you designated with a 
+'  SetSourceDirectory action.
+
+  oIn.SearchInSubDirectory(True)
+  SearchInSubdirectory = true
+  Call ErrorHandler("SearchInSubdirectory") 
+ 
+End Function
+
+Function SetSourceDirectory(bInter, bDebug, SmartParam) 
+'
+' String value of the directory's name and path. Instead, you can use a Smart Parameter such 
+' as @Path to establish the Source Directory's name and path.
+    
+  Dim StrParam
+  Dim oFolder
+  
+  On Error Resume Next
+   
+  SetSourceDirectory = False
+   
+  StrParam = MetaWord(SmartParam)
+  If len(Trim(StrParam))=0 Then StrParam=SmartParam
+         
+  Writelog("looking for:" & StrParam)
+
+  If trim(StrParam)="" Then
+    Writelog("Error: Folder '" & StrParam & "' does not exist.")
+    SetSourceDirectory = False
+  End if
+  
+  If FileMgr.FolderExists(StrParam)=False Then
+    WriteLog("Error: Folder '" & StrParam & "' does not exist")
+    nTaskStatus = RetAbort
+    Exit Function
+  End if
+
+  'Check existing directory and insert DRIVER LETTER: required for Mail Object
+      
+  Set oFolder = FileMgr.GetFolder(StrParam)
+  StrParam = oFolder.Path 
+  Set oFolder = Nothing
+
+  oIn.SetSourceDir(StrParam)
+  Err.Clear
+      
+  oOutLook.SetSourceDir(StrParam)
+  If err.number <> 0 Then
+    WriteLog("Fatal error: Outlook is not running")
+    SetSourceDirectory = FALSE
+  Else
+    SourceDir = StrParam
+    SetSourceDirectory = TRUE
+  End If  
+       
+
+End Function
+
+Function SetMaxImageFiles(bInter, bDebug, SmartParam) 
+
+'    An optional string value specifying the maximum number of files. Smart parameter accepted.
+'
+'   If you do not enter a value, the task will scan all images in the target folder - and 
+'   this action will return True.
+ 
+  Dim StrParam
+  Dim strTrimParam  ' Input with leading / trailing space removed
+  Dim lParmValue    ' Value as a long
+
+  On Error Resume Next
+  StrParam=MetaWord(SmartParam)   
+  If len(Trim(StrParam))=0 Then StrParam=SmartParam
+  strTrimParam = Trim(StrParam)
+  
+  'Always return success.  If the parameter value is not a valid integer, then we will just
+  'log the problem and use the default value.  Let's set that up as the default condition.
+  SetMaxImageFiles = True
+  oOut.SetMaxImageFiles(MaxImageFiles)
+  
+  if len(strTrimParam) = 0 Then
+     ' In this one case where no parameter is present, we will use the largest size.
+     WriteLog("SetMaxImageFiles: No parameter, using largest value: 32767")
+     oOut.SetMaxImageFiles(32767)
+     Exit function
+  end if   
+
+ ' CInt will cause an error if the value is a number that is bigger than an int.  
+ ' We will validate it is a positive integer.
+ if (Not IsNumeric(strTrimParam)) Then
+    WriteLog("SetMaxImageFiles: Parameter: " & strTrimParam & " is not a number, using default value: " & MaxImageFiles)
+    exit function
+ end if   
+
+ ' We have some kind of number.  It can be an int or a long.
+
+ if (Len(strTrimParam) > 5) then
+    WriteLog("SetMaxImageFiles: Parameter: " & strTrimParam & " is too big, using default value: " & MaxImageFiles)
+    exit function
+ end if   
+ 
+ ' Might or might not be an int, but it must be a long by now.
+
+ lParmValue = CLng(strTrimParam)    ' Set value to a long to prevent overflow
+
+ if ((lParmValue > 32767) or (lParmValue < 1)) Then
+    ' bigger than signed int or 0 or negative
+    WriteLog("SetMaxImageFiles: Parameter: " & strTrimParam & " is too big or 0, using default value: " & MaxImageFiles)
+    exit function
+ end if   
+    
+ ' We have a valid, positive integer.
+ oOut.SetMaxImageFiles( CInt(strTrimParam) )  ' Note, CInt rounds and uses system numeric settings
+
+ Call ErrorHandler("SetMaxImageFiles")
+
+ 
+End Function
+
+Function DeleteImageFile(bInter, bDebug) 
+
+'A housekeeping action that deletes the current source image file.  A Scan action 
+'must follow this action.
+ 
+  On Error Resume Next
+  
+  Call oIn.ResetFileOption(FILE_DELETE,"")
+  DeleteImageFile = True
+  
+  Call ErrorHandler("DeleteImageFile")
+
+End Function
+
+Function CopyFile(bInter, bDebug, StrParamSP) 
+
+'    <b>1.</b> The String value of the name of the target file system folder.<br/>
+'    <b>2.</b> Optional. The file extension you wish to use for each file. If you provide an extension, it must
+'    not be preceded by a period.  The action defaults to "tif" if this parameter is blank.<br/>
+'    Smart parameters are supported.
+
+  Dim aParam
+  Dim StrParam
+  
+  On Error Resume Next
+    
+  StrParam = MetaWord(trim(StrParamSP)) 
+  writelog("Input after processing smart parameters: '" & StrParam & "'")
+  
+  aParam = Split(StrParam,",")
+
+  If uBound(aParam) = 1 Then
+    call oIn.ResetFileOption(FILE_COPY,  StrParam) 
+    CopyFile = true
+  Else
+    call oIn.ResetFileOption(FILE_COPY,  StrParam & ",tif") 
+    CopyFile = true
+  End if
+  
+  Call ErrorHandler("CopyFile") 
+
+End Function
+
+Function SetMailSourceFolder(bInter, bDebug, SmartParam) 
+  'String value of the Outlook folder you want to search.
+
+  Dim StrParam
+  
+  On Error Resume next    
+  
+  SetMailSourceFolder = False
+  
+  StrParam=MetaWord(SmartParam)  
+  
+  If len(Trim(StrParam))=0 Then StrParam=SmartParam
+  
+  If trim(StrParam) <> "" Then
+     oOutLook.InitializeOutlook(StrParam) 
+  Else
+      ' leave Mail Source folder untouched
+    writelog("StrParam is empty, leave Mail Source folder as Inbox")
+  End if
+
+  ' we always put result of action in true, because we can manage badly created oOutlook object
+  ' by  variable CMailFolder::bInitializeComplete
+
+  SetMailSourceFolder = True
+   
+
+End Function
+
+Function Scan(bInter, bDebug) 
+  '    Scans a set of waiting Image files, according to the parameters set by earlier actions.<br/><br/>
+  '    This is usually the last action in a vScan rule.
+  
+  On Error Resume Next
+  Scan = False
+  If gReinitVScanUponRescan Then Writelog "gReinitVScanUponRescan = True"
+    
+  If cInt(CurrentObj.ObjectType) <> 0 Then
+		writelog("The Scan action is required to run at the Batch level.  Returning False.")
+		Exit Function	
+	End If
+  
+  If (Not FileMgr.FolderExists(SourceDir)) Then
+    If len(trim(SourceDir))=0 then
+      writelog("Source Directory is not setup correctly, an empty path exists for this value. Exiting.")
+    Else
+      writelog("Source Directory '" & SourceDir & "' not Found. Exiting.")
+    End if
+    Scan = False
+    Exit function
+  End if  
+
+  If IsAlive(oOutLook) then oOutLook.SaveAttachmentsAndDeleteMail()
+
+  nImages = Ubound(oIn.GetArray())
+  If nImages = 32767 Then 
+      writelog("Maximum reached. Found " & nImages & " or more image files in Source folder:'" & SourceDir & "'.")
+  Else
+      writelog("Found " & nImages & " image files in Source folder:'" & SourceDir & "' for the batch.")
+  End if
+  nMaxImageFiles = oOut.GetMaxImageFiles()
+  
+  'Get image files
+  If cInt(nImages)<>cInt(0) Then 
+  
+    If bDocumentStructurePresents=TRUE then
+      'Set the Expected Pages variable
+      DCO.Variable("EP") = cStr(nMaxImageFiles)
+    End if
+
+    'Process Image Files
+    For i = 1 to min(nImages,oOut.GetMaxImageFiles) 'nImages
+      sUnderProcessFile = oIn.GetFile(i)
+
+      Select Case cStr(oOut.Perform(sUnderProcessFile))
+        
+        Case cStr(PerformPageOk)
+            'we will release files at the end
+            'oIn.ReleaseFile(sUnderProcessFile) 
+        
+        Case cStr(PerformPageAbort)
+            'oIn.ReleaseFile(sUnderProcessFile) 
+            writelog("Files not released - File Processing Aborting.")
+            nTaskStatus = RetAbort
+            Scan = false
+            Exit function
+        
+        Case cStr(PerformPageFinish)
+            'we did not process  oIn.ReleaseFile(sUnderProcessFile) 
+            nTaskStatus = RetFinished
+            Exit for
+
+        Case Else
+            'oIn.ReleaseFile(sUnderProcessFile) 
+            writelog("Files not released - Unexpected result from File Processing.")
+            Scan = False
+            Exit function
+      End Select
+      
+    Next 'i
+
+    If nTaskStatus = RetFinished Then
+       writelog("Releasing files...")
+       For i = 1 to min(nImages,oOut.GetMaxImageFiles) 'nImages
+          sUnderProcessFile = oIn.GetFile(i)
+          oIn.ReleaseFile(sUnderProcessFile) 
+       Next
+       Writelog("Files Released.")
+    End if
+
+    Pilot.ExpectedPages = cStr(nImages)
+    nTaskStatus = RetFinished
+
+  Else
+    nTaskStatus = RetPending
+
+  End if
+
+  Scan = True
+  
+    Call ErrorHandler("Scan") 
+
+End Function
+
+Function AddDocument(bInter, bDebug) 
+
+'   Places all scanned pages into a single, batch-wide document.
+'   This action must be called before the Scan action.<br/><br/>
+'
+'   The action also adds ED (Expected Documents), AD (Actual Documents), EP (Expected Pages)
+'   and AP (Actual Pages) properties to a task's Page file (.xml).<br/><br/>
+'
+'   This action allows a VScan task to create a batch that has all the same 
+'   characteristics of a batch that is created using a standard scan task such as kScan or iScan.
+'   It is not required to call this action.  Use this action if your application relies on a
+'   document structure on import.
+
+  On Error Resume Next
+
+  AddDocument = False
+
+  If cInt(CurrentObj.ObjectType) <> 0 Then
+		writelog("The AddDocument action is required to run at the Batch level. Returning False.")
+		Exit Function	
+	End If
+
+  Set oSetupObject = DCO.SetupObject
+
+  writelog("Checking Setup DCO for a document structure...")
+  nDocs = oSetupObject.NumOfNodes(1)
+
+  If (nDocs >= 1 ) Then '  we suppose there is just one document
+    Writelog("Found '" & cstr(nDocs) & "' document structures in current setup DCO.")
+    
+    If DCO.NumOfChildren = 0 Then
+         Set oDoc = DCO.AddChild(1,Pilot.BatchID & ".01" ,-1)
+         oDoc.Type = ""   'oDoc.Type=oSetupObject.GetNode(1,0).Name
+
+         DCO.Variable("ED") = cStr(nDocs)
+         DCO.Variable("AD") = "0"
+         DCO.Variable("EP") = "0"
+         DCO.Variable("AP") = "0"
+    Else
+        Set oDoc = DCO.GetChild(0)
+    End if
+    
+    bDocumentStructurePresents = True
+    AddDocument = True
+  Else
+    Writelog("No document structures found in current setup DCO. No Document structure will be created.")
+    bDocumentStructurePresents = false
+    AddDocument = false
+  End If
+  
+  Set oSetupObject = Nothing 
+
+End Function
+
+Function SetSortOrder(bInter, bDebug, strParam) 
+'   Two comma-separated String values:
+'
+'    1. Designation of the images' sorting field: ImageName=1, Type=2, DateCreated=3,
+'    DateLastAccessed=4, DateLastModified=5, or Size=6.
+'    2. Optional: ASC or 1 (Ascending), DESC or 2 (Descending). If you do not include this 
+'    parameter, the action defaults to ASC (1).
+
+  Dim bValid
+  Dim arParam
+
+  On Error Resume Next
+
+  SetSortOrder = false
+  
+  strParam=trim(strParam)
+  If len(strParam)=0 then
+    writelog("Expecting 1 or 2 parameter values. None found.")
+    Exit function
+  End if
+  
+  arParam = split(strParam,",")
+  if Ubound(arParam) > 1 Then
+    writelog("Wrong number of parameters, should be 1 or 2")
+    exit function
+  end if
+
+  arParam(0)=Trim(cStr(arParam(0)))
+
+  Select Case Ucase(arParam(0))
+	Case "NAME","1"
+		gSortType = "Name"
+ 	Case "TYPE","2"
+		gSortType = "Type"
+	Case "DATECREATED","3"
+		gSortType = "DateCreated"
+	Case "DATELASTACCESSED","4"
+		gSortType = "DateLastAccessed"
+	Case "DATELASTMODIFIED","5"
+		gSortType = "DateLastModified"
+	Case "SIZE","6"
+		gSortType = "Size"
+	Case Else
+		writelog ("first argument has to be one of the names: Name,Type,DateCreated,DateLastAccessed,DateLastModified,Size")
+      	Exit function
+  End Select
+  
+  ' Default to assending sort order.
+  gSortOrder = "ASC"
+  
+  If uBound(arParam)=1 Then
+    arParam(1)=Trim(cStr(arParam(1)))	
+    Select Case uCase(arParam(1))
+	Case "DESC","2"
+	      gSortOrder = "DESC"
+      	writelog("sort order is DESC")
+    	Case Else
+      	writelog("sort order is ASC")	
+    end Select
+  end if
+
+  SetSortOrder = true 
+    
+  
+End Function
+
+Function SetAlternateImageNames(NameIndex)
+		
+  'NOTE: THIS ACTION ISN'T CODED FOR ALL CASES. KEEPING IT PRIVATE UNTIL IT CAN BE FINISHED.
+  
+  ' <b>0</b> : Sets the naming scheme of the input files to the format used by eDocument Conversion actions.<br/>
+  '  Any other input value uses the traditional naming schmeme of TM000001, TM000002, etc.
+ 
+  On Error Resume Next  
+ 
+  If NameIndex="" then NameIndex="0"
+  
+  If NameIndex="0" then 
+     g_bAltDCName=true
+  
+    'Future oDCName index for nameing convention set here
+  End if
+
+  WriteLog("g_bAltDCName = " & g_bAltDCName)
+
+  SetAlternateImageNames = true
+  Call ErrorHandler("SetAlternateImageNames")
+
+
+End Function
+		
+Function MoveImageFileToDirectory(bInter, bDebug, SmartParam) 
+ 'The full path to the target location of the Image file.  Smart parameters are supported.
+ '
+ '   A housekeeping action that moves the current Image file to a location you specify.  The source
+ '   image file will be removed from the input directory and moved to the specified directory.
+ '   This action is typically used when it is desired to place images into a specific
+ '   location for archiving.  A copy of the image will still be placed into the batch directory.
+ '
+ '   If the target directory already contains a file of the same name, it will give a unique name to the new file.
+ '
+ '  This action must precede the Scan action.  If MoveImageFileToDirectory is used and the Scan action
+ '  is never subsequently called, the file move will not be performed.
+ 
+ Dim StrParam   
+  
+  On Error Resume Next
+
+  StrParam=Metaword(SmartParam)
+  If len(Trim(StrParam))=0 Then StrParam=SmartParam
+   
+  If trim(StrParam)<>"" Then
+    If ( Not FileMgr.FolderExists(StrParam) ) Then
+      WriteLog("Fatal error: Folder " & StrParam & " does not exist")
+      nTaskStatus = RetAbort
+      MoveImageFileToDirectory = False
+    Else
+    
+      ' check existing directory
+      ' AND insert DRIVER LETTER : it is needed for Mail Object
+
+      Dim folder
+      Set folder = FileMgr.GetFolder(StrParam)
+      StrParam = folder.Path 
+      Set Folder = Nothing
+
+      call oIn.ResetFileOption(FILE_MOVE, StrParam)
+
+      MoveImageFileToDirectory = True 
+    End if
+  Else
+    WriteLog("MoveImageFileToDirectory: Parameter is not correct.")
+    nTaskStatus = RetAbort
+    MoveImageFileToDirectory = False
+  End if
+
+  Call ErrorHandler("MoveImageFileToDirectory")
+
+End Function

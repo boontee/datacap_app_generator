@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ruleset id="5" name="Verify" ver="1" modder="admin.1">
+	<rule name="VerifyRule" id="1">
+		<func name="Verifyfunction">
+			<a ns="com:Datacap.Libraries.ValidationsAndTextAdjustments.Actions" name="IsTextLength" qi="">
+				<p name="Target" type="string" v="@X"/>
+				<p name="Length" type="string" v="0"/>
+				<p name="ComparisonOperator" type="string" v="&lt;="/>
+			</a>
+		</func>
+	</rule>
+</ruleset>

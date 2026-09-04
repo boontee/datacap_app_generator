@@ -1,0 +1,218 @@
+<ruleset id="1" name="Convert Files To Images" qi="Converts electronic documents to a binary TIFF file format before running recognition.  If the default configuration values are inadequate, you can adjust the format by using the available options to convert the document to a TIFF file for each image type." rem="Convert Images">
+	<rule name="Page level image conversion" id="1" dcomap.open="P" dcomap.close="">
+		<func name="Bitmap Conversion" disabled="False" rem="Bitmap Conversion">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True">
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+			<a name="ImageToTIFF" ns="com:Datacap.Libraries.Convert.Images=Datacap.Libraries.Convert.Images" qi="" />
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+    </func>
+		<func name="Multipage TIFF Expansion" disabled="False" rem="Split Multipage tiffs">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+			<a name="SplitMultipageTiff" ns="com:Datacap.Libraries.Convert.Tiff=Datacap.Libraries.Convert.Tiff"/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+		</func>
+		<func name="ZIP Archive Expansion" disabled="False" rem="Zip bursting">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+			<a name="ZipUnPack" ns="com:Datacap.Libraries.Convert.Zip=Datacap.Libraries.Convert.Zip"/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+		</func>
+		<func name="PDF Conversion" disabled="False" rem="PDF conversion">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+			<a name="PDFDocumentToImage" ns="com:Datacap.Libraries.Convert.Pdf=Datacap.Libraries.Convert.Pdf"/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+		</func>
+		<func name="Microsoft Word Conversion" disabled="False" rem="MS Word conversion">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+			<a name="WordDocumentToImage" ns="com:Datacap.Libraries.Convert.Word=Datacap.Libraries.Convert.Word"/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+		</func>
+		<func name="Microsoft Outlook conversion" disabled="False" rem="MS Outlook conversion">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+			<a name="OutlookMessageToImageAndAttachment" ns="com:Datacap.Libraries.Convert.Outlook=Datacap.Libraries.Convert.Outlook" disabled="True"/>
+      <a name="OutlookMessageToAttachmentOnly" ns="com:Datacap.Libraries.Convert.Outlook=Datacap.Libraries.Convert.Outlook" disabled="False"/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+		</func>
+		<func name="Microsoft Excel Conversion" disabled="False" rem="MS Excel conversion">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+			<a name="ExcelWorkbookToImage" ns="com:Datacap.Libraries.Convert.Excel=Datacap.Libraries.Convert.Excel"/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+		</func>
+    <func name="HTML Conversion" disabled="False" rem="HTML conversion">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+      <a name="HtmlToImage" ns="com:Datacap.Libraries.Convert.Html"/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+    </func>
+    <func name="RTF Conversion" disabled="False" rem="RTF conversion">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+      <a name="RtfToImage" ns="com:Datacap.Libraries.Convert.Rtf" qi=""/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+    </func>
+    <func name="TXT Conversion" disabled="False" rem="TXT conversion">
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="CheckDCOStatus" disabled="True" >
+        <p name="ExpectedStatus" v="49"/>
+      </a>
+      <a name="TxtToImage" ns="com:Datacap.Libraries.Convert.Txt" qi=""/>
+      <a ns="com:Datacap.Libraries.ApplicationObjects.Actions" name="SetDCOStatus" qi="" disabled="True" >
+        <p name="Type" type="string" v="75"/>
+      </a>
+    </func>
+	</rule>
+  
+  <rule name="Batch Rule" id="2" dcomap.open="B" dcomap.close="" qi="" rem="batch level settings">
+    <func name="Function Setup Name pattern" rem="derived page name pattern" disabled="False">
+      <a name="SetNamePattern" ns="com:Datacap.Libraries.Convert.Common" qi="">
+        <p name="PatternType" type="string" qi="A single positive numeric value." v="2"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function Image Convert Settings" disabled="False">
+      <a name="ImageFileTypesToConvert" ns="com:Datacap.Libraries.Convert.Images" disabled="False">
+        <p name="fileextensions" type="string" qi="A CSV string of file extensions that defines the image types that will be converted." v="jpeg,jpg,bmp,png,gif"/>
+      </a>
+      <a name="ImageDefaultDPI" ns="com:Datacap.Libraries.Convert.Images" qi="" disabled="False">
+        <p name="X" type="short" qi="Horizonal dpi (X axis). A positive numeric value normally ranging from 96 to 300" v="300"/>
+        <p name="Y" type="short" qi="Vertical dpi (Y axis). A positive numeric value normally ranging from 96 to 300" v="300"/>
+      </a>
+      <a name="ImageMonoType" ns="com:Datacap.Libraries.Convert.Images" disabled="False">
+        <p name="Mono" type="int" v="4"/>
+      </a>
+      <a name="ImageMonoThreshold" ns="com:Datacap.Libraries.Convert.Images" disabled="False">
+        <p name="thresh" type="short" qi="A positive numeric value from 1 to 255." v="126"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function Excel Settings" disabled="False">
+      <a name="ExcelPrintQuality" ns="com:Datacap.Libraries.Convert.Excel" disabled="False">
+        <p name="dpi" type="int" v="300"/>
+      </a>
+      <a name="ExcelTiffCompression" ns="com:Datacap.Libraries.Convert.Excel" disabled="True">
+        <p name="tiffCompression" type="string" v="CCITT4"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function Html Settings" disabled="False">
+      <a name="HtmlPrintQuality" ns="com:Datacap.Libraries.Convert.Html" disabled="True">
+        <p name="dpi" type="int" v="300"/>
+      </a>
+      <a name="HtmlTiffCompression" ns="com:Datacap.Libraries.Convert.Html" disabled="True">
+        <p name="tiffCompression" type="string" v="CCITT4"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function Outlook settings" disabled="False">
+      <a name="OutlookPrintQuality" ns="com:Datacap.Libraries.Convert.Outlook" disabled="True">
+        <p name="dpi" type="int" v="300"/>
+      </a>
+      <a name="OutlookTiffCompression" ns="com:Datacap.Libraries.Convert.Outlook" disabled="True">
+        <p name="tiffCompression" type="string" v="CCITT4"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function PDF Settings" disabled="False">
+      <a name="PDFBitDepth" ns="com:Datacap.Libraries.Convert.Pdf" disabled="True">
+        <p name="p_iVal" type="int" v="1"/>
+      </a>
+      <a name="PDFCompression" ns="com:Datacap.Libraries.Convert.Pdf" disabled="True">
+        <p name="p_iVal" type="int" v="4"/>
+      </a>
+      <a name="PDFConversionMethod" ns="com:Datacap.Libraries.Convert.Pdf" disabled="True">
+        <p name="p_iVal" type="int" v="2"/>
+      </a>
+      <a name="PDFGrayscale" ns="com:Datacap.Libraries.Convert.Pdf" disabled="True">
+        <p name="p_bVal" type="bool" v="False"/>
+      </a>
+      <a name="PDFQuality" ns="com:Datacap.Libraries.Convert.Pdf" disabled="True">
+        <p name="p_iVal" type="int" v="100"/>
+      </a>
+      <a name="PDFHorizontalResolution" ns="com:Datacap.Libraries.Convert.Pdf" disabled="False">
+        <p name="p_iVal" type="int" v="300"/>
+      </a>
+      <a name="PDFVerticalResolution" ns="com:Datacap.Libraries.Convert.Pdf" disabled="False">
+        <p name="p_iVal" type="int" v="300"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function RTF Settings" disabled="False">
+      <a name="RtfPrintQuality" ns="com:Datacap.Libraries.Convert.Rtf" disabled="False">
+        <p name="dpi" type="int" v="300"/>
+      </a>
+      <a name="RtfTiffCompression" ns="com:Datacap.Libraries.Convert.Rtf" disabled="True">
+        <p name="tiffCompression" type="string" v="CCITT4"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function TXT Settings" disabled="False">      
+      <a name="TxtPrintQuality" ns="com:Datacap.Libraries.Convert.Txt" disabled="False">
+        <p name="dpi" type="int" v="300"/>
+      </a>
+      <a name="TxtTiffCompression" ns="com:Datacap.Libraries.Convert.Txt" disabled="True">
+        <p name="tiffCompression" type="string" v="CCITT4"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function SplitTiff Settings" disabled="False" rem="split tiff">
+      <a name="SplitTIFFCompression" ns="com:Datacap.Libraries.Convert.Tiff" disabled="True">
+        <p name="compressionTypeColor" type="int" v="0"/>
+        <p name="compressionTypeBW" type="int" v="4"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function MS Word Settings" disabled="False" rem="MS Word settings">
+      <a name="WordPrintQuality" ns="com:Datacap.Libraries.Convert.Word" disabled="False">
+        <p name="dpi" type="int" v="300"/>
+      </a>
+      <a name="WordTiffCompression" ns="com:Datacap.Libraries.Convert.Word" disabled="True">
+        <p name="tiffCompression" type="string" v="CCITT4"/>
+      </a>
+      <a name="GoToNextFunction" ns="com:Datacap.Libraries.RuleRunnerLogic.Actions" qi=""/>
+    </func>
+    <func name="Function ZIP Settings" disabled="False">
+      <a name="ZipOverwrite" ns="com:Datacap.Libraries.Convert.Zip" disabled="False">
+        <p name="overwrt" type="bool" v="True"/>
+      </a>
+      <a name="ZipPassword" ns="com:Datacap.Libraries.Convert.Zip" disabled="True">
+        <p name="pwd" type="string" v="@APPVAR(values/adv/UnzipPassword)"/>
+      </a>
+    </func>
+  </rule>
+  <rule name="Batch Rule Out" id="3" dcomap.open="" dcomap.close="B"  qi="">
+    <func name="Function Remove Source images" disabled="False">
+      <a ns="com:Datacap.Libraries.Convert.Common" name="DeleteSourceImagePages" qi=""/>
+    </func>
+  </rule>
+</ruleset>
