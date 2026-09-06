@@ -1,0 +1,1 @@
+mcp-datacap-server v1.1.0 running — base: http://localhost:82/service, default app: APT

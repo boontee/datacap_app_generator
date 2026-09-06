@@ -75,6 +75,9 @@ async function withSession<T>(application: string, fn: (s: Session) => Promise<T
 // Keeps wTmId alive between transaction-start and transaction-end calls
 // so all transaction tools share the same authenticated session cookie.
 const txSessions = new Map<string, Session>();
+// Tracks transactions that reused an external wTmId — these must NOT be logged off
+// on transaction-end so the caller's session remains alive for log continuity.
+const txExternalSessions = new Set<string>();
 
 function ok(text: string) {
   return { content: [{ type: "text" as const, text }] };
@@ -99,7 +102,7 @@ function buildMultipart(fileBytes: Buffer, fileName: string, mimeType = "applica
 // ─── MCP Server ───────────────────────────────────────────────────────────────
 const server = new McpServer({
   name: "mcp-datacap-server",
-  version: "1.1.0",
+  version: "1.2.0",
 });
 
 // ─── Tool: list-applications ──────────────────────────────────────────────────
@@ -484,6 +487,8 @@ server.registerTool(
 // Logs on, starts a transaction, and keeps the session alive in txSessions
 // so that transaction-set-file / transaction-execute / transaction-get-file /
 // transaction-end all share the same wTmId cookie.
+// If wTmId is supplied the logon step is skipped and the existing session is reused,
+// keeping all calls in the same RRS log file.
 server.registerTool(
   "transaction-start",
   {
@@ -492,22 +497,33 @@ server.registerTool(
       "Returns a transactionId (GUID) that must be passed to transaction-set-file, " +
       "transaction-execute, transaction-get-file, and transaction-end. " +
       "Use this flow instead of the Queue-based flow when you want to run rules on files " +
-      "without creating a persistent batch record.",
+      "without creating a persistent batch record. " +
+      "Pass wTmId to reuse an existing session and keep all calls in the same RRS log file " +
+      "(skips Logon — caller is responsible for calling Logoff when fully done).",
     inputSchema: z.object({
       application: z.string().describe("Datacap application name").optional(),
+      wTmId: z.string().describe("Existing session cookie value to reuse (skips Logon)").optional(),
     }),
   },
-  async ({ application }) => {
+  async ({ application, wTmId }) => {
     const app = application ?? APP_NAME;
     try {
-      // Logon and keep the session alive — do NOT call logoff here
-      const session = await logon(app);
+      // If an existing wTmId is supplied, reuse it — skip logon so the RRS log stays continuous
+      let session: Session;
+      let skipLogoffOnError = false;
+      if (wTmId) {
+        session = { wTmId, application: app };
+        skipLogoffOnError = true;
+      } else {
+        // Logon and keep the session alive — do NOT call logoff here
+        session = await logon(app);
+      }
       const resp = await fetch(`${BASE_URL}/Transaction/Start`, {
         method: "GET",
         headers: { Accept: "application/json", Cookie: `wTmId=${session.wTmId}` },
       });
       if (!resp.ok) {
-        await logoff(session);
+        if (!skipLogoffOnError) await logoff(session);
         const e = await resp.text().catch(() => String(resp.status));
         throw new Error(`Transaction/Start failed (${resp.status}): ${e}`);
       }
@@ -516,13 +532,14 @@ server.registerTool(
       // Extract GUID
       const guidMatch = txId.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
       if (!guidMatch) {
-        await logoff(session);
+        if (!skipLogoffOnError) await logoff(session);
         throw new Error(`Transaction/Start returned unexpected response: ${text}`);
       }
       const transactionId = guidMatch[0];
       // Store session so subsequent transaction tools can reuse the same wTmId
       txSessions.set(transactionId, session);
-      return ok(`transactionId: ${transactionId}`);
+      if (skipLogoffOnError) txExternalSessions.add(transactionId);
+      return ok(`transactionId: ${transactionId}\nwTmId: ${session.wTmId}`);
     } catch (e) { return err(String(e)); }
   }
 );
@@ -719,13 +736,17 @@ server.registerTool(
   {
     description:
       "End a Datacap Transaction and clean up its temporary workspace. " +
-      "Always call this after transaction-get-file to release server resources.",
+      "Always call this after transaction-get-file to release server resources. " +
+      "Set keepAlive=true to skip Session/Logoff so the user can inspect the batch " +
+      "folder and RRS log before the session is closed. The returned wTmId can be " +
+      "passed to a subsequent transaction-start to reuse the same session.",
     inputSchema: z.object({
       application:   z.string().describe("Datacap application name").optional(),
       transactionId: z.string().describe("Transaction GUID to end"),
+      keepAlive:     z.boolean().describe("Skip Session/Logoff — keep session open for inspection").optional(),
     }),
   },
-  async ({ application, transactionId }) => {
+  async ({ application, transactionId, keepAlive }) => {
     const app = application ?? APP_NAME;
     try {
       const session = txSessions.get(transactionId) ?? await logon(app);
@@ -733,12 +754,17 @@ server.registerTool(
         method:  "DELETE",
         headers: { Cookie: `wTmId=${session.wTmId}` },
       });
-      // Always clean up stored session
+      // Clean up stored session — skip logoff if external session or keepAlive requested
+      const isExternal = txExternalSessions.has(transactionId);
       txSessions.delete(transactionId);
-      await logoff(session);
+      txExternalSessions.delete(transactionId);
+      if (!isExternal && !keepAlive) await logoff(session);
       if (!resp.ok) {
         const e = await resp.text().catch(() => String(resp.status));
         throw new Error(`Transaction/End failed (${resp.status}): ${e}`);
+      }
+      if (keepAlive && !isExternal) {
+        return ok(`Transaction ${transactionId} ended. Session kept alive.\nwTmId: ${session.wTmId}\nPass this wTmId to transaction-start to reuse the session.`);
       }
       return ok(`Transaction ${transactionId} ended.`);
     } catch (e) { return err(String(e)); }
@@ -823,6 +849,7 @@ server.registerTool(
       const execBody = JSON.stringify({
         TransactionId: transactionId,
         Application:   app,
+        Workflow:      app,
         PageFile:      "VScan.xml",
         TaskProfile:   taskProfile,
         Rulesets:      rulesets,
@@ -918,6 +945,71 @@ server.registerTool(
   }
 );
 
+// ─── Tool: get-task-list ──────────────────────────────────────────────────────
+server.registerTool(
+  "get-task-list",
+  {
+    description:
+      "List all tasks defined in a Datacap application (flat list, jobIndex=-3 = all jobs). " +
+      "Returns task names, IDs, and associated job info. " +
+      "Use this to discover valid taskName values for create-batch and grab-next-batch.",
+    inputSchema: z.object({
+      application: z.string().describe("Datacap application name").optional(),
+    }),
+  },
+  async ({ application }) => {
+    const app = application ?? APP_NAME;
+    try {
+      return await withSession(app, async (s) => {
+        const data = await apiFetch(s, `/Admin/GetTaskList/${app}/-3`);
+        return ok(JSON.stringify(data, null, 2));
+      });
+    } catch (e) { return err(String(e)); }
+  }
+);
+
+// ─── Tool: queue-set-file ─────────────────────────────────────────────────────
+server.registerTool(
+  "queue-set-file",
+  {
+    description:
+      "Upload or replace a file on an existing grabbed batch in the Datacap queue. " +
+      "Use this to update the DCO page file (e.g. VScan.xml) or add/replace an image " +
+      "on a batch that is already in 'running' status. " +
+      "Content-Type is always application/octet-stream — do not use multipart here.",
+    inputSchema: z.object({
+      application: z.string().describe("Datacap application name").optional(),
+      queueId:     z.string().describe("Batch queue ID (must be in running status)"),
+      fileName:    z.string().describe("File name without extension (e.g. VScan or TM000001)"),
+      fileExt:     z.string().describe("File extension without dot (e.g. xml or tif)"),
+      filePath:    z.string().describe("Absolute path to the file on the server"),
+    }),
+  },
+  async ({ application, queueId, fileName, fileExt, filePath }) => {
+    const app = application ?? APP_NAME;
+    try {
+      return await withSession(app, async (s) => {
+        const fs        = await import("fs");
+        const fileBytes = fs.readFileSync(filePath);
+        const resp = await fetch(`${BASE_URL}/Queue/SetFile/${app}/${queueId}/${fileName}/${fileExt}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/octet-stream",
+            Cookie: `wTmId=${s.wTmId}`,
+          },
+          body: fileBytes,
+        });
+        if (!resp.ok) {
+          const e = await resp.text().catch(() => String(resp.status));
+          throw new Error(`Queue/SetFile failed (${resp.status}): ${e}`);
+        }
+        const text = await resp.text();
+        return ok(text.trim() || `Uploaded ${fileName}.${fileExt} (${fileBytes.length} bytes) to batch ${queueId}`);
+      });
+    } catch (e) { return err(String(e)); }
+  }
+);
+
 // ─── Tool: get-fingerprint-list ───────────────────────────────────────────────
 server.registerTool(
   "get-fingerprint-list",
@@ -945,7 +1037,7 @@ server.registerTool(
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error(`mcp-datacap-server v1.1.0 running — base: ${BASE_URL}, default app: ${APP_NAME}`);
+  console.error(`mcp-datacap-server v1.2.0 running — base: ${BASE_URL}, default app: ${APP_NAME}`);
 }
 
 main().catch((error) => {

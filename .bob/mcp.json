@@ -3,7 +3,7 @@
     "datacap": {
       "command": "node",
       "args": [
-        "C:\\Workspaces\\datacap_project_generator\\mcp-datacap-server\\build\\index.js"
+        "C:\\Workspaces\\datacap_app_generator\\mcp-datacap-server\\build\\index.js"
       ],
       "env": {
         "DATACAP_URL": "http://localhost:82/service",
@@ -15,7 +15,8 @@
       "alwaysAllow": [
         "list-applications",
         "get-task-profiles"
-      ]
+      ],
+      "disabled": false
     }
   }
 }

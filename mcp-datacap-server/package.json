@@ -1,6 +1,6 @@
 {
   "name": "mcp-datacap-server",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "MCP server for IBM Datacap 9.1.10 REST API",
   "type": "module",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "files": ["build"],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "zod": "^3.0.0"
   },
   "devDependencies": {
