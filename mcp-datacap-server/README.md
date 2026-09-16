@@ -49,7 +49,7 @@ All configuration is via environment variables. Defaults target a local Datacap 
         "git+https://github.com/boontee/mcp-datacap-server"
       ],
       "env": {
-        "DATACAP_URL": "http://<datacapserver_url>/service",
+        "DATACAP_URL": "http://<datacapserver_url>/ServiceWTM.svc",
         "DATACAP_APP": "watsonxai",
         "DATACAP_USER": "admin",
         "DATACAP_PASSWORD": "admin",
