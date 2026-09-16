@@ -2,12 +2,21 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import * as fs from "fs";
+import * as path from "path";
 // ─── Configuration ────────────────────────────────────────────────────────────
 const BASE_URL = process.env.DATACAP_URL ?? "http://localhost:82/service";
 const APP_NAME = process.env.DATACAP_APP ?? "APT";
 const DC_USER = process.env.DATACAP_USER ?? "admin";
 const DC_PASS = process.env.DATACAP_PASSWORD ?? "admin";
 const DC_STATION = process.env.DATACAP_STATION ?? "1";
+const DC_ROOT = process.env.DATACAP_ROOT ?? "C:\\Datacap";
+function resolveFilePath(p) {
+    if (p.startsWith("@apps\\") || p.startsWith("@apps/")) {
+        return path.join(DC_ROOT, p.slice(6));
+    }
+    return p;
+}
 async function logon(application) {
     const body = JSON.stringify({ application, user: DC_USER, password: DC_PASS, station: DC_STATION });
     const resp = await fetch(`${BASE_URL}/Session/Logon`, {
@@ -85,6 +94,39 @@ function buildMultipart(fileBytes, fileName, mimeType = "application/octet-strea
     const tail = Buffer.from(`${CRLF}--${boundary}--${CRLF}`);
     return { body: Buffer.concat([head, fileBytes, tail]), boundary };
 }
+// ─── Helper: resolve ruleset names for a task profile from collection.xml ────
+function getRulesetsForProfile(app, profileName) {
+    const collectionPath = path.join(DC_ROOT, app, `dco_${app}`, "rules", "collection.xml");
+    const xml = fs.readFileSync(collectionPath, "utf8");
+    // Build id → name map only from the <rsc> block (not tprofile references)
+    const rulesetMap = new Map();
+    const rscMatch = xml.match(/<rsc>([\s\S]*?)<\/rsc>/);
+    if (rscMatch) {
+        for (const m of rscMatch[1].matchAll(/<ruleset\s[^>]*>/g)) {
+            const tag = m[0];
+            const id = tag.match(/\bid="([^"]+)"/)?.[1];
+            const name = tag.match(/\bname="([^"]+)"/)?.[1];
+            const nameDll = tag.match(/\bname\.dll="([^"]+)"/)?.[1];
+            if (id) {
+                // Prefer explicit name; fall back to name.dll; last resort use id
+                rulesetMap.set(id, name ?? (nameDll ? `${nameDll}` : id));
+            }
+        }
+    }
+    // Find the matching <tprofile name="..."> block and collect its <ruleset id> refs
+    const tpMatch = xml.match(new RegExp(`<tprofile\\s[^>]*name="${profileName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*>([\\s\\S]*?)</tprofile>`));
+    if (!tpMatch)
+        throw new Error(`Task profile "${profileName}" not found in ${collectionPath}`);
+    const names = [];
+    for (const rm of tpMatch[1].matchAll(/<ruleset\s[^>]*id="([^"]+)"/g)) {
+        const resolved = rulesetMap.get(rm[1]);
+        if (resolved)
+            names.push(resolved);
+    }
+    if (names.length === 0)
+        throw new Error(`Task profile "${profileName}" has no rulesets in ${collectionPath}`);
+    return names.join(",").replace(/transaction\.ai_Data_Extraction/gi, "watsonx.ai_Data_Extraction");
+}
 // ─── MCP Server ───────────────────────────────────────────────────────────────
 const server = new McpServer({
     name: "mcp-datacap-server",
@@ -128,10 +170,15 @@ server.registerTool("get-task-profiles", {
     description: "List all task profiles (ruleset execution profiles) defined in a Datacap application.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
+        taskProfile: z.string().describe("Optional task profile name to resolve rulesets for").optional(),
     }),
-}, async ({ application }) => {
+}, async ({ application, taskProfile }) => {
     const app = application ?? APP_NAME;
     try {
+        if (taskProfile) {
+            const rulesets = getRulesetsForProfile(app, taskProfile);
+            return ok(JSON.stringify({ application: app, taskProfile, rulesets: rulesets.split(",") }, null, 2));
+        }
         return await withSession(app, async (s) => {
             const data = await apiFetch(s, `/Admin/GetTaskProfileList/${app}`);
             return ok(JSON.stringify(data, null, 2));
@@ -338,7 +385,7 @@ server.registerTool("create-batch", {
 server.registerTool("upload-file", {
     description: "Upload a local image file (TIFF, PDF) to an existing grabbed batch. " +
         "The batch must be in 'running' status (call grab-batch first). " +
-        "Returns the pageId assigned to the uploaded image (e.g. TM000001).",
+        "Returns the pageId assigned to the uploaded image (e.g. tm000001).",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         queueId: z.string().describe("Batch queue ID returned by create-batch or list-batches"),
@@ -350,9 +397,10 @@ server.registerTool("upload-file", {
         return await withSession(app, async (s) => {
             const fs = await import("fs");
             const path = await import("path");
-            const fileBytes = fs.readFileSync(filePath);
-            const fileName = path.basename(filePath);
-            const ext = path.extname(filePath).toLowerCase();
+            const resolvedPath = resolveFilePath(filePath);
+            const fileBytes = fs.readFileSync(resolvedPath);
+            const fileName = `tm000001${path.extname(resolvedPath)}`;
+            const ext = path.extname(resolvedPath).toLowerCase();
             const mimeType = ext === ".pdf" ? "application/pdf" : "image/tiff";
             const { body, boundary } = buildMultipart(fileBytes, fileName, mimeType);
             const resp = await fetch(`${BASE_URL}/Queue/UploadFile/${app}/${queueId}`, {
@@ -499,13 +547,13 @@ server.registerTool("transaction-start", {
 server.registerTool("transaction-set-file", {
     description: "Upload a file into a Datacap Transaction's temporary workspace. " +
         "Call this for BOTH the page file (e.g. fileName=VScan, fileExt=xml) AND each image file " +
-        "(e.g. fileName=TM000001, fileExt=tif) before calling transaction-execute. " +
+        "(e.g. fileName=tm000001, fileExt=tif) before calling transaction-execute. " +
         "The page file must be a valid DCO XML batch file using <B>/<P>/<V> tags. " +
         "filePath must be an absolute path on the server.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         transactionId: z.string().describe("Transaction GUID from transaction-start"),
-        fileName: z.string().describe("File name without extension (e.g. VScan or TM000001)"),
+        fileName: z.string().describe("File name without extension (e.g. VScan or tm000001)"),
         fileExt: z.string().describe("File extension without dot (e.g. xml or tif)"),
         filePath: z.string().describe("Absolute path to the file on the server (e.g. C:\\Datacap\\APT\\images\\Input\\APT001.tif)"),
     }),
@@ -516,16 +564,16 @@ server.registerTool("transaction-set-file", {
         const session = txSessions.get(transactionId) ?? await logon(app);
         const fs = await import("fs");
         const path = await import("path");
-        const fileBytes = fs.readFileSync(filePath);
-        const ext = path.extname(filePath).toLowerCase().slice(1);
+        const resolvedPath = resolveFilePath(filePath);
+        const fileBytes = fs.readFileSync(resolvedPath);
+        const ext = path.extname(resolvedPath).toLowerCase().slice(1);
         const isImage = ["tif", "tiff", "pdf", "jpg", "jpeg", "png"].includes(ext);
         let respOk = false;
         let respText = "";
         if (isImage) {
             // Images must be sent as multipart/form-data
-            const baseName = path.basename(filePath);
             const mimeType = ext === "pdf" ? "application/pdf" : "image/tiff";
-            const { body, boundary } = buildMultipart(fileBytes, baseName, mimeType);
+            const { body, boundary } = buildMultipart(fileBytes, `${fileName}.${fileExt}`, mimeType);
             const resp = await fetch(`${BASE_URL}/Transaction/SetFile/${transactionId}/${fileName}/${fileExt}`, {
                 method: "POST",
                 headers: {
@@ -566,7 +614,7 @@ server.registerTool("transaction-set-page-xml", {
         "Use this instead of transaction-set-file when the page XML content is generated inline " +
         "rather than read from disk. The xml must use Datacap DCO format: " +
         "<B id='Transaction'><V n='TYPE'>AppName</V>" +
-        "<P id='TM000001'><V n='TYPE'>Other</V><V n='STATUS'>0</V><V n='IMAGEFILE'>TM000001.tif</V></P></B>",
+        "<P id='tm000001'><V n='TYPE'>Other</V><V n='STATUS'>0</V><V n='IMAGEFILE'>tm000001.tif</V></P></B>",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         transactionId: z.string().describe("Transaction GUID from transaction-start"),
@@ -596,31 +644,29 @@ server.registerTool("transaction-set-page-xml", {
 // ─── Tool: transaction-execute ────────────────────────────────────────────────
 server.registerTool("transaction-execute", {
     description: "Execute one or more Datacap rulesets within a Transaction. " +
-        "rulesets must be a comma-separated list of ruleset names exactly as they appear in " +
-        "collection.xml (e.g. 'PageID', 'CreateDocs', 'Recognize,Validate'). " +
-        "For global action DLLs append .Rul.dll (e.g. 'ImageEnhancement.Rul.dll'). " +
+        "If rulesets is omitted, it is automatically resolved from taskProfile by reading collection.xml. " +
+        "Otherwise pass a comma-separated list of ruleset names exactly as they appear in collection.xml. " +
         "pageFile is the name+ext of the page file uploaded via transaction-set-file (e.g. 'VScan.xml'). " +
         "Returns Status (0=success), DocumentCount, PageCount, and any Messages.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         transactionId: z.string().describe("Transaction GUID from transaction-start"),
-        rulesets: z.string().describe("Comma-separated ruleset names from collection.xml (e.g. 'PageID' or 'CreateDocs,PageID')"),
+        rulesets: z.string().describe("Comma-separated ruleset names from collection.xml. Omit to auto-resolve from taskProfile.").optional(),
         pageFile: z.string().describe("Page file name with extension uploaded earlier (e.g. VScan.xml)").optional(),
-        taskProfile: z.string().describe("Task profile name for context (e.g. 'Batch Profiler')").optional(),
-        workflow: z.string().describe("Workflow name — usually same as application name").optional(),
+        taskProfile: z.string().describe("Task profile name (e.g. 'WebTransaction'). Used to resolve rulesets when rulesets is omitted.").optional(),
     }),
-}, async ({ application, transactionId, rulesets, pageFile = "VScan.xml", taskProfile = "", workflow }) => {
+}, async ({ application, transactionId, rulesets, pageFile = "VScan.xml", taskProfile = "" }) => {
     const app = application ?? APP_NAME;
     try {
+        const resolvedRulesets = rulesets ?? (taskProfile ? getRulesetsForProfile(app, taskProfile) : (() => { throw new Error("Either rulesets or taskProfile must be provided"); })());
+        console.error(`Resolved rulesets for profile '${taskProfile}': ${resolvedRulesets}`);
         const session = txSessions.get(transactionId) ?? await logon(app);
         const body = JSON.stringify({
             TransactionId: transactionId,
             Application: app,
-            Workflow: workflow ?? app,
             PageFile: pageFile,
-            Rulesets: rulesets,
             TaskProfile: taskProfile,
-            TargetDCOObject: "",
+            Rulesets: resolvedRulesets,
         });
         const resp = await fetch(`${BASE_URL}/Transaction/Execute`, {
             method: "POST",
@@ -632,7 +678,7 @@ server.registerTool("transaction-execute", {
             throw new Error(`Transaction/Execute failed (${resp.status}): ${e}`);
         }
         const data = await resp.json();
-        return ok(JSON.stringify(data, null, 2));
+        return ok(JSON.stringify({ ...data, ResolvedRulesets: resolvedRulesets }, null, 2));
     }
     catch (e) {
         return err(String(e));
@@ -643,6 +689,8 @@ server.registerTool("transaction-get-file", {
     description: "Retrieve a file from a Datacap Transaction's temporary workspace after rule execution. " +
         "Typically used to read back the updated DCO page file (e.g. VScan.xml) to inspect " +
         "classification results, extracted field values, and page statuses. " +
+        "The second call after execution should fetch the LLM Extract JSON: " +
+        "fileName=TM000001-Extract, fileExt=json. " +
         "Also supports fetching field data files (e.g. fileName=tm000001, fileExt=xml) and " +
         "full-page CCO word maps (e.g. fileName=tm000001c, fileExt=xml).",
     inputSchema: z.object({
@@ -722,15 +770,14 @@ server.registerTool("transaction-run", {
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         imagePath: z.string().describe("Absolute path to the image file on the server (e.g. C:\\Datacap\\TravelDocs\\Images\\Car1.tif)"),
-        rulesets: z.string().describe("Comma-separated ruleset names from collection.xml (e.g. 'ImageFix,PageID,CreateDocs,Recognize,Validate')"),
-        taskProfile: z.string().describe("Task profile name (e.g. 'TransactionCaptureOCR', 'Batch Profiler')").optional(),
-        pageFileName: z.string().describe("Page ID to assign to the image, default TM000001").optional(),
+        rulesets: z.string().describe("Comma-separated ruleset names from collection.xml. Omit to auto-resolve from taskProfile.").optional(),
+        taskProfile: z.string().describe("Task profile name (e.g. 'WebTransaction'). Used to resolve rulesets when rulesets is omitted.").optional(),
+        pageFileName: z.string().describe("Page ID to assign to the image, default tm000001").optional(),
         extraFiles: z.array(z.string()).describe("Additional file names (no extension) to fetch after execute, e.g. ['tm000001', 'tm000001c']").optional(),
     }),
-}, async ({ application, imagePath, rulesets, taskProfile = "", pageFileName = "TM000001", extraFiles = [] }) => {
+}, async ({ application, imagePath, rulesets, taskProfile = "", pageFileName = "tm000001", extraFiles = [] }) => {
     const app = application ?? APP_NAME;
-    const fs = await import("fs");
-    const path = await import("path");
+    const resolvedRulesets = rulesets ?? (taskProfile ? getRulesetsForProfile(app, taskProfile) : (() => { throw new Error("Either rulesets or taskProfile must be provided"); })());
     let session = null;
     let transactionId = "";
     try {
@@ -761,11 +808,12 @@ server.registerTool("transaction-run", {
         if (!setXmlResp.ok)
             throw new Error(`SetFile VScan.xml failed (${setXmlResp.status})`);
         // ── 4. SetFile image ─────────────────────────────────────────────────────
-        const imageBytes = fs.readFileSync(imagePath);
-        const imageName = path.basename(imagePath);
-        const imageExt = path.extname(imagePath).toLowerCase().slice(1);
+        const resolvedImagePath = resolveFilePath(imagePath);
+        const imageBytes = fs.readFileSync(resolvedImagePath);
+        const imageExt = path.extname(resolvedImagePath).toLowerCase().slice(1);
         const mimeType = imageExt === "pdf" ? "application/pdf" : "image/tiff";
-        const { body: mpBody, boundary } = buildMultipart(imageBytes, imageName, mimeType);
+        // Use pageFileName as the upload filename so OCR finds it by the correct name
+        const { body: mpBody, boundary } = buildMultipart(imageBytes, `${pageFileName}.${imageExt}`, mimeType);
         const setImgResp = await fetch(`${BASE_URL}/Transaction/SetFile/${transactionId}/${pageFileName}/${imageExt}`, {
             method: "POST",
             headers: { "Content-Type": `multipart/form-data; boundary=${boundary}`, Cookie: `wTmId=${session.wTmId}` },
@@ -777,10 +825,9 @@ server.registerTool("transaction-run", {
         const execBody = JSON.stringify({
             TransactionId: transactionId,
             Application: app,
-            Workflow: app,
             PageFile: "VScan.xml",
             TaskProfile: taskProfile,
-            Rulesets: rulesets,
+            Rulesets: resolvedRulesets,
         });
         const execResp = await fetch(`${BASE_URL}/Transaction/Execute`, {
             method: "POST",
@@ -799,7 +846,24 @@ server.registerTool("transaction-run", {
         if (!getVscanResp.ok)
             throw new Error(`GetFile VScan.xml failed (${getVscanResp.status})`);
         const vscanResult = await getVscanResp.text();
-        // ── 6b. Get extra files (e.g. tm000001.xml, tm000001c.xml) ───────────────
+        // ── 6b. Get Extract JSON (e.g. tm000001-Extract.json) ────────────────────
+        const extractJsonName = `${pageFileName}-Extract`;
+        let extractJson = "";
+        try {
+            let extractResp = await fetch(`${BASE_URL}/Transaction/GetFile/${transactionId}/${extractJsonName}/json`, {
+                headers: { Cookie: `wTmId=${session.wTmId}` },
+            });
+            if (!extractResp.ok) {
+                // fallback check in case of casing variance
+                extractResp = await fetch(`${BASE_URL}/Transaction/GetFile/${transactionId}/tm000001-Extract/json`, {
+                    headers: { Cookie: `wTmId=${session.wTmId}` },
+                });
+            }
+            if (extractResp.ok)
+                extractJson = await extractResp.text();
+        }
+        catch { /* best-effort */ }
+        // ── 6c. Get extra files (e.g. tm000001.xml, tm000001c.xml) ───────────────
         const extraResults = {};
         for (const extra of extraFiles) {
             try {
@@ -826,6 +890,10 @@ server.registerTool("transaction-run", {
             `\n=== VScan.xml (DCO) ===`,
             vscanResult,
         ];
+        if (extractJson) {
+            lines.push(`\n=== ${pageFileName}-Extract.json ===`);
+            lines.push(extractJson);
+        }
         for (const [name, content] of Object.entries(extraResults)) {
             lines.push(`\n=== ${name} ===`);
             lines.push(content);
@@ -896,7 +964,7 @@ server.registerTool("queue-set-file", {
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         queueId: z.string().describe("Batch queue ID (must be in running status)"),
-        fileName: z.string().describe("File name without extension (e.g. VScan or TM000001)"),
+        fileName: z.string().describe("File name without extension (e.g. VScan or tm000001)"),
         fileExt: z.string().describe("File extension without dot (e.g. xml or tif)"),
         filePath: z.string().describe("Absolute path to the file on the server"),
     }),
@@ -905,7 +973,7 @@ server.registerTool("queue-set-file", {
     try {
         return await withSession(app, async (s) => {
             const fs = await import("fs");
-            const fileBytes = fs.readFileSync(filePath);
+            const fileBytes = fs.readFileSync(resolveFilePath(filePath));
             const resp = await fetch(`${BASE_URL}/Queue/SetFile/${app}/${queueId}/${fileName}/${fileExt}`, {
                 method: "POST",
                 headers: {
