@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import * as fs from "fs";
 import * as path from "path";
-// ─── Configuration ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const BASE_URL = process.env.DATACAP_URL ?? "http://localhost:82/service";
 const APP_NAME = process.env.DATACAP_APP ?? "APT";
 const DC_USER = process.env.DATACAP_USER ?? "admin";
@@ -71,11 +71,11 @@ async function withSession(application, fn) {
         await logoff(session);
     }
 }
-// ─── Transaction Session Store ────────────────────────────────────────────────
+// â”€â”€â”€ Transaction Session Store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Keeps wTmId alive between transaction-start and transaction-end calls
 // so all transaction tools share the same authenticated session cookie.
 const txSessions = new Map();
-// Tracks transactions that reused an external wTmId — these must NOT be logged off
+// Tracks transactions that reused an external wTmId â€” these must NOT be logged off
 // on transaction-end so the caller's session remains alive for log continuity.
 const txExternalSessions = new Set();
 function ok(text) {
@@ -84,7 +84,7 @@ function ok(text) {
 function err(text) {
     return { content: [{ type: "text", text }], isError: true };
 }
-// ─── Helper: build multipart/form-data body for a file ───────────────────────
+// â”€â”€â”€ Helper: build multipart/form-data body for a file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function buildMultipart(fileBytes, fileName, mimeType = "application/octet-stream") {
     const boundary = `----DatacapBoundary${Date.now()}`;
     const CRLF = "\r\n";
@@ -94,11 +94,11 @@ function buildMultipart(fileBytes, fileName, mimeType = "application/octet-strea
     const tail = Buffer.from(`${CRLF}--${boundary}--${CRLF}`);
     return { body: Buffer.concat([head, fileBytes, tail]), boundary };
 }
-// ─── Helper: resolve ruleset names for a task profile from collection.xml ────
+// â”€â”€â”€ Helper: resolve ruleset names for a task profile from collection.xml â”€â”€â”€â”€
 function getRulesetsForProfile(app, profileName) {
     const collectionPath = path.join(DC_ROOT, app, `dco_${app}`, "rules", "collection.xml");
     const xml = fs.readFileSync(collectionPath, "utf8");
-    // Build id → name map only from the <rsc> block (not tprofile references)
+    // Build id â†’ name map only from the <rsc> block (not tprofile references)
     const rulesetMap = new Map();
     const rscMatch = xml.match(/<rsc>([\s\S]*?)<\/rsc>/);
     if (rscMatch) {
@@ -127,12 +127,12 @@ function getRulesetsForProfile(app, profileName) {
         throw new Error(`Task profile "${profileName}" has no rulesets in ${collectionPath}`);
     return names.join(",").replace(/transaction\.ai_Data_Extraction/gi, "watsonx.ai_Data_Extraction");
 }
-// ─── MCP Server ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ MCP Server â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const server = new McpServer({
     name: "mcp-datacap-server",
     version: "1.2.0",
 });
-// ─── Tool: list-applications ──────────────────────────────────────────────────
+// â”€â”€â”€ Tool: list-applications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("list-applications", {
     description: "List all Datacap applications registered in the Task Manager.",
     inputSchema: z.object({}),
@@ -147,9 +147,9 @@ server.registerTool("list-applications", {
         return err(String(e));
     }
 });
-// ─── Tool: get-workflow ───────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-workflow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-workflow", {
-    description: "Get the workflow hierarchy (workflows → jobs → tasks) for a Datacap application.",
+    description: "Get the workflow hierarchy (workflows â†’ jobs â†’ tasks) for a Datacap application.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name (e.g. APT)").optional(),
     }),
@@ -165,7 +165,7 @@ server.registerTool("get-workflow", {
         return err(String(e));
     }
 });
-// ─── Tool: get-task-profiles ──────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-task-profiles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-task-profiles", {
     description: "List all task profiles (ruleset execution profiles) defined in a Datacap application.",
     inputSchema: z.object({
@@ -188,7 +188,7 @@ server.registerTool("get-task-profiles", {
         return err(String(e));
     }
 });
-// ─── Tool: get-dco-list ───────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-dco-list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-dco-list", {
     description: "List all SetupDCO document hierarchy definitions for a Datacap application.",
     inputSchema: z.object({
@@ -206,12 +206,12 @@ server.registerTool("get-dco-list", {
         return err(String(e));
     }
 });
-// ─── Tool: get-dco-definition ─────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-dco-definition â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-dco-definition", {
     description: "Get the full SetupDCO XML definition (document types, page types, fields) for a Datacap application.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
-        dcoName: z.string().describe("DCO name — usually same as application name").optional(),
+        dcoName: z.string().describe("DCO name â€” usually same as application name").optional(),
     }),
 }, async ({ application, dcoName }) => {
     const app = application ?? APP_NAME;
@@ -226,21 +226,21 @@ server.registerTool("get-dco-definition", {
         return err(String(e));
     }
 });
-// ─── Tool: list-batches ───────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: list-batches â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("list-batches", {
     description: "List batches in a Datacap application queue with optional filters.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         pageSize: z.number().int().min(1).max(100).describe("Number of batches per page (default 20)").optional(),
         pageIndex: z.number().int().min(1).describe("Page index starting at 1 (default 1)").optional(),
-        sortColumn: z.string().describe("Sort column — e.g. qu_id, qu_batch, qu_status (default qu_id)").optional(),
+        sortColumn: z.string().describe("Sort column â€” e.g. qu_id, qu_batch, qu_status (default qu_id)").optional(),
         filter: z.string().describe("Optional filter expression e.g. qu_status==|pending").optional(),
     }),
 }, async ({ application, pageSize = 20, pageIndex = 1, sortColumn = "qu_id", filter }) => {
     const app = application ?? APP_NAME;
     try {
         return await withSession(app, async (s) => {
-            // Filter is passed as a query parameter (not encoded — Datacap expects raw ==| syntax)
+            // Filter is passed as a query parameter (not encoded â€” Datacap expects raw ==| syntax)
             let path = `/Queue/GetBatchList/${app}/${pageSize}/${pageIndex}/${sortColumn}`;
             if (filter)
                 path += `?${filter}`;
@@ -252,7 +252,7 @@ server.registerTool("list-batches", {
         return err(String(e));
     }
 });
-// ─── Tool: get-batch ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-batch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-batch", {
     description: "Get attributes and status of a specific batch by its queue ID.",
     inputSchema: z.object({
@@ -271,7 +271,7 @@ server.registerTool("get-batch", {
         return err(String(e));
     }
 });
-// ─── Tool: get-statistics ─────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-statistics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-statistics", {
     description: "Get processing statistics for a Datacap application: total counts, batches by task, average task time, and batch age.",
     inputSchema: z.object({
@@ -299,7 +299,7 @@ server.registerTool("get-statistics", {
         return err(String(e));
     }
 });
-// ─── Tool: release-batch ──────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: release-batch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("release-batch", {
     description: "Release a grabbed batch back to the queue with a given status. Typical status values: finished, hold, cancelled, aborted.",
     inputSchema: z.object({
@@ -320,7 +320,7 @@ server.registerTool("release-batch", {
         return err(String(e));
     }
 });
-// ─── Tool: get-batch-history ──────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-batch-history â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-batch-history", {
     description: "Get the processing history (task progression log) for a specific batch.",
     inputSchema: z.object({
@@ -339,7 +339,7 @@ server.registerTool("get-batch-history", {
         return err(String(e));
     }
 });
-// ─── Tool: get-page-file ──────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-page-file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-page-file", {
     description: "Get the current page file (DCO XML with extracted field values and batch state) for a batch.",
     inputSchema: z.object({
@@ -358,7 +358,7 @@ server.registerTool("get-page-file", {
         return err(String(e));
     }
 });
-// ─── Tool: create-batch ───────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: create-batch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("create-batch", {
     description: "Create a new batch in a Datacap application and set it to running status. " +
         "Returns the queueId needed for subsequent upload-file and execute-rules calls. " +
@@ -381,7 +381,7 @@ server.registerTool("create-batch", {
         return err(String(e));
     }
 });
-// ─── Tool: upload-file ────────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: upload-file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("upload-file", {
     description: "Upload a local image file (TIFF, PDF) to an existing grabbed batch. " +
         "The batch must be in 'running' status (call grab-batch first). " +
@@ -424,7 +424,7 @@ server.registerTool("upload-file", {
         return err(String(e));
     }
 });
-// ─── Tool: grab-batch ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: grab-batch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("grab-batch", {
     description: "Grab a pending batch and set its status to running so files can be uploaded and rules executed. " +
         "Use grab-next-batch to grab the next available pending batch automatically.",
@@ -452,7 +452,7 @@ server.registerTool("grab-batch", {
         return err(String(e));
     }
 });
-// ─── Tool: grab-next-batch ────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: grab-next-batch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("grab-next-batch", {
     description: "Grab the next available pending batch for a given job and task, set it to running, and return its queue ID. " +
         "Returns -1 if no pending batches are available.",
@@ -481,7 +481,7 @@ server.registerTool("grab-next-batch", {
         return err(String(e));
     }
 });
-// ─── Tool: transaction-start ─────────────────────────────────────────────────
+// â”€â”€â”€ Tool: transaction-start â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Logs on, starts a transaction, and keeps the session alive in txSessions
 // so that transaction-set-file / transaction-execute / transaction-get-file /
 // transaction-end all share the same wTmId cookie.
@@ -494,7 +494,7 @@ server.registerTool("transaction-start", {
         "Use this flow instead of the Queue-based flow when you want to run rules on files " +
         "without creating a persistent batch record. " +
         "Pass wTmId to reuse an existing session and keep all calls in the same RRS log file " +
-        "(skips Logon — caller is responsible for calling Logoff when fully done).",
+        "(skips Logon â€” caller is responsible for calling Logoff when fully done).",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         wTmId: z.string().describe("Existing session cookie value to reuse (skips Logon)").optional(),
@@ -502,7 +502,7 @@ server.registerTool("transaction-start", {
 }, async ({ application, wTmId }) => {
     const app = application ?? APP_NAME;
     try {
-        // If an existing wTmId is supplied, reuse it — skip logon so the RRS log stays continuous
+        // If an existing wTmId is supplied, reuse it â€” skip logon so the RRS log stays continuous
         let session;
         let skipLogoffOnError = false;
         if (wTmId) {
@@ -510,7 +510,7 @@ server.registerTool("transaction-start", {
             skipLogoffOnError = true;
         }
         else {
-            // Logon and keep the session alive — do NOT call logoff here
+            // Logon and keep the session alive â€” do NOT call logoff here
             session = await logon(app);
         }
         const resp = await fetch(`${BASE_URL}/Transaction/Start`, {
@@ -543,7 +543,7 @@ server.registerTool("transaction-start", {
         return err(String(e));
     }
 });
-// ─── Tool: transaction-set-file ───────────────────────────────────────────────
+// â”€â”€â”€ Tool: transaction-set-file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("transaction-set-file", {
     description: "Upload a file into a Datacap Transaction's temporary workspace. " +
         "Call this for BOTH the page file (e.g. fileName=VScan, fileExt=xml) AND each image file " +
@@ -608,13 +608,16 @@ server.registerTool("transaction-set-file", {
         return err(String(e));
     }
 });
-// ─── Tool: transaction-set-page-xml ──────────────────────────────────────────
+// â”€â”€â”€ Tool: transaction-set-page-xml â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("transaction-set-page-xml", {
     description: "Upload a DCO page XML string directly into a Datacap Transaction. " +
         "Use this instead of transaction-set-file when the page XML content is generated inline " +
         "rather than read from disk. The xml must use Datacap DCO format: " +
         "<B id='Transaction'><V n='TYPE'>AppName</V>" +
-        "<P id='tm000001'><V n='TYPE'>Other</V><V n='STATUS'>0</V><V n='IMAGEFILE'>tm000001.tif</V></P></B>",
+        "<P id='tm000001'><V n='TYPE'>Other</V><V n='STATUS'>0</V><V n='IMAGEFILE'>tm000001.pdf</V></P></B>. " +
+        "IMPORTANT: the IMAGEFILE value must match the exact filename+extension of the image uploaded " +
+        "(e.g. tm000001.pdf for a PDF, tm000001.tif for a TIFF). A blank or mismatched IMAGEFILE " +
+        "causes all ConvertFiles conversion actions to silently skip with 'File is not a ...' errors.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         transactionId: z.string().describe("Transaction GUID from transaction-start"),
@@ -641,7 +644,7 @@ server.registerTool("transaction-set-page-xml", {
         return err(String(e));
     }
 });
-// ─── Tool: transaction-execute ────────────────────────────────────────────────
+// â”€â”€â”€ Tool: transaction-execute â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("transaction-execute", {
     description: "Execute one or more Datacap rulesets within a Transaction. " +
         "If rulesets is omitted, it is automatically resolved from taskProfile by reading collection.xml. " +
@@ -684,7 +687,7 @@ server.registerTool("transaction-execute", {
         return err(String(e));
     }
 });
-// ─── Tool: transaction-get-file ───────────────────────────────────────────────
+// â”€â”€â”€ Tool: transaction-get-file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("transaction-get-file", {
     description: "Retrieve a file from a Datacap Transaction's temporary workspace after rule execution. " +
         "Typically used to read back the updated DCO page file (e.g. VScan.xml) to inspect " +
@@ -717,7 +720,7 @@ server.registerTool("transaction-get-file", {
         return err(String(e));
     }
 });
-// ─── Tool: transaction-end ────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: transaction-end â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("transaction-end", {
     description: "End a Datacap Transaction and clean up its temporary workspace. " +
         "Always call this after transaction-get-file to release server resources. " +
@@ -727,7 +730,7 @@ server.registerTool("transaction-end", {
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         transactionId: z.string().describe("Transaction GUID to end"),
-        keepAlive: z.boolean().describe("Skip Session/Logoff — keep session open for inspection").optional(),
+        keepAlive: z.boolean().describe("Skip Session/Logoff â€” keep session open for inspection").optional(),
     }),
 }, async ({ application, transactionId, keepAlive }) => {
     const app = application ?? APP_NAME;
@@ -737,7 +740,7 @@ server.registerTool("transaction-end", {
             method: "DELETE",
             headers: { Cookie: `wTmId=${session.wTmId}` },
         });
-        // Clean up stored session — skip logoff if external session or keepAlive requested
+        // Clean up stored session â€” skip logoff if external session or keepAlive requested
         const isExternal = txExternalSessions.has(transactionId);
         txSessions.delete(transactionId);
         txExternalSessions.delete(transactionId);
@@ -756,15 +759,15 @@ server.registerTool("transaction-end", {
         return err(String(e));
     }
 });
-// ─── Tool: transaction-run ────────────────────────────────────────────────────
-// Single-call helper: Logon → Transaction/Start → SetFile VScan.xml →
-// SetFile image → Execute → GetFile VScan.xml → End → Logoff
+// â”€â”€â”€ Tool: transaction-run â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Single-call helper: Logon â†’ Transaction/Start â†’ SetFile VScan.xml â†’
+// SetFile image â†’ Execute â†’ GetFile VScan.xml â†’ End â†’ Logoff
 // All steps share the same persistent HTTP session so the wTmId cookie
 // is correctly propagated, matching the proven Postman/PowerShell flow.
 server.registerTool("transaction-run", {
     description: "Run a complete Datacap Transaction in a single call: " +
-        "Logon → Transaction/Start → SetFile page XML → SetFile image → Execute rulesets → " +
-        "GetFile results → Transaction/End → Logoff. " +
+        "Logon â†’ Transaction/Start â†’ SetFile page XML â†’ SetFile image â†’ Execute rulesets â†’ " +
+        "GetFile results â†’ Transaction/End â†’ Logoff. " +
         "Returns the full DCO result XML from VScan.xml plus optionally tm000001.xml and tm000001c.xml. " +
         "Use this instead of the individual transaction-* tools when you want a one-shot pipeline.",
     inputSchema: z.object({
@@ -781,9 +784,9 @@ server.registerTool("transaction-run", {
     let session = null;
     let transactionId = "";
     try {
-        // ── 1. Logon ────────────────────────────────────────────────────────────
+        // â”€â”€ 1. Logon â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         session = await logon(app);
-        // ── 2. Transaction/Start ────────────────────────────────────────────────
+        // â”€â”€ 2. Transaction/Start â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const startResp = await fetch(`${BASE_URL}/Transaction/Start`, {
             method: "GET",
             headers: { Accept: "application/json", Cookie: `wTmId=${session.wTmId}` },
@@ -795,11 +798,15 @@ server.registerTool("transaction-run", {
         if (!guidMatch)
             throw new Error(`Transaction/Start bad response: ${startText}`);
         transactionId = guidMatch[0];
-        // ── 3. SetFile VScan.xml ─────────────────────────────────────────────────
+        // -- 3. Resolve image path and extension first (needed in VScan.xml IMAGEFILE value) -------
+        const resolvedImagePath = resolveFilePath(imagePath);
+        const imageBytes = fs.readFileSync(resolvedImagePath);
+        const imageExt = path.extname(resolvedImagePath).toLowerCase().slice(1);
+        // -- 4. SetFile VScan.xml -- IMAGEFILE must use the real file extension --------------------
         const vscanXml = Buffer.from(`<?xml-stylesheet type="text/xsl" href="..\\..\\dco.xsl"?>\r\n` +
             `<B id="Transaction"><V n="TYPE">${app}</V>` +
             `<P id="${pageFileName}"><V n="TYPE">Other</V><V n="STATUS">0</V>` +
-            `<V n="IMAGEFILE">${pageFileName}.tif</V></P></B>`, "utf-8");
+            `<V n="IMAGEFILE">${pageFileName}.${imageExt}</V></P></B>`, "utf-8");
         const setXmlResp = await fetch(`${BASE_URL}/Transaction/SetFile/${transactionId}/VScan/xml`, {
             method: "POST",
             headers: { "Content-Type": "application/octet-stream", Cookie: `wTmId=${session.wTmId}` },
@@ -807,10 +814,7 @@ server.registerTool("transaction-run", {
         });
         if (!setXmlResp.ok)
             throw new Error(`SetFile VScan.xml failed (${setXmlResp.status})`);
-        // ── 4. SetFile image ─────────────────────────────────────────────────────
-        const resolvedImagePath = resolveFilePath(imagePath);
-        const imageBytes = fs.readFileSync(resolvedImagePath);
-        const imageExt = path.extname(resolvedImagePath).toLowerCase().slice(1);
+        // -- 5. SetFile image -----------------------------------------------------------------------
         const mimeType = imageExt === "pdf" ? "application/pdf" : "image/tiff";
         // Use pageFileName as the upload filename so OCR finds it by the correct name
         const { body: mpBody, boundary } = buildMultipart(imageBytes, `${pageFileName}.${imageExt}`, mimeType);
@@ -821,7 +825,7 @@ server.registerTool("transaction-run", {
         });
         if (!setImgResp.ok)
             throw new Error(`SetFile image failed (${setImgResp.status})`);
-        // ── 5. Execute ───────────────────────────────────────────────────────────
+        // â”€â”€ 5. Execute â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const execBody = JSON.stringify({
             TransactionId: transactionId,
             Application: app,
@@ -839,14 +843,14 @@ server.registerTool("transaction-run", {
             throw new Error(`Transaction/Execute failed (${execResp.status}): ${e}`);
         }
         const execResult = await execResp.json();
-        // ── 6. GetFile VScan.xml ─────────────────────────────────────────────────
+        // â”€â”€ 6. GetFile VScan.xml â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const getVscanResp = await fetch(`${BASE_URL}/Transaction/GetFile/${transactionId}/VScan/xml`, {
             headers: { Cookie: `wTmId=${session.wTmId}` },
         });
         if (!getVscanResp.ok)
             throw new Error(`GetFile VScan.xml failed (${getVscanResp.status})`);
         const vscanResult = await getVscanResp.text();
-        // ── 6b. Get Extract JSON (e.g. tm000001-Extract.json) ────────────────────
+        // â”€â”€ 6b. Get Extract JSON (e.g. tm000001-Extract.json) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const extractJsonName = `${pageFileName}-Extract`;
         let extractJson = "";
         try {
@@ -863,7 +867,7 @@ server.registerTool("transaction-run", {
                 extractJson = await extractResp.text();
         }
         catch { /* best-effort */ }
-        // ── 6c. Get extra files (e.g. tm000001.xml, tm000001c.xml) ───────────────
+        // â”€â”€ 6c. Get extra files (e.g. tm000001.xml, tm000001c.xml) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const extraResults = {};
         for (const extra of extraFiles) {
             try {
@@ -875,15 +879,15 @@ server.registerTool("transaction-run", {
             }
             catch { /* best-effort */ }
         }
-        // ── 7. Transaction/End ───────────────────────────────────────────────────
+        // â”€â”€ 7. Transaction/End â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         await fetch(`${BASE_URL}/Transaction/End/${transactionId}`, {
             method: "DELETE",
             headers: { Cookie: `wTmId=${session.wTmId}` },
         }).catch(() => { });
-        // ── 8. Logoff ────────────────────────────────────────────────────────────
+        // â”€â”€ 8. Logoff â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         await logoff(session);
         session = null;
-        // ── Build output ─────────────────────────────────────────────────────────
+        // â”€â”€ Build output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         const lines = [
             `=== Execute Result ===`,
             JSON.stringify(execResult, null, 2),
@@ -913,7 +917,7 @@ server.registerTool("transaction-run", {
         return err(String(e));
     }
 });
-// ─── Tool: delete-batch ───────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: delete-batch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("delete-batch", {
     description: "Delete a batch and its batch folder from a Datacap application. " +
         "Use this to clean up test batches after inspection. " +
@@ -935,7 +939,7 @@ server.registerTool("delete-batch", {
         return err(String(e));
     }
 });
-// ─── Tool: get-task-list ──────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-task-list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-task-list", {
     description: "List all tasks defined in a Datacap application (flat list, jobIndex=-3 = all jobs). " +
         "Returns task names, IDs, and associated job info. " +
@@ -955,12 +959,12 @@ server.registerTool("get-task-list", {
         return err(String(e));
     }
 });
-// ─── Tool: queue-set-file ─────────────────────────────────────────────────────
+// â”€â”€â”€ Tool: queue-set-file â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("queue-set-file", {
     description: "Upload or replace a file on an existing grabbed batch in the Datacap queue. " +
         "Use this to update the DCO page file (e.g. VScan.xml) or add/replace an image " +
         "on a batch that is already in 'running' status. " +
-        "Content-Type is always application/octet-stream — do not use multipart here.",
+        "Content-Type is always application/octet-stream â€” do not use multipart here.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         queueId: z.string().describe("Batch queue ID (must be in running status)"),
@@ -994,13 +998,13 @@ server.registerTool("queue-set-file", {
         return err(String(e));
     }
 });
-// ─── Tool: get-fingerprint-list ───────────────────────────────────────────────
+// â”€â”€â”€ Tool: get-fingerprint-list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 server.registerTool("get-fingerprint-list", {
     description: "List fingerprint templates registered for a page type in a Datacap application.",
     inputSchema: z.object({
         application: z.string().describe("Datacap application name").optional(),
         pageType: z.string().describe("Page type name (e.g. InvoicePage)"),
-        dcoName: z.string().describe("DCO name — usually same as application name").optional(),
+        dcoName: z.string().describe("DCO name â€” usually same as application name").optional(),
     }),
 }, async ({ application, pageType, dcoName }) => {
     const app = application ?? APP_NAME;
@@ -1015,11 +1019,11 @@ server.registerTool("get-fingerprint-list", {
         return err(String(e));
     }
 });
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error(`mcp-datacap-server v1.2.0 running — base: ${BASE_URL}, default app: ${APP_NAME}`);
+    console.error(`mcp-datacap-server v1.2.0 running â€” base: ${BASE_URL}, default app: ${APP_NAME}`);
 }
 main().catch((error) => {
     console.error("Fatal error:", error);
