@@ -1,0 +1,1181 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="ZonesAndLineItems" v="9.1.10.5">
+  <com ref="Datacap.Libraries.ZonesAndLineItems.Actions"  qi=" : Work with zones and line items.">
+      <h>
+          The ZonesAndLineItems action library focuses on actions that manipulate fields, zones and lineitems.<br/><br/>
+
+          A field is a location allocated in the DCO that tracks a text value and location on the image associated with the page.
+          A zone is the pixel location on the page image, that contains the coordinates for the text within
+          a field.  For example, if the field contains a date, the zone coordinates identifies the location
+          on the image that holds the date value in a left, top, right, bottom format.  It is common for
+          the words "field" and "zone" to be used interchangeably although there are these slight
+          differences in meaning.<br/><br/>
+
+          Lineitems are special kinds of fields. If line items are used in an application, 
+          they not necessarily appear on every page.
+          Lineitems are fields that are children of a field, creating a short tree structure.
+          Lineitems are typically used to represent a table on the page.<br/><br/>
+          
+          A typical lineitem structure example:<br/><br/>
+          
+          Details<br/>
+          - Lineitem<br/>
+          - - ItemID<br/>
+          - - ItemDesc<br/>
+          - - Qty<br/>
+          - - Price<br/>
+          - - LineTotal<br/><br/>          
+          
+          Lineitems add an additional level of complexity to field manipulation, verification
+          and export. It is recommended to create lineitem fields only when necessary.<br/><br/>
+          
+          <b>♕ Smart Parameters ♕</b><br/><br/>
+
+          Action parameters can be provided with smart parameter specifications. The complete smart parameter
+          reference can be found in the top-level help of the RuleRunnerLogic action library.<br/><br/>
+      </h>
+
+      <method name="AdjustMergedCCOPositions" qi=": Adjusts positions in a merged CCO.">
+          <ap>None.</ap>
+          <h>
+              <b>AdjustMergedCCOPositions</b> is for use in applications using merged 
+              CCOs. It normalizes zone position coordinates populated to the DCO when the data is
+              generated from a document using a merged CCO. The coordinates are adjusted relative to
+              the page and also sets the DCO ImageFile property to the name of the TIFF that the data was
+              found on.<br/><br/>
+
+              Note: All files to be merged MUST have an associated CCO file.<br/><br/>
+
+              Used in conjunction with action <b>MergeCCOsByType</b> from the <b>AutomaticDocumentFingerprinting</b> action library in a prior ruleset.<br/><br/>
+              
+              <e>
+                  <b>AdjustMergedCCOPositions()</b>
+                  <br/>
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              <b>False</b> if the current document does not consist of more than one source page, or if
+              a page to be merged did not have an associated CCO file created.
+              Otherwise, <b>True.</b>
+          </ret>
+          <see>
+              Action MergeCCOsByType in the AutomaticDocumentFingerprinting action library.<br/><br/>
+          </see>
+      </method>
+      
+      
+      <method name="AdjustZoneBottomToImageBottom" qi=": Expands the zone to the bottom of the current image.">
+          <p name="UseCCO" qi="True: Use the CCO boundaries, False: Use the current image boundaries."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Changes the bottom zone boundary of the current field to either the bottom of the associated
+              page image, or to the bottom of the CCO. This action is useful when there is a use case to extend
+              the bottom coordinates of the current field.<br/>
+              <br/>
+              <e>
+                  <b>AdjustZoneBottomToImageBottom("True")</b>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="AdjustZoneLeftToImageLeft" qi=": Expands the zone to the left of the current image.">
+          <p name="UseCCO" qi="True: Use the CCO boundaries, False: Use the current image boundaries."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Changes the top zone boundary of the current field to either the left of the associated
+              page image, or to the left of the CCO. This action is useful when there is a use case to extend
+              the left coordinates of the current field to the edge of the page.<br/>
+              <br/>
+              <e>
+                  <b>AdjustZoneLeftToImageLeft("True")</b>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="AdjustZoneRightToImageRight" qi=": Expands the zone to the right of the current image.">
+          <p name="UseCCO" qi="True: Use the CCO boundaries, False: Use the current image boundaries."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Changes the top zone boundary of the current field to either the right of the associated
+              page image, or to the right of the CCO. This action is useful when there is a use case to extend
+              the right coordinates of the current field to the edge of the page.<br/>
+              <br/>
+              <e>
+                  <b>AdjustZoneRightToImageRight("True")</b>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+      
+      
+      <method name="AdjustZoneTopToImageTop" qi=": Expands the zone to the top of the current image.">
+          <p name="UseCCO" qi="True: Use the CCO boundaries, False: Use the current image boundaries."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Changes the top zone boundary of the current field to either the top of the associated
+              page image, or to the top of the CCO. This action is useful when there is a use case to extend
+              the top coordinates of the current field.<br/>
+              <br/>
+              <e>
+                  <b>AdjustZoneTopToImageTop("True")</b>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+      
+      
+      <method name="CalculateBlankInvoiceLineItemDetails" qi=": Calculates the value when either the Qty, Price or LineTotal lineitem is empty.">
+          <ap>None.</ap>
+          <h>
+              This action is for use on the line item field where the fields quantity, price and line total exists on the line item,
+              as is typical for an invoice document. If one of the three fields is missing, the action will calculate the value of the missing field
+              using the values of the two fields with values.
+              This calculation is performed for all detail lines on the page.<br/><br/>
+
+              To calculate the missing field, it is required that the line items 
+              in the application are named exactly "Qty", "Price", and "LineTotal".<br/><br/>
+              <e>
+                  <b>CalculateBlankInvoiceLineItemDetails()</b>
+              </e>
+          </h>
+          <lvl>Field level.  Specifically, the lineitem field under the Details field.</lvl>
+          <ret>
+              Always True.<br/>
+          </ret>
+      </method>
+
+
+      <method name="CallPOLR" qi=": Pre-matches invoice line items with a previously processed PO.">
+          <p name="DisplayPOLRPanel" />
+          <p name="ADOBDBType" />
+          <ap>
+              <b>DisplayPOLRPanel:</b> True = Display the POLR panel. False = Do not display the POLR panel.
+              This parameter must never be set to true within any task profile that is run unattended, such
+              as with Rulerunner. Typically, this value will be set to False.<br/><br/>
+
+              <b>ADOBDBType:</b> The ADOBDB constant number for the PO number field.  
+              When using bind variables, the data type
+              of the PO Number is specified with this action. For example: 200 = varchar.<br/><br/>
+
+              Smart parameters are supported for all parameters.<br/><br/>
+          </ap>
+          <h>
+              This action is used to pre-match invoice line items with the PO prior to verify operator verification.
+              Additional action parameters must exist in the settings.ini file.<br/><br/>
+              
+              The record set for the PO is retrieved using the information in the settings.ini.
+              This calls the record set according to the DSN in the settings INI.
+              PODSN and POLookup indicate how to obtain the record set.
+              The record set is expected to be the line items for the PO for the current document and
+              is keyed off of the PO number.  It then uses the POLR logic to perform the automatic matching.<br/><br/>
+
+              The database connection is retrieved from Database\PODSN.<br/>
+              The SQL query is retrieved from Database\POLookup.<br/><br/>
+
+              There is a special testing mode that occurs when the station name ends in "-Test".  In this situation,
+              the values are retrieved from different locations in the settings.ini file.<br/><br/>
+
+              The database connection is retrieved from Database\TestPODSN.<br/>
+              The SQL query is retrieved from Database\TestPOLookup.<br/><br/>
+
+              The PODSN and TestPODSN support smart parameters to allow for secure connection strings.
+              The connection string can be encrypted in the application manager and can be referenced in the 
+              INI file section using a smart parameter.<br/><br/>
+              
+              The POLookup and TestPOLookup values may also contain smart parameters.<br/><br/>
+
+              The settings ini file must contain values for these keys:<br/>
+              [POLR]<br/>
+              Qty=<br/>
+              ItemID=<br/>
+              Price=<br/>
+              WriteUnusedPOLInes=<br/>
+              PriceTolerance=<br/>
+              SeparatorCharacter=<br/><br/>
+
+              If the station name has a suffix of "-Test" then these keys must exist:<br/>
+              [Database]<br/>
+              TestPODSN=<br/>
+              TestPOLookup=<br/><br/>
+
+              If the station name does not have a suffix of "-Test" then these keys must exist:<br/>
+              [Database]<br/>
+              PODSN=<br/>
+              POLookup=<br/><br/>
+              <e>
+                  <b>CallPOLR("False", "200")</b>
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+
+      <method name="FindBlocksByRegularExpression" qi=": Creates fields that represent rectangular area based on text that matches an expression.">
+          <p name="StartExpression" qi="A regular expression to locate the start of a block." />
+          <p name="EndExpression" qi="An regular expression to locate the end of a block." />
+          <p name="AdjustTop" qi="Integer line adjustment of the start of the block."/>
+          <p name="AdjustBottom" qi="Integer line adjustment of the bottom of the block." />
+          <ap>
+              All parameters are optional. At a minimum, a StartExpression, an EndExpression, or both must be specified.<br/><br/>
+              
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Uses a Regular Expression to find horizontal blocks of text within the current source page and create a new field
+              that contains the found data. If the regular expression matches multiple locations on the page,
+              a new field will be created for each matching location. 
+              Based on the found word, the zoned block will horizonally span the page.
+              Each block's position is assigned to a series of repeating fields based on the first child field of the calling object.
+              For example, if the current DCO field name is "Date", then the created fields will be called "Date1", "Date2", etc., 
+              and the new fields will be children of the current field.
+              If called on a page object, then the fields are named based on the first field listed in the Setup DCO, although
+              the new fields will be children of the page, not the field.<br/><br/>
+              
+              The new zones' text value is not set. A follow-on action can build upon the process
+              and use the zone coordinates to perform
+              further operations on the area of the page that has been identified by the zone's coordinates.<br/><br/>
+              
+              The optional AdjustTop and AdjustBottom parameters will move the found location up or down the specified value.
+              A positive value moves down, and a negative value moves above.<br/><br/>
+
+              It is recommended that sufficient testing is performed to ensure that the input
+              documents are consistent enough to create these zones (blocks), that can be
+              processed as needed by an application.<br/><br/>
+              <e>
+                  <b>FindBlocksByRegularExpression("/bFROM/b", "/bTHRU/b", "", "")</b>
+                  <br/><br/>
+                  This example looks for that contain "FROM" and a following line that contains "THRU".
+                  Assuming that the page has four sections of text that follow this pattern,
+                  four fields would be created, each zoned
+                  with an area that encompasses the text in that area.<br/>
+
+                  The field's text value is not set by this action. It is up to the application to use the
+                  newly zoned area as needed. One approach is to use this approach to limit the text area
+                  for a locate. A locate action on zoned area only find words only in that area. Assuming that
+                  each area is expected to have a unique item, such as a date or part number, a Locate action can be
+                  performed in each area for expected text and the search is limited to the zoned "block" area.
+                  Another Locate action could find the value to the right and update the field with that value.<br/><br/>
+
+                  Example SetupDCO:<br/>
+                  InvoicePage<br/>
+                  + TableField<br/>
+                  - + ItemField<br/>
+                  - - + ItemNumberField<br/><br/>
+
+                  The action is configured to run on the "ItemField" object.<br/><br/>
+
+                  Example RuntimeDCO After FindBlocksByRegularExpression:<br/>
+                  TM0000001 (InvoicePage)<br/>
+                  + TableField<br/>
+                  - + ItemField1<br/>
+                  - - + ItemNumberField<br/>
+                  - + ItemField2<br/>
+                  - - + ItemNumberField<br/>
+                  - + ItemField3<br/>
+                  - - + ItemNumberField<br/>
+                  - + ItemField4<br/>
+                  - - + ItemNumberField<br/><br/>
+              </e>
+          </h>
+          <lvl>Page or Field level. Typically it is used on a Field object.</lvl>
+          <ret>
+              <b>False,</b> if no matches are found.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+      <method name="FindBlocksByWhiteSpace" qi=": Creates fields that represent a rectangular area based on blank space between sections of text.">
+          <p name="PixelCount" qi="An integer of the number of pixels required between lines." />
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Identifies a horizontal area on the page based on blank space between sections of text.
+              Using the pixel count provided, the action scans the page text within the page CCO.
+              When the space between lines is greater than the pixel count, a new sub-field is
+              created and is zoned as to include the area of text.<br/><br/>
+
+              Each block's position is assigned to a series of repeating fields based on the first child field of the calling object.
+              For example, if the current DCO field name is "Date", then the created fields will be called "Date1", "Date2", etc.              
+              <br/><br/>
+
+              It is recommended that sufficient testing is performed to ensure that the input
+              documents are consistent enough to create these zones (blocks), that can be
+              processed as needed by an application.<br/><br/>
+              
+              <e>                  
+                  <b>FindBlocksByWhiteSpace("27")</b>
+                  <br/><br/>
+                  This example looks for lines on the page that have more than 27 pixels between them.
+                  Assuming that the page is visibly broken up into three sections and there is more
+                  than 27 pixels separating those sections, three fields would be created, each zoned
+                  with an area that encompasses the text in that area.<br/>
+
+                  The field's text value is not set by this action. It is up to the application to use the
+                  newly zoned area as needed. One approach is to use this approach to limit the text area
+                  for a locate. A locate action on zoned area only find words only in that area. Assuming that
+                  each area is expected to have a unique item, such as a date or part number, a Locate action can be
+                  performed in each area for that text and the search is limited to the zoned "block" area.
+                  Another Locate action could find the value to the right and update the field with that value.<br/><br/>
+
+                  Example SetupDCO:<br/>
+                  InvoicePage<br/>
+                  + TableField<br/>
+                  - + ItemField<br/>
+                  - - + ItemNumberField<br/><br/>
+                  
+                  The action is configured to run on the "ItemField" object.<br/><br/>
+
+                  Example RuntimeDCO After FindBlocksByWhiteSpace:<br/>
+                  TM0000001 (InvoicePage)<br/>
+                  - TableField<br/>
+                  - + ItemField1<br/>
+                  - - + ItemNumberField<br/>
+                  - + ItemField2<br/>
+                  - - + ItemNumberField<br/>
+                  - + ItemField3<br/>
+                  - - + ItemNumberField<br/>
+                  - + ItemField4<br/>
+                  - - + ItemNumberField<br/><br/>
+
+              </e>
+          </h>
+          <lvl>Field level. The current field must have 1 child field specified in the SetupDCO.</lvl>
+          <ret>
+              <b>False,</b> if no matches are found.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+      <method name="GenerateDetails" qi=": Creates the detail lineitem fields on the page.">
+          <ap>None.</ap>
+          <h>
+              This action sets up a field in the APT application and puts a detail subfield on every page.  This extra detail subfield
+              appears on all pages of a multi-page invoice, allowing every page to be viewed.
+              <e>
+                  <b>GenerateDetails()</b>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>False,</b> if called on the wrong level.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="InheritParentPosition" qi=": Provides the current field zone with the zone position of a parent object identified by the parameter.">
+          <p name="ParentFieldName" type="string"/>
+          <ap>
+              Case-sensitive string value of the parent field name.
+              The current field is expected to be a child of another field and will inherit the position
+              of the parent field whose type or name exactly matches the one specified in the parameter.<br/><br/>
+              
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              Provides the current object bound to this action, a subfield of another field, of the Document Hierarchy with the zone
+              parameters of a parent object identified by the parameter.<br/><br/>
+              <e>
+                  <b>InheritParentPosition("Details")</b>
+
+                  Details, in this example, is the name of a parent field object in the
+                  Invoices application. If this action is called on the child LINEITEM field,
+                  the action will provide this child object with the zone parameters of the parent.
+                  The current field is then assigned the same position value of the Details field.
+                  The Details field will be unchanged.<br/>
+              </e>
+          </h>
+          <ret>
+              <b>False</b> if the action cannot locate the parent field. Otherwise, <b>True.</b>
+          </ret>
+          <lvl>Field level.</lvl>
+      </method>
+      
+      
+      <method name="LoadCCOFromField" qi=": Forces the load of the CCO for this action library.">
+          <ap>None.</ap>
+          <h>
+              This action loads the CCO associated with the parent page from a field object.
+              Using this action will force a refresh of the current page CCO in memory
+              prior to using another action in this library that uses the CCO.
+              Typically it is not necessary to call this action as any action within
+              this library that requires the CCO will load the CCO, when it is not
+              already loaded.<br/><br/>
+              <e>
+                  <b>LoadCCOFromField()</b><br/>
+                  SetDynamicDetailZones("Zone Bottom,Notes")<br/>
+                  AdjustZoneBottomToImageBottom()<br/>
+                  ScanDetails()<br/>
+              </e>
+          </h>
+          <lvl>Field Level.</lvl>
+          <ret>
+              <b>False,</b> if this action is not called on a field or if the CCO file does not exist.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+      
+      <method name="LearnLineItemZones" access="public" qi=": Adds new zones to the DCO.">
+          <ap>
+              None.
+          </ap>          
+          <h>
+              This action has the capability to learn new zones based on a variable setting.
+              A variable "PreVerify Pos" with a value of "0,0,0,0" indicates that there wasn't
+              previously a zone for the line item and will be added to the DCO.<br/><br/>
+              
+              The current page must contain a field called "Details" which contains the line items.<br/><br/>
+              
+              Legacy fingerprints are stored in the Setup DCO. The client or service running rules must
+              have sufficient rights to write updates to the application's setup. XML fingerprints
+              may provide better performance.<br/><br/>
+              
+              This action is not compatible with XML fingerprints.  This action only learns the first line item.<br/><br/>
+              <e>
+                  <b>LearnLineItemZones()</b>
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              <b>False,</b> if the setup DCO could not be saved to disk.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+
+      <method name="LearnLineItemZonesFingerprintXML" access="public" qi=": Adds new zones to the XML fingerprint.">
+          <ap>
+              None.
+          </ap>          
+          <h>
+              This action has the capability to learn new zones based on a variable setting.
+              A variable "PreVerify Pos" with a value of "0,0,0,0" indicates that there wasn't
+              previously a zone and will be added to the DCO.<br/><br/>
+              
+              This action is fingerprint XML compatible.  This action only learns the first line item.
+
+              The current page must contain a field called "Details" which contains the line items.<br/><br/>
+
+              This action needs to be followed by XMLWriteZones to write the zones to fingerprint XML file.
+              The service or client user ID running the rules must have rights to write to the fingerprint XML file location.<br/><br/>
+
+              <e>
+                  <b>LearnLineItemZonesFingerprintXML()</b><br/>
+                  XMLWriteZones()<br/>
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              <b>False,</b> if the fingerprint XML does not need to be rewritten  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="LoadZonesFromFingerprint" qi=": Forces loading of a fingerprint and sets all of the zone positions baased on the fingerprint zones coordinates">
+          <p name="FingerprintID" qi="The ID of the fingerprint to load."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Loads position information for each field in the calling object and children from the specified fingerprint. Pre-adjusts these
+              values based on offset information stored in an 'Image_Offset' variable from the current field or page.<br/><br/>
+              
+              Position information is based on the setup DCO position for the fingerprint ID passed as a parameter.<br/><br/>
+              
+              The offset value is applied to all child objects of a node where an 'Image_Offset' variable is found;
+              unless overwritten by a child node also having an Image_Offset value to apply.<br/><br/>
+              
+              This action does not support XML fingerprints.<br/><br/>
+              <e>
+                  LoadZonesFromFingerprint("1022");
+              </e>
+          </h>
+          <lvl>Page or Field level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+      
+      
+      <method name="MergeLineItemFieldToPageField" qi=": Merges line item values to a page variable">
+          <p name="DetailFieldName"/>
+          <p name="LineItemFieldName"/>
+          <p name="Delimiter" />
+          <p name="PageFieldName" />
+
+          <ap>
+              <b>DetailFieldName:</b> The name of the field, a direct child of the page, that
+              contains the line items.<br/><br/>
+
+              <b>LineItemFieldName:</b> The name of the field, a grandchild of the DetailField, whose value
+              is to be concatenated in the field specified by PageFieldName.<br/><br/>
+
+              <b>Delimiter:</b> The delimiter character to be placed between each field value.<br/><br/>
+
+              <b>PageFieldName</b> The name of a field, a direct child of the page object, that will
+              hold the results.<br/><br/>
+              
+              Smart parameters are supported for all fields.<br/><br/>
+          </ap>
+          <h>
+              This action concatenates all of the values of a subfield contained in
+              a detail section and place the values in a field on the current page.<br/><br/>
+
+              This action can be useful to place all of the values from a line item field into
+              a page field which is then available using other export techniques.<br/><br/>
+              <e>
+                  <b>MergeLineItemFieldToPageField("Details","Description",",","MyExportField")</b>
+                  <br/>
+              </e>
+          </h>
+          <lvl>
+              Must be on the page object that contains the detail section and the PageFieldName
+              holder of the concatenated values<br/>
+          </lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>
+              MergePageFieldToDocumentVariable
+          </see>
+      </method>
+
+      
+      <method name="MergePageFieldToDocumentVariable" qi=": Copies fields from multiple pages into a parent document variable.">
+          <p name="PageFieldName"/>
+          <p name="Delimiter" />
+          <p name="DocumentVariableName" />
+          <ap>
+              <b>PageFieldName:</b> The name of a field, a direct child of the page object, that will
+              have its value copied to a parent document variable.<br/><br/>
+
+              <b>Delimiter:</b> The delimiter character to be placed between each field value.<br/><br/>
+
+              <b>DocumentVariableName:</b> The name of the destination variable on the current document
+              where the field values are to be concatenated.<br/><br/>
+              
+              All parameters support smart parameters.<br/><br/>
+          </ap>
+          <h>
+              This action will iterate through each page within the current document. For each page,
+              the value in the specified page field will be copied to the specified document variable.
+              If there are multiple pages, each value will be separated by the delimiter.<br/><br/>
+              <e>
+                  <b>MergeLineItemFieldToPageField("Total",",","AllPageTotals")</b>
+                  <br/>
+              </e>
+          </h>
+          <lvl>              
+              Each page must be an immediate child of the document.<br/>
+          </lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>
+              MergeLineItemFieldToPageField
+          </see>
+      </method>
+
+
+      <method name="MergeZones" qi=": Merges the zone from calling field with zone of dco fields passed as smart parameters.">
+          <p name="FieldList"/>
+          <ap>
+              A comma separated set of smart parameters that specify target fields to merge together.
+              Each smart parameter must resolve to a field on the current page.<br/><br/>
+          </ap>
+          <h>
+              Merges calling field's position with each passed dco position.<br/><br/>
+              
+              <e>
+                  <b>MergeZones("@P\5PAddTel,@P\5PAddZip,@P\2PatName")</b>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>False</b> if the calling field does not have a valid position value. Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+
+      <method name="PadZone" qi=": Pads the zone by the value passed. Number of CSV passed values varies padding value by vector.">
+          <p name="Padding" qi="A comma separated list of 1 to 4 integers."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Pads the calling field's position with each value passed. Number of passed values varies the padding vector as follows:<br/><br/>
+              
+              1) Pads Left, Top, Right, and Bottom by this value (i.e. expand if positive)<br/>
+              2) Pads as X,Y (X: pad to Left and Right, Y: pad to Top and Bottom)<br/>
+              3) Pads as Left, Top, Right, and Bottom. (missing values will be treated as zero).<br/>
+              4) Pads as Left, Top, Right, and Bottom.<br/><br/>
+              <e>
+                  <b>PadZone("15")</b><br/>
+                  Pads 15 pixels to the Left, Right, Top and Bottom position.<br/>
+              </e>
+              <br/><br/>
+              <e>
+                  <b>PadZone("5,10")</b><br/>
+                  Pads 5 pixels to the Left and Right position, and 10 to the Top and Bottom position.<br/>
+              </e>
+              <br/><br/>
+              <e>
+                  <b>PadZone("-5,0,12,25")</b><br/>
+                  Pads -5 pixels to the Left (making the zone smaller), 0 to the Right, 12 to the Top and 25 to the Bottom position.<br/><br/>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>False</b> if the calling field does not have a valid non zero position.<br/>
+              <b>False</b> if there are zero or more than four CSV parameters.<br/>
+              <b>False</b> if the SmartParameter value returns as a non-numeric.<br/>
+              Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="PopulateZonedField" qi=": Copies a section CCO page text to the current field based on the current field's zone coordinates.">
+          <ap>None.</ap>
+          <h>
+              This action populates the current field value with the full-page recognition results
+              that fall within the field's zone boundaries.<br/><br/>
+              
+              The field must have coordinates set.
+              A CCO must exist for the page.  A CCO can be created through a RecognizePage action
+              or created by CreateCCOFromLayout action, after a Recognize action has been performed.
+              The text at the location of the field's zone will be copied from the CCO to the field.<br/><br/>                           
+              
+              This action is very similar to the action SnapCCOtoDCO in the SharedRecognitionTools action library.
+              The difference is that SnapCCOToDCO populates every field on the page with the recognized text
+              within the CCO and PopulateZonedField will only populate the current field.<br/><br/>
+              <e>
+                  <b>PopulateZonedField()</b><br/>
+                  If the current field had a zone position of "46,72,85,81", this action will
+                  copy the text, from the CCO for the current page,
+                  that exists within those coordinates and place it into the
+                  "text" property of the current field.<br/><br/>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>True</b> if a value is found. Otherwise, <b>False.</b>
+          </ret>
+          <see>
+              SnapCCOtoDCO, PopulateZoneLineItemField.
+          </see>
+      </method>
+      
+
+      <method name="PopulateZonedLineItemField" qi=": Copies text from the CCO page text to lineitem fields based on the zone coordinates.">
+          <ap>None.</ap>
+          <h>
+              This action populates the field value with the full-page recognition results
+              (in the CCO) that fall within a child field's zone boundaries of a LINEITEM parent field.<br/><br/>
+
+              The field must have coordinates set.
+              A CCO must exist for the page.  A CCO for the page can be created through a RecognizePage action
+              or created by CreateCCOFromLayout action, after a Recognize action has been performed.
+              The text at the location of the field's zone will be copied from the CCO to the field.<br/><br/>
+
+              This action is very similar to the action PopulateZonedField.
+              The difference is that PopulateZonedField does not populate lineitem fields while 
+              PopulateZonedLineItemField will only populate lineitem fields.<br/><br/>
+              <e>
+                  <b>PopulateZonedLineItemField()</b>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>True</b> if a value is found or if the calling field has no position information. Otherwise, <b>False.</b>
+          </ret>
+          <see>
+              SnapCCOToDCO, PopulateZonedLineItemField.
+          </see>
+      </method>
+      
+      
+      <method name="PopulateZoneLineItemFieldDynamic" qi =": Populates line items.">
+          <ap>
+              None.
+          </ap>
+          <h>
+              This action is like the PopulateZNLineItemField but it uses the CCO that was
+              loaded into memory by LoadCCOFromField, instead of the global CCO.
+              It populates the fingerprint’s Data file with the recognized value contained inside
+              the zone of a child Field object of a LINEITEM parent field. This action should
+              only be used with sub-fields of the LINEITEM field - ItemID, ItemDesc,
+              Quantity, Price in the Invoices application.<br/>
+              <e>
+                  rrCompare("@P.ZoneRead", "FPXML")<br/>
+                  <b>PopulateZoneLineItemFieldDynamic()</b><br/>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>True,</b> if there is no field position or if the data was found in a zone.
+              <b>False,</b> if there is a zone defined but it is blank.
+          </ret>
+      </method>
+
+
+      <method name="ReadZones" qi=": Sets the page zones coordinates based on the current fingerprint." >
+          <ap>None.</ap>
+          <h>
+              Based on the current page fingerprint, this action loads field
+              position information for each node in the calling object and it's children. It adjusts
+              these values based on offset information stored in an 'Image_Offset' variable at any node level.<br/><br/>
+              
+              Position information is based on the setup DCO position for the parent page's fingerprint ID.<br/><br/>
+              
+              The offset value is applied to all child objects of a node where an 'Image_Offset' variable is found;
+              unless overwritten by a child node also having an Image_Offset value to apply.<br/><br/>
+
+              This action is not compatible with XML fingerprints.  For XML fingerprints
+              use the action XMLReadZones in the AutomaticDocumentFingerprints action library.<br/><br/>              
+          </h>
+          <lvl>Page or Field level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>
+              XMLReadZones in the AutomaticDocumentFingerprints action library.
+          </see>
+      </method>
+
+
+      <method name="RemoveLineItemsShorterThanPercentage" qi=": Removes line items shorter than the longest line item based on a percentage." >
+          <p name="Percentage" qi="A value between 0 and 100"/>
+          <ap>
+              The lineitem field widths are evaluated and any lineitems that are less than the percentage length of the longest
+              lineitem row are removed.
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              RemoveLineItemsShorterThanPercentage is an optional step in the process of "filtering" line items after creation. 
+              The generation of line items is a "greedy" process. Depending on the layout of the rows, and on the location
+              of the recognized text, more line item rows may be found than exist on the page. It is expected that after line item
+              generation steps are taken to clean the text within the subfields (columns). Next, run any additional
+              rules necessary to filter out invalid rows of the table. The CheckSubFields action is one method of filtering
+              invalid rows from a table.<br/><br/>
+              
+              The action RemoveLineItemsShorterThanPercentage is an additional, optional, mechanism used to filter a table by
+              removing very short rows in documents where the lineitems are expected to be of a longer length.  For example,
+              if each lineitems are all expected to be roughly the same width, and the line item generation is creating invalid
+              short rows due to character noise detected by the recognition engine that creates invalid short rows,
+              this action removes all rows that are shorter than expected.<br/><br/>
+              
+              <e>
+                  CheckSubFields("('ItemID' OR 'ItemDesc') AND ('Price' OR 'LineTotal')")<br/>
+                  <b>RemoveLineItemsShorterThanPercentage("60")</b><br/><br/>
+
+                  This example shows how a typical filter ruleset operates. This ruleset would be called after the lineitems have been
+                  created and the subfields have been cleaned.<br/><br/>
+
+                  In a typical DCO setup like this:<br/><br/>
+
+                  - Page<br/>
+                  - - DetailsField<br/>
+                  - - - LineItems<br/>
+                  - - - - Qty<br/>
+                  - - - - Description<br/>
+                  - - - - Price<br/><br/>
+
+                  The ruleset is attached to the "DetailsField" object. The rule first runs the CheckSubFields action to remove
+                  any rows that do not meet the required column specifications. Next, RemoveLineItemsShorterThanPercentage is run with
+                  a percentage specified as 60.  The action determines the longest horizontal length of all of the existing lineitem fields, 
+                  and any field that is less than 60% of that length is removed from the parent details field.<br/><br/>
+              </e>
+          </h>
+          <lvl>Field level, the parent of the LineItems field.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>
+              PopulateZoneLineItemFieldDynamic, ScanLineItemDynamic, and ScanDetails in the ZonesAndLineItems action library.
+              CheckSubFields in the ValdiationsAndTextAdjustments action library.
+          </see>
+      </method>
+
+
+      <method name="ResetField" qi=": Clears a field's value and position information.">
+          <ap>None.</ap>
+          <h>
+              This action deletes the selected Field object's captured value, and sets the field's Position
+              attribute to 0,0,0,0.<br/><br/>
+              
+              This action is intended to provide an easy mechanism to both reset the field position and
+              clear the text captured in the field.  If the only the field's text needed to be cleared,
+              that can be accomplished using rrSet("EMPTY", "@X").  This would clear the text and retain
+              the field's zone location on the page.<br/><br/>
+              
+              If only the field's position needs to be reset,
+              this can be performed using rrSet("0,0,0,0", "@X.Position")<br/><br/>
+
+              Note, however, that the action does not clear any Alt-Text values
+              associated with the bound Field object. Alternate text can be cleared
+              using the action ClearAlternateText in the VoteUsingComparativeText action library.<br/><br/>              
+              <e>
+                  <b>ResetField()</b><br/><br/>
+
+                  This action typically belongs to a follow-up Validate rule that deals with a <b>False</b> response to
+                  an action such as IsDate() in the previous rule. If the field's value is not a date (in this example),
+                  the <b>ResetField</b> action will remove the value that is there. <b>Note:</b>It will also set the
+                  field's <b>Position</b> attribute to 0,0,0,0.  This allows a click-n-key operation to select a new
+                  location on the page containing the next text.
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>False</b> if not called on the field level.  Otherwise, <b>True.</b>
+          </ret>
+          <see>
+              ClearAlternateText in the VoteUsingComparativeText action library.
+          </see>
+      </method>
+
+
+      <method name="ScanDetails" qi=": Creates the lineitem fields in the runtime DCO.">
+          <ap>None.</ap>
+          <h>
+              The action estimates the number of lineitem rows to create and then
+              instantiates the Lineitem children fields for the current field
+              in the runtime DCO. This is similar to the "CreateFields" action,
+              but this action is specifically for lineitems.<br/><br/>
+
+              The lineitem rows created are potential line but they may not exist on
+              the page. Follow-on Rulesets are required delete ineligible lineitems
+              based on the criteria of the application.
+              In the APT application, the <b>Clean</b> and <b>Filter</b> Rulesets
+              perform the post-step cleanup.<br/><br/>
+              <e>
+                  Example field structure:<br/><br/>
+                  
+                  Main_Page<br/>
+                  - Details<br/>
+                  - - Lineitem<br/>
+                  - - - ItemID<br/>
+                  - - - ItemDesc<br/>
+                  - - - Qty<br/>
+                  - - - Price<br/>
+                  - - - LineTotal<br/>
+                  - - - POLineNum<br/><br/>
+                  
+                  <b>ScanDetails()</b><br/>
+                  In this example, ScanDetails is used on a rule that is attached to the "Details" field.<br/><br/>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>True</b> if the current field object contains lines of data. Otherwise, <b>False.</b>
+          </ret>
+          <see>
+              ScanDetailsByLines, ScanDetailsByVerticalSpace.
+          </see>
+      </method>
+
+
+      <method name="ScanDetailsByLines" qi=": Creates the line items using the provided count to determine the number of lines in each row.">
+          <p name="Count" type="string" qi="The number of lines in each line item."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              The action estimates the number of lineitem rows to create and then
+              instantiates the Lineitem children fields for the current field
+              in the runtime DCO. This is similar to the "CreateFields" action,
+              but this action is specificaly for lineitems.<br/><br/>
+              
+              The difference between ScanDetailsByLines and ScanDetails is that
+              ScanDetails always assumes a lineitem contains only 1 row of text.
+              ScanDetailsByLines will use the provided number as the number of
+              rows of text within each lineitem.<br/><br/>
+
+              The lineitem rows created are potential line but they may not exist on
+              the page. Follow-on Rulesets are required delete ineligible lineitems
+              based on the criteria of the application.
+              In the APT application, the <b>Clean</b> and <b>Filter</b> Rulesets
+              perform the post-step cleanup.<br/><br/>
+
+              <e>
+                  Example field structure:<br/><br/>
+
+                  Main_Page<br/>
+                  - Details<br/>
+                  - - Lineitem<br/>
+                  - - - ItemID<br/>
+                  - - - ItemDesc<br/>
+                  - - - Qty<br/>
+                  - - - Price<br/>
+                  - - - LineTotal<br/>
+                  - - - POLineNum<br/><br/>
+                  
+                  <b>ScanDetailsByLines("2")</b><br/>
+                  In this example, ScanDetailsByLines is used on a rule that is attached to the "Details" field.<br/><br/>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>True</b> if the current field object contains lines of data. Otherwise, <b>False.</b>
+          </ret>
+          <see>
+              ScanDetails, ScanDetailsByVerticalSpace.
+          </see>
+      </method>
+
+
+      <method name="ScanDetailsByVerticalSpace" qi=": Creates the line items using the provided pixel height to determine the number of lines in each row.">
+          <p name="Count" type="string" qi="The Number of vertical pixels in each lineitem."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              The action estimates the number of lineitem rows to create and then
+              instantiates the Lineitem children fields for the current field
+              in the runtime DCO. This is similar to the "CreateFields" action,
+              but this action is specificaly for lineitems.<br/><br/>
+
+              The difference between ScanDetailsByVerticalSpace and ScanDetails is that
+              ScanDetails always assumes a lineitem contains only 1 row of text.
+              ScanDetailsByLines will use the provided number as the number of
+              pixels to determine the height of each lineitem.<br/><br/>
+
+              The lineitem rows created are potential line but they may not exist on
+              the page. Follow-on Rulesets are required delete ineligible lineitems
+              based on the criteria of the application.
+              In the APT application, the <b>Clean</b> and <b>Filter</b> Rulesets
+              perform the post-step cleanup.<br/><br/>
+              <e>
+                  Example field structure:<br/><br/>
+
+                  Main_Page<br/>
+                  - Details<br/>
+                  - - Lineitem<br/>
+                  - - - ItemID<br/>
+                  - - - ItemDesc<br/>
+                  - - - Qty<br/>
+                  - - - Price<br/>
+                  - - - LineTotal<br/>
+                  - - - POLineNum<br/><br/>
+                  
+                  <b>ScanDetailsByVerticalSpace("45")</b><br/>
+                  In this example, ScanDetailsByVerticalSpace is used on a rule that is attached to the "Details" field.<br/><br/>
+
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>True</b> if the bound <b>Field</b> object contains lines of data. Otherwise, <b>False.</b>
+          </ret>
+          <see>
+              ScanDetails, ScanDetailsByLines.
+          </see>
+      </method>
+      
+
+      <method name="ScanLineItem" qi="">
+      <ap>None.</ap>
+      <h>
+          This action creates the lineitem child sub-fields, usually representing columns, for the current lineitem row field.<br/><br/>
+          
+          The page must have identified an associated fingerprint.
+          The child field positions are then obtained from the lineitem variables "Pos{ID}" where {ID} is the current fingerprint ID.
+          Fields are created and the zones set, but the text contents of the fields are not populated.<br/><br/>
+
+          This action is not compatible with XML fingerprints.  If using XML fingerprints, use ScanLineItemDynamic.<br/><br/>
+        
+        <e>
+            Main_Page<br/>
+            - Details<br/>
+            - - Lineitem<br/>
+            - - - ItemID<br/>
+            - - - ItemDesc<br/>
+            - - - Qty<br/>
+            - - - Price<br/>
+            - - - LineTotal<br/>
+            - - - POLineNum<br/><br/>
+
+            <b>ScanLineItem()</b><br/>
+            In this example, ScanLineItem is used on a rule that is attached to the "Lineitem" field.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False</b> if not called from a Field. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+
+      <method name="ScanLineItemDynamic" qi=": Creates the child fields for the current field." >
+          <p name="Fields" type="string" qi="A comma separated list of any fields that should be ignored."/>
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              ScanLineItemDynamic is called on a field that contains child fields, and creates the
+              child fields.  It then reads the "POS" positions from the parent object
+              to set the positions of each child field. Any child fields whose type
+              matches the value provided in the parameter will be skipped.<br/><br/>
+
+              It is required for Find Details functionality.  It saves the positions of the line and of the fields at the detail
+              level so all of the line items can be erased and recreated.<br/><br/>
+              
+              This action is for applications using lineitems and XML fingerprints.  If using traditional fingerprints
+              that place fingerprint position information in the DCO, use the action ScanLineItem.<br/><br/>
+              <e>
+                  Main_Page<br/>
+                  - Details<br/>
+                  - - Lineitem<br/>
+                  - - - ItemID<br/>
+                  - - - ItemDesc<br/>
+                  - - - Qty<br/>
+                  - - - Price<br/>
+                  - - - LineTotal<br/>
+                  - - - POLineNum<br/><br/>
+                  
+                  rrCompare("@P.ZoneRead", "FPXML")<br/>
+                  <b>ScanLineItemDynamic("ZoneBottom,Notes")</b><br/>
+                  In this example, ScanLineItemDynamic is used on a rule that is attached to the "Lineitem" field.<br/><br/>
+              </e>
+          </h>
+          <lvl>Field Level on a field that contains child fields.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>      
+      
+
+      <method name="SetDynamicDetailZones" qi=": Builds the detail zones">
+          <p name="Field" type="string" qi="The name of the bottom field."/>
+          <ap>
+              The parameter is the Zone Bottom field. Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              This action takes the position of the line items and it builds the line coordinates from them
+              and then it sets the details zones from that top line to the bottom of the CCO.<br/>
+              <e>
+                  LoadCCOFromField()<br/>
+                  <b>SetDynamicDetailZones("Zone Bottom,Notes")</b><br/>
+                  AdjustZoneBottomToImageBottom()<br/>
+                  ScanDetails()
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              <b>False</b> if no children exist or there is an error.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="SetFieldEndOfLineCustom" qi=": Sets the End of Line character that will be used to separate data from a zone with multiple lines of text.">
+          <p name="EndOfLineDelimiter"/>
+          <ap>
+              The end of line separator character used to multiple lines in a single field.<br/><br/>
+              
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Sets the end of line character that will be used to separate data from a zone
+              with multiple lines of text. <br/><br/>
+
+              When a field is populated by an action in the ZonesAndLineItems action library
+              by copying the contents of the CCO to the field position, then the specified
+              character is used to separate lines when more than one line is placed
+              into a field's Text value.<br/><br/>
+              
+              If this action is not used, and SetFieldEndOfLineToCRLF is not used, the default separator character is a space.<br/><br/>
+              <e>
+                  <b>SetFieldEndOfLineCustom("|")</b><br/>
+                  <br/>
+                  This example sets the End of Line character to the ‘|’ (pipe) character.
+                  A field with two lines of text will have the captured value separated
+                  by this new character.
+              </e>
+          </h>
+          <lvl>All.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>
+              SetFieldEndOfLineToCRLF
+          </see>
+      </method>
+      
+
+      <method name="SetFieldEndOfLineToCRLF" qi=": Sets the End Of Line character that will be used to separate data from a zone with multiple lines of text.">
+          <ap>None.</ap>
+          <h>
+              Sets the End Of Line character that will be used to separate data
+              from a zone with multiple lines of text to the carriage return and
+              line feed characters:  ASCII values 13 and 10.<br/><br/>
+              
+              When a field is populated by an action in the ZonesAndLineItems action library
+              by copying the contents of the CCO to the field position, then the specified
+              character is used to separate lines when more than one line is placed
+              into a field's Text value.<br/><br/>
+
+              If this action is not used, and SetFieldEndOfLineCustom is not used,
+              the default separator character is a space.<br/><br/>
+              <e>
+                  <b>SetFieldEndOfLineToCRLF()</b><br/>
+                  <br/>
+                  This sets the End of Line character to the Carriage Return and Line
+                  Feed characters.  A field with two lines of text will have
+                  the captured value separated by these characters.
+              </e>
+          </h>
+          <lvl>All.</lvl>
+          <ret>Always True</ret>
+          <see>
+              SetFieldEndOfLineCustom
+          </see>
+      </method>
+
+
+      <method name="UpdateSetupDCOWithDetailField" qi=": Populates the Setup DCO with the runtime configuration.">
+          <p name="DetailName" type="string" qi="The name of the detail field to update in the Setup DCO."/>
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              This action updates the application's Setup DCO with the current elements within the specified line item detail field.<br/>
+              <e>
+                  SetFingerprint("@P\Vendor", "")<br/>
+                  SetZones()<br/>
+                  <b>UpdateSetupDCOWithDetailField("Details")</b><br/>
+                  IncrementVariable("@X.IntellocateFingerprint", "1")
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              <b>False,</b> if called at the wrong level, if the DCO node cannot be found, if the fingerprint ID is not
+              found, or if the setup DCO cannot be saved.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+  </com>
+</rrx>

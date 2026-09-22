@@ -1,0 +1,282 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="ExportToXML" v="1.0.0">
+  <com ref="Datacap.Libraries.ExportToXML.Actions"  qi="Description of action library">
+    <h>
+      ExportToXML library is used to generate the XMl File.<br/><br/>
+      Xml file contains all the dco data such as document,page and field details.<br/><br/>
+      To Set the file name use the action XMLSetFileName() and location of the file will be set using XMLSetExportath() action.<br/><br/>
+      <b>NewNode:</b><br/>
+      The first xmlNewNode() action in a ruleset will create the root node of the XML file using the new parent NodeID, the child NodeID must be blank.<br/><br/>
+      e.g<br/>
+      xmlNewNode("","Batch") in this example the Batch is the root node of XML File.<br/><br/>
+
+      xmlNewNode("Page1","Batch") in this exmple the "Page1" is child node and "Batch" Is the Parent node.<br/><br/>
+      <b>SetNodeValue:</b><br/>
+      For adding the value of the node use <b>XMLSetNodeValue</b> action which having the parameters NodeId and NodeValue<br/><br/>
+      e.g<br/>
+      xmlNewNode("","Batch")<br/><br/>
+      xmlNewNode("Page1","Batch")<br/><br/>
+      XMLSetNodeValue("Page1","Mypage"); <br/><br/>
+      <b>Setting attribute:</b><br/>
+      For setting the value of node the node should be available otherwise it will method will return false.<br/><br/>
+      Similarly for setting the attribute use XMLSetAttributeValue action which takes parameter as Nodeid ,AttrId as attribute id and AttrValue as Attribute Value<br/><br/>
+      e.g<br/>
+      xmlNewNode("","Batch")<br/><br/>
+      xmlNewNode("Page1","Batch")<br/><br/>
+      XMLSetNodeValue("Page1","Mypage");<br/><br/>
+      XMLSetAttributeValue("Page1","ID","10")<br/><br/>
+      <b>Set Encoding:</b><br/>
+      There is action XMLSetFileEncodingAsASCII() which having optional parameter set the UNICODE Encoding format to the xml<br/><br/>
+      If this action will not called then by default it take UTF-8 encoding.<br/><br/>
+      This action should called before XMLSave() action.<br/><br/>
+
+      XMLSetFileEncodingAsASCII("0")<br/><br/>
+      XMLSave()<br/><br/>
+
+      <b>Smart Parameters and Common Operations</b><br/><br/>
+
+      If an action supports smart parameters, it is specified in the action help.  Smart parameters are very powerful
+      specifications for parameters that allow access of data to and from other DCO objects and allow performing
+      special pre-defined operations in one step.
+
+      Smart parameters can be used to dynamically obtain or create action input parameters at runtime.  For example,
+      an action could be fed the value of a field after recognition, a parameter could pull the value from a
+      DCO variable that was set by a previous action, or a smart parameter could evaluate to the current date, the current
+      time, the current job ID, the current operator ID, the path to the current batch that is running, and more.
+      Smart parameter syntax can also be used to build expressions at runtime that concatenate dynamic data and
+      static data at runtime.  Smart parameters are
+      a flexible way to provide a wide range of input to any action that supports smart parameters.
+      <br/><br/>
+      e.g <br/>
+      Suppose the BatchID having Value "20190402.000002" <br/><br/>
+      XMLSetFileName("@BatchID")  will generate the xmlfile with the name of 20190402.000002 i.e 20190402.000002.xml.
+      <br/><br/>
+
+    </h>
+
+    <method name="XMLSaveFile">
+      <ap>None.</ap>
+      <h>
+        This action  saves XML file to disk. You must use this action
+        to complete the creation of the export XML file. <br/><br/>
+        <e>
+          <b>XMLSaveFile()</b>
+        </e>
+      </h>
+      <lvl>Batch, Document or Page level.</lvl>
+      <ret>
+        <b>True</b> if the file is created successfully. Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+    <method name="XMLSetExportPath" >
+      <p name="StrParam" type="string"/>
+      <ap>
+        Specifies the full path to the directory that will store the export XML file.
+        If this action is not called, the XML file will be saved in the batch directory.
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action will only set the path.  You will still need to use <b>XMLSetFileName</b> to set the
+        name of the export file.
+        <e>
+          <b>XMLSetExportPath("C:\Invoice\ExportXML")</b><br/>
+          XMLSetFileName("@BatchID")
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="XMLSetFileName">
+      <p name="StrParam" type="string"/>
+      <ap>
+        The name of the XML export file.  Smart Parameters are supported.
+      </ap>
+      <h>
+        Use of this action is required to set the name of the XML Export file.
+        While this action can be called at any level, it is typically called at the batch level.
+        If the action XMLSetExportPath is not called, the file will be saved in the batch folder.
+        <e>
+          XMLSetExportPath("C:\Invoice\ExportXML")<br/>
+          <b>XMLSetFileName("@BatchID")</b>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>XMLSaveFile</see>
+    </method>
+
+    <method name="XMLNewNode" >
+      <p name="NewNodeID" type="string"/>
+      <p name="ParentID" type="string"/>
+      <ap>
+        <b>1. NewNodeID:</b> The NodeID (tag name) of a new child node.<br/>
+        <b>2. ParentID:</b> The NodeID (tag name) of the parent node, if there is a parent.<br/><br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        The new NodeID followed by the parent NodeID creates a new Node in the Export XML file.
+        <br/><br/>
+        The first <b>xml_NewNode</b> action in a ruleset will create the root node of the XML file using the
+        new parent NodeID, the child NodeID must be blank.
+        <br/><br/>
+        <e>
+          XMLSetExportPath("C:\ParentDir\APT")<br/>
+          XMLSetFileName("@BATCHID")<br/>
+          <b>XMLNewNode("","B")</b><br/>
+          XMLSetAttributeValue("B,id,@BATCHID")<br/><br/>
+          The example above starts an export XML file that is named the same as the current batch ID.
+          It has a root node "B" whose "id" is assigned the batch ID.  It is expected that additional rules
+          will continue to build the XML structure.  The last invoked action must call XMLSaveFile to save
+          the export file to disk.
+          <br/><br/>
+          <b>XMLNewNode("ClaimsData,HCFA")</b><br/>
+          Duplicated Node ID's will cause the prior node of the same ID to commit to its specific parent
+          node and will no longer be available for modification.<br/><br/>
+          Note: Adding a second child NodeID with the same Tag name of the root node will cause the action
+          to return false.
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if parent node exists. <br/><b>False</b> if duplicate root node
+        is declared, or parent NodeID does not exist.
+      </ret>
+      <see>XMLSaveFile</see>
+    </method>
+
+    <method name="XMLSetNodeValue" >
+      <p name="NodeID" type="string"/>
+      <p name="NodeValue" type="string"/>
+      <ap>
+        <br/><br/>
+        1. The NodeID.<br/>
+        2. The value to assign to the node.<br/><br/>
+        The action defaults the current object's value.<br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Assigns a value to a specific node.
+        <e>
+          The example below shows how creation of an XML for invoice line items might look.<br/>
+          XMLNewNode("LineItem,Invoice")<br/>
+          XMLSetAttributeValue("LineItem,id,@ID")<br/>
+          XMLNewNode("ItemID,LineItem")<br/>
+          <b>XMLSetNodeValue("IdemID,@F\ItemID")</b><br/>
+          XMLNewNode("ItemDesc,LineItem")<br/>
+          <b>XMLSetNodeValue("ItemDesc,@F\ItemDesc")</b><br/>
+          XMLNewNode("Qty,LineItem")<br/>
+          <b>XMLSetNodeValue("Qty,@F\Qty")</b><br/>
+          XMLCommitNode("LineItem")<br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>XMLNewNode</see>
+    </method>
+
+    <method name="XMLSetAttributeValue">
+
+      <p name="NodeID" type="string"/>
+      <p name="AttrID" type="string"/>
+      <p name="AttrValue" type="string"/>
+      <ap>
+        <b>1.</b>The NodeID.<br/>
+        <b>2.</b>The attribute's name.<br/>
+        <b>3.</b>The value to be assigned to the attribute.  Smart parameters are supported.
+      </ap>
+      <h>
+        Sets an attribute value within a specific node in the XML hierarchy.
+        <e>
+          The example below assigns the current Page's <b>Number</b> field value to the
+          <b>Xpage</b> node's <b>Number</b> attribute.<br/>
+          <b>XMLSetAttributeValue("Xpage,Number,@P\Number")</b><br/><br/>
+
+          The example below shows how creation of an XML for invoice line items might look.<br/>
+          XMLNewNode("LineItem,Invoice")<br/>
+          <b>XMLSetAttributeValue("LineItem,id,@ID")</b><br/>
+          XMLNewNode("ItemID,LineItem")<br/>
+          XMLSetNodeValue("IdemID,@F\ItemID")<br/>
+          XMLNewNode("ItemDesc,LineItem")<br/>
+          XMLSetNodeValue("ItemDesc,@F\ItemDesc")<br/>
+          XMLNewNode("Qty,LineItem")<br/>
+          XMLSetNodeValue("Qty,@F\Qty")<br/>
+          XMLCommitNode("LineItem")<br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the node does not exist.  Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="XMLSetFileEncodingAsASCII">
+      <p name="ASCIIEncoding"/>
+      <ap>
+        0. No Encoding
+        1. UTF-8 Encoding
+        2. UTF-16 Encoding
+        <br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Determines if the Export file is created with ASCII or UNICODE encoding.
+        A parameter value of 1 and 2 will create files with UNICODE format.
+        <br/><br/>
+
+        <b>
+          NOTE:
+          This action must be called before any actions that physically write to and create the Export file.If not called,
+          then the file will be created with UNICODE encoding UTF-8.
+        </b>
+        <br/><br/>
+        <e>
+          <b>XMLSetFileEncodingAsASCII("0")</b><br/>
+          <b> XMLSaveFile()</b><br/>
+          <!--  xml_CommitNode("LineTotal")<br/><br/> -->
+
+          This example will create files with no encoding .<br/><br/>
+
+          <b>XMLSetFileEncodingAsASCII("1")</b><br/>
+          <b> XMLSaveFile()</b><br/>
+          <!-- xml_CommitNode("LineTotal")<br/><br/>-->
+
+          This example will create the file in UNICODE  UTF-8 format.
+        </e>
+      </h>
+      <lvl>Any.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+
+    </method>
+
+    <method name="XMLCommitNode">
+      <p name="StrParam" type="string"/>
+      <ap>
+        String value of the xml Tag.  Smart parameters are supported.
+      </ap>
+      <h>
+        Commits (closes) current xml node to it's parent node with the xml tag value of the parameter. Allowing a new node with the same
+        tag to be created at the same hierarchical level in the output xml.
+        <e>XMLCommitNode("LineTotal")</e><br/>
+        Example commits (closes) the current xml node with a Tag <i>LineTotal</i>.<br/><br/>
+        Remember: Use of this action can change the expected order of xml nodes as they appear in the final xml, since this action commits the current xml
+        to the parent xml node when it is called. Sibling xml nodes that were not committed using this action are later committed
+        to the parent node when the <b>XMLSaveFile</b> is called, so those xml nodes will appear after nodes previously committed using the <b>XMLCommitNode</b> action.
+
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method >
+  </com>
+</rrx>

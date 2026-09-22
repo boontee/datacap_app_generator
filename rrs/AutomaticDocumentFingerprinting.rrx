@@ -1,0 +1,1442 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="AutomaticDocumentFingerprinting" v="9.1.9.10">
+  <com ref="Datacap.Libraries.AutomaticDocumentFingerprinting.Actions"  qi=": Identifies pages and assigns types and fingerprints through fingerprint matching.">
+
+    <h>
+      When ingesting and processing documents in a Datacap application, typically documents and pages are classified to identify the data within
+      the document or to control how the page should processed.  Fingerprints are a classification mechanism that matches images
+      based on the geometry of the image.  It is typical for a Datacap application to use fingerprints to classify pages
+      within the workflow.  It is allowed for other types of classification techniques to be used in addition to fingerprints.
+      The rules within an application are flexible to allow exclusive use of fingerprints for classification or mixing fingerprinting
+      with other types of classification, including techniques that may be custom for an application.<br/><br/>
+
+      Classification can be configured uniquely for any Datacap application.  With that said, there are some typical types of classification
+      that are performed and are briefly described here.  The intent is to provide basic understanding of fingerprints, how they can be used
+      as a starting point that can be used in an application which are then changed or expanded as required by a specific application's
+      use cases.<br/><br/>
+
+      One approach to classification is by using separator sheets.  These are typically sheets with a barcode and are used to separate
+      different pages that are scanned.  The presence of a new separator sheet, denotes the start of a new document.  Fingerprints
+      can classify documents in addition to or instead of separator sheets.  To fingerprint a page, the page needs to be analyzed,
+      using the AnalyzeImage action, to create a CCO file that is a geometric representation of the page.  This representation will then
+      be matched using the FindFingerprint action against known formats. When match, the page type is then determined. Additionally
+      a fingerprint template is assigned to the page, the fingerprint template defines zones / fields on the page that contain
+      the data that will be extracted or verified by an operator.  While classification can be performed without using fields,
+      it is a typical scenario where fields are also used.<br/><br/>
+
+      Using the APT application as an example, a page may be identified as a "MainPage" which is the first page of
+      an invoice.  This causes different processing for that type of page, opposed to other types such as separator
+      pages which may be ignored or deleted.  An application may process invoices from 1000s of different vendors.
+      One invoice may be from "ABC Plumbing" and another may be from "XYZ Car Rental".  Because they are provided by different
+      vendors, each will have their own format and layout to the invoice that was received.  However, there are some common properties
+      of an invoice that the application needs to process such as date, vendor name, address, tax, total and line items for items
+      covered by the invoice.  While each page is identified as a "MainPage", the matched fingerprint template for each page will
+      be unique.  For example, ABC Plumbing may have the date in the top left corner of the page while XYZ Car Rental puts the
+      date at the bottom of the page.  The matched template contains the location of the desired data so the application can
+      correctly obtain the data from the invoice.  APT has additional abilities where it can ingest invoices that have not
+      been previously processed and dynamically determine the locations of these values and then save a fingerprint so the
+      locations are known the next time an invoice is received from the same vendor.<br/><br/>
+
+      That is one example of how fingerprints can assign page types and field zone templates for pages.  Datacap has the ability
+      to run unique rules for each object type within an application.  Perhaps pages defined as invoices need one set of operations
+      and documents identified as bank statements need a different set of processing steps.  The page types determined by fingerprinting
+      will then control the pages as the continue through the workflow.<br/><br/>
+
+      Prior to fingerprinting, images are typically pre-processed to ensure the greatest accuracy when processed.  For example,
+      images are typically straightened, de-speckled and have blobs and lines removed prior to fingerprinting.  This will help
+      detection by applying a uniform look to pages prior to identification.  It is quite possible that it may not be desired to
+      show these processed forms to the user, or more likely, it is desired to save the original documents as they came in and
+      not the versions that have been adjusted for fingerprinting or recognition.  The Datacap actions always save the original
+      version of the image prior to performing image adjustments.  This original version of the image can always be used or stored
+      as required in later steps of the workflow.<br/><br/>
+
+      <b>Local Fingerprints</b><br/><br/>
+
+      By default fingerprints are stored and used "locally" on the machine that is running rules and are held within
+      the client or process.  For example, fingerprints are typically used in a "Page Identification" task.
+      When this process is performed, the AutomaticDocumentFingerprint actions will load the fingerprints
+      defined for the application, then perform fingerprint matching and creation.  It is all local on the
+      current machine.  This process occurs for each batch that is run.  The benefit of using fingerprints
+      locally is that no additional setup is required beyond adding the required fingerprint actions to a
+      Datacap application.  A draw back of local fingerprints are that the fingerprints will be loaded for
+      each batch.  If there are a large number of fingerprints, this could be several minutes. It also will\
+      consume memory within the process that is running the batch.  For better performance, the
+      fingerprint service is the recommended mechanism for using fingerprints.<br/><br/>
+
+      <b>Fingerprint Service</b><br/><br/>
+
+      The Datacap Fingerprint Service, in combination with actions from this action library, supports the ability to cache and
+      use the fingerprints from one or multiple Datacap applications simultaneously. The Fingerprint Service overcomes
+      the time-consuming process of loading all the fingerprints of an application each time a batch is run.
+      The solution involves reading all the fingerprints into the system memory cache of the Fingerprint Server when the
+      first fingerprint match is requested. As a further optimization of this process, only the identification portion
+      of the fingerprint is loaded into memory. The fingerprints remain in system memory for the life of the Fingerprint
+      Service process. The result is the elimination of the fingerprint load time for all but the first batch that
+      is processed by an application. Large-scale implementations, where large numbers of fingerprints
+      (typically over 1000 fingerprints) are required for document identification, use of the Fingerprint Service is recommended.<br/><br/>
+
+      Other than identifying the location of the fingerprint service with the SetFingerprintWebServiceURL, the actions
+      within this action library will transparently use the fingerprint service vs the local service.  The important step is to
+      first call the <b>SetFingerprintWebServiceURL</b> action to specify the location of the service, then subsequent actions,
+      in the same profile, will automatically use the service instead of using local fingerprinting operations.<br/><br/>
+
+      The fingerprint service requires IIS and can be configured on a machine which can be shared
+      by multiple applications.  Refer to the fingerprint service configuration documentation
+      "Installing and configuring the Datacap Fingerprint Service" for more information.<br/><br/>
+
+      The first time that a match is requested by an application, the Fingerprint Service loads the fingerprints (all *cco files)
+      for that application. When more than one application is set up to use a single Fingerprint Service,
+      the first time each application requests fingerprint matching, the fingerprints for that application are loaded into memory.
+      The greater the number of Fingerprints to read into memory, the longer the service takes to begin fingerprint processing;
+      which can be from a few seconds to many minutes for large fingerprint deployments. Subsequent requests for matching
+      work with the fingerprints in the cache in memory. When a matching fingerprint is not found and the
+      application creates a new fingerprint, that new fingerprint is loaded into the cache.<br/><br/>
+
+      The Datacap Fingerprint Service is a web service that is based on Microsoft Internet Information Services (IIS).
+      The service can service multiple client requests simultaneously. The service can service multiple client requests simultaneously.
+      The Datacap Fingerprint Service cache is shared by all rulerunners or clients running the application.
+      Therefore, the single load of fingerprints into the cache for an application is all that is required even when multiple threads are running.<br/><br/>
+      
+      If the fingerprint service is enabled and an action that uses the fingerprint service is called, such as FindFingerprint, 
+      and if the fingerprints are not yet loaded, or if the load is in progress due to it being initiated by another batch,
+      by default the action will wait up to 20 minutes for the fingerprint load to complete.  The default time is long enough for most installations.
+      Should more time be required due to a significantly large amount of fingerprints, set the DCO variable <b>FingerprintServiceWait_Seconds</b> to
+      the maximum number of seconds that the action should wait for the fingerprints to load on the service.  This variable would be set on the
+      same DCO node where FindFingerprint is called.  In other words, if one batch is loading fingerprints and another batch calls FindFingerprint,
+      it will wait up to the 20 minute default time for the load to finish. If the load is not finished, the FindFingerprint action will not perform 
+      a fingerprint match and will return false.  Increasing the timeout will avoid this problem during long fingerprint load times at the service.<br/><br/>
+      
+      Once the fingerprints are loaded by the services, they
+      will remain loaded for subsequent calls to FindFingerprint and will not need to be reloaded.  If the service is recycled, then on the next
+      call to the service, the fingerprints will be reloaded.<br/><br/>
+
+        <b>XML Fingerprints</b><br/><br/>
+
+        XML fingerprints are preferred over traditional/legacy fingerprints.  Fingerprints consist of two types of metadata. The first type is a
+        CCO file that contains the fingerprint geometry information used when matching fingerprints. The second type of metadata are
+        the zone locations on the fingerprint. Each zone identifies the location of text that is captured by an application.
+        For example, typical areas of an invoice page would include a date, invoice number, customer name, etc. The zone location
+        identifies each of these and the coordinates where the text exists on a page.<br/><br/>
+
+        The key difference between these two types of fingerprints is how the zone information is stored.
+        Traditional fingerprints store the zone information within the Setup DCO of an application.  The XML fingerprints
+        store the zone information externally as associated files in the fingerprint directory.<br/><br/>
+
+        The advantage of XML fingerprints becomes apparent as the number of application fingerprints increases.
+        When the application's Setup DCO contains a large number of fingerprints, it can slow the processing
+        of an application, even when not performing fingerprint operations.  The issue does not occur when using XML fingerprints.<br/><br/>
+
+        If 'Enable FPXML' setting is checked in the application settings 'Main' tab within the Taskmaster Application Manager,
+        when zoning fingerprints in Datacap Studio, the application will place field zone information into a fingerprint XML file instead of placing the zone
+        information into the applications setup DCO.  One XML file is created per fingerprint.        
+        If the application is using fingerprint XML files, then use the action XMLReadZones to load the field zone coordinates.<br/><br/>
+
+        <b>Additional Information</b><br/><br/>
+
+      It is recommended to review the best practices guide for recognition for tips on how to improve
+      image quality prior to fingerprint matching and recognition.<br/><br/>
+
+      Fingerprints rely on the creation of a CCO for the image that is associated
+      with the DCO page.  The CCO is typically created by the AnalyzeImage
+      action and/or with a recognition action. More information about the CCO can be found in the top level
+      help of the "SharedRecognitionTools" action library.<br/><br/>
+
+      The top-level help topic of the ApplicationObjects action library discusses the Datacap Object Hierarchy (DCO)
+      including the different object levels and object variables. It is recommended that the DCO is well
+      understood when writing a Datacap application.<br/><br/>
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      The complete smart parameter reference is available in the top-level help of the RuleRunnerLogic action library.<br/><br/>
+    </h>
+
+
+    <method name="CalculateOffset" access="public" qi="Sets the standard Offset value to be used when matching source pages to fingerprints.">
+      <ap>None.</ap>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if the action is not applied at the Page level or an error occurs. Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        Calculates the offset, in pixels, between the CCO for the current page and the fingerprint that
+        it matches.  The fingerprint template must have already been set from a previous call to FindFingerprint,
+        SetFingerprint or some other method to associate the correct template with the current page.<br/><br/>
+
+        The result of the calculation is stored in the current page object in a variable called "Image_Offset"
+        in the form "x,y", where the value x is the pixel difference on the x-axis and y is the
+        pixel difference on the y-axis.<br/><br/>
+
+        The confidence of the match is stored in the current DCO variable called "Confidence".<br/><br/>
+        <e>
+          FindFingerprint("False","")<br/>
+          <b>CalculateOffset()</b><br/><br/>
+
+          This example will compare the CCO for the current image with the matched fingerprint and store the difference
+          in the variable "Image_Offset".  For example, "-24,-16"<br/><br/>
+        </e>
+      </h>
+    </method>
+
+      <method name="AddAndSetFingerprint" access="public" qi="Creates a fingerprint for the current source page with a specified class type.">
+          <p name="FingerprintClass" type="string" />
+          <ap>
+              <b>FingerprintClass:</b> The fingerprint class name to assign to the new fingerprint.  If this parameter is
+              blank, then the global name '˂New˃' will be assigned.  Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              Unconditionally adds the current fingerprint for the current source page to the fingerprint
+              directory for future fingerprint matching and allows the host fingerprint class to be specified.<br/><br/>
+
+              The current page must have an existing, black and white, image file (.tif) and its fingerprint processing file (.cco).
+              These files are given a unique fingerprint template ID and added to the fingerprint database.
+              The TIF image and the CCO file will be added to the fingerprint directory.<br/><br/>
+
+              Upon successful completion of the action, the following variables will be created in the
+              current page DCO:<br/><br/>
+
+              "Confidence" are created with a value of "1".<br/>
+              "TemplateID" are set with the new ID associated with the fingerprint.<br/>
+              "Fingerprint Created" are set to "Yes".<br/><br/>
+
+              The resulting fingerprint will consist of two files: the page's Image file (.tif) and its Processing file (.cco).<br/><br/>
+
+              SetFingerprintDirectory must have been called before this action.  If using the fingerprint service, then
+              SetFingerprintWebServiceURL must also have been previously called.<br/>
+              <e>
+                  SetFingerprintDirectory("@APPPATH(fingerprint)")<br/>
+                  AnalyzeImage()<br/>
+                  <b>AddAndSetFingerprint("Invoice")</b><br/><br/>
+
+                  This example configures the fingerprint directory then calls AnalyzeImage to create a fingerprint for the
+                  current page based on the page's associated TIF image.  The fingerprint is then added to the
+                  current collection of fingerprints.  Note that while SetFingerprintDirectory is shown in this example,
+                  it is typically called on a batch level so it is set only once.
+                  For more information, see SetFingerprintDirectory.<br/>
+              </e>
+          </h>
+          <lvl>Page level only.</lvl>
+          <ret>
+              <b>False</b> if the rule with this action is not bound to a Page object of the Document Hierarchy;
+              if the current page does not have an Image file; if a CCO fingerprint file has not been
+              created or if the fingerprint's two files cannot be created in the fingerprint directory.
+              Otherwise, <b>True.</b><br/>
+          </ret>
+          <see>
+              SetFingerprintDir, SetFingerprintWebServiceURL<br/><br/>
+
+              Refer to the top-level help for more information on using fingerprints and the fingerprint service.<br/><br/>
+          </see>
+      </method>
+
+
+
+      <method name="AddFingerprint" access="public" qi="Creates a fingerprint for the current source page.">
+      <ap>None.</ap>
+      <h>
+        Unconditionally adds the current fingerprint for the current source page to the fingerprint
+        directory for future fingerprint matching.<br/><br/>
+
+          The fingerprint will be associated with the global host fingerprint class ID.
+          If the new fingerprint must be associated with a specific fingerprint class, then use the
+          AddAndSetFingerprint action.
+
+          The current page must have an existing Image file (.tif) and its fingerprint processing file (.cco).
+          These files will be given a unique fingerprint template ID and added to the fingerprint database.
+          The TIF image and the CCO file will be added to the fingerprint directory.<br/><br/>
+
+        Upon successful completion of the action, the following variables will be created in the
+        current page DCO:<br/><br/>
+
+        "Confidence" will be created with a value of "1".<br/>
+        "TemplateID" will be set with the new ID associated with the fingerprint.<br/>
+        "Fingerprint Created" will be set to "Yes".<br/><br/>
+
+        The resulting fingerprint will consist of two files: the page's Image file (.tif) and its Processing file (.cco).<br/><br/>
+
+        SetFingerprintDirectory must have been called prior to this action.  If using the fingerprint service, then
+        SetFingerprintWebServiceURL must also have been previously called.<br/>
+        <e>
+          SetFingerprintDirectory("@APPPATH(fingerprint)")<br/>
+          AnalyzeImage()<br/>
+          <b>AddFingerprint()</b><br/><br/>
+
+          This example configures the fingerprint directory then calls AnalyzeImage to create a fingerprint for the
+          current page based on the page's associated TIF image.  The fingerprint is then added to the
+          current collection of fingerprints.  Note that while SetFingerprintDirectory is shown in this example,
+          it is typically called on a batch level so it is set only once.  Refer to SetFingerprintDirectory
+          for more information.<br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if the rule with this action is not bound to a Page object of the Document Hierarchy;
+        if the current page does not have an Image file; if a CCO fingerprint file has not been
+        created or if the fingerprint's two files cannot be created in the fingerprint directory.
+        Otherwise, <b>True.</b><br/>
+      </ret>
+      <see>
+        SetFingerprintDir, SetFingerprintWebServiceURL<br/><br/>
+
+        Refer to the top-level help for more information on using fingerprints and the fingerprint service.<br/><br/>
+      </see>
+    </method>
+
+
+
+
+    <method name="DeleteFingerprint" access="public" qi="Deletes the current page's fingerprint.">
+      <ap>None.</ap>
+      <lvl>Page level only.</lvl>
+      <ret>
+        Always returns <b>True.</b> Under certain conditions the action will be unable to delete the fingerprint
+        but will still return True. For example if the action is not applied at the Page level or if the
+        current page does not have an fingerprint template set.
+        Please review the action log file if DeleteFingerprint does not perform as expected.<br/>
+      </ret>
+      <h>
+        Removes a fingerprint from the application and fingerprint database.
+        Deletes the image file (.tif) and fingerprint file (.cco) of the current page's fingerprint from the
+        application's fingerprint directory, and its record from the Fingerprint database.
+        The current page must have an associated fingerprint template from a previous
+        action such as FindFingerprint or nothing will be deleted.<br/><br/>
+
+        SetFingerprintDirectory action must be called prior to this action.<br/><br/>
+
+        If the fingerprint service is in use, the fingerprint will not be unloaded. Instead
+        it will simply not be loaded the next time the service loads fingerprints.<br/><br/>
+        <e>
+          SetFingerprintDirectory("C:\ParentDirectory\Application\fingerprint")<br/>
+          <b>DeleteFingerprint()</b><br/><br/>
+
+          This example will set the fingerprint directory and then delete the fingerprint template
+          that is associated with this page.  It is assumed that FindFingerprint, SetFingerprint
+          or similar action has been previously run to find the fingerprint that is associated with
+          the page. Note that while SetFingerprintDirectory is shown in this example,
+          it is typically called on a batch level so it is set only once.  Refer to SetFingerprintDirectory
+          for more information.<br/>
+        </e>
+      </h>
+      <see>
+        SetFingerprintDirectory, AddFingerprint<br/><br/>
+
+        Refer to the top-level help for general information about this action library.<br/>
+      </see>
+    </method>
+
+      <method name="CheckForStickyFingerprint" access="public" qi="Checks if a new fingerprint applies to a follow on page in the same batch.">
+          <ap>None.</ap>
+          <h>
+              For new fingerprints this action checks to see if there another matching fingerprint
+              within the same batch that has already been verified, where it can
+              use it to obtain zone information.  An example is when a batch contains two similar
+              invoices, which have never been processed by the system before.  Once the first
+              invoice is zoned during verify, the same new fingerprint can be used
+              on the second invoice.  This is only needed on new matching fingerprints within the same batch
+              because a fingerprints zones are saved at export time and are available for subsequent batches.<br/><br/>
+              
+              This action has a requirement that the line items parent is called "Details".
+              <e>
+                  <b>CheckForStickyFingerprint()</b>
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+
+      <method name="FindBlackFingerprint" access="public" qi="Attempts to match black forms to fingerprints in the fingerprints directory of an application.">
+      <p name="AddFingerprintIfNotFound" type="string" />
+      <p name="PageType" type="string" />
+      <ap>
+        <b>AddFingerprintIfNotFound:</b> If an existing fingerprint is not matched for the
+        current page, a value of "True" will cause a new fingerprint to be created based
+        on the current page.  The new fingerprint will match this page on future
+        calls to this action.  The value "False" will cause the action to return false
+        if the page does not match an existing fingerprint and a new fingerprint will not be created.<br/><br/>
+
+        <b>PageType:</b> If parameter "AddFingerprintIfNotFound" is "True", then the provided
+        page type is assigned to the new fingerprint.  The parameter is option.  If it is blank
+        and a new fingerprint is created, then the type assigned to the new fingerprint
+        will be the same as the current page.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        This action is similar to FindFingerprint and attempts to match black forms to an existing fingerprint.
+        A "black" form is a page that contains a dense amount of lines that have not been removed and can provide
+        better matching on these kinds of pages than FindFingerprint. An example of a black form is a typical
+        medical claim form which has been faxed making all of the lines black instead of a typical medical form
+        that uses a drop out color that allows a scanner to remove a specific color, leaving just the text on the image.
+        The action can optionally create a new fingerprint that matches the current page if none of the existing fingerprints
+        match the current image.<br/><br/>
+
+        A CCO file must be associated with the current page prior to calling this action.  The CCO file is typically
+        created using the action AnalyzeImage to create a geometric representation of the image that is used
+        to match with existing fingerprints.<br/><br/>
+
+        It is typically recommended to use image enhancement features, such as deskew to first adjust the image prior
+        to creating the fingerprint.  This will improve the matching quality of the fingerprints and
+        will also improve subsequent recognition, if it will also be performed on the image.<br/><br/>
+
+        A fingerprint match will occur if the current fingerprint matches an existing fingerprint
+        with a confidence higher than the value configured with the action SetMinimumMatchingTolerance.
+        If multiple fingerprints match with a tolerance greater than the configured tolerance,
+        then the fingerprint that has the best match is returned as the matching fingerprint.
+        If multiple fingerprints have a the highest confidence match of "1", then the first fingerprint
+        that matches at the highest confidence will be considered the best match.<br/><br/>
+
+        This action library has other actions that can be used to adjust how fingerprints are matched, such
+        as: SetFilterClassName, SetFilterPageType, SetFingerprintWebServiceFailureThreshold, SetMaximumMatchingOffset,
+        SetFingerprintDirectory which must be used prior to using this action.<br/><br/>
+        <e>
+          RotateImage()<br/>
+          AnalyzeImage()<br/>
+          RecognizePageOCR_A()<br/>
+          SetFingerprintSearchArea("0.0","0.5")<br/>
+          SetMinimumMatchingTolerance("0.7")<br/>
+          SetFingerprintDirectory("@APPPATH(fingerprint)")<br/>
+          <b>FindBlackFingerprint("True","Invoice_Page")</b><br/><br/>
+
+          In this sequence, the FindBlackFingerprint action will only use the top 50% of the current page to
+          search for a match.  However, it will accept a match with a confidence of 0.7 or higher.  If no match is found,
+          the sequence will create a new fingerprint and store it in the location specified by the
+          SetFingerprintDirectory action.  If the parameter has been set to False, a new fingerprint
+          will not be created in case there is no match.<br/><br/>
+
+          For illustration, this example shows a number of settings such as SetMinimumMatchingTolerance,
+          SetFingerprintSearchArea and SetFingerprintDirectory on the page object that is calling FindFingerprint.
+          These actions only need to be called once and they will remain in effect for the rest of the
+          task profile. They could be called once at the batch level. If implemented exactly as shown,
+          then these actions will be called over and over for each page of this type, which is
+          not required and will use some amount of unnecessary processing time.
+          If fingerprints are used again in a later task profile, any global settings
+          such as the fingerprint directory, the fingerprint service URL, search area, etc.
+          must again be configured before using subsequent fingerprint actions.<br/><br/>
+
+          If the parameter is instead been set to False, no fingerprint will be created if a match is not found.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if the action is not applied at the Page level or if the first parameter is <b>False</b> and
+        a fingerprint match does not occur. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        SetFingerprintDirectory<br/><br/>
+
+        Refer to the top-level help topic for more information about fingerprints and the fingerprint service.<br/>
+      </see>
+    </method>
+
+
+    <method name="FindFingerprint" access="public" qi="Attempts to match the current page to a fingerprint and creates a new fingerprint if a match does not occur.">
+      <p name="AddFingerprintIfNotFound" type="string" />
+      <p name="PageType" type="string" />
+      <ap>
+        <b>AddFingerprintIfNotFound:</b> If an existing fingerprint is not matched for the
+        current page, a value of "True" will cause a new fingerprint to be created based
+        on the current page.  The new fingerprint will match this page on future
+        calls to this action.  The value "False" will cause the action to return false
+        if the page does not match an existing fingerprint and a new fingerprint will not be created.<br/><br/>
+
+        <b>PageType:</b> If parameter "AddFingerprintIfNotFound" is "True", then the provided
+        page type is assigned to the new fingerprint.  The parameter is option.  If it is blank
+        and a new fingerprint is created, then the type assigned to the new fingerprint
+        will be the same as the current page.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <lvl>Page level only.</lvl>
+
+      <h>
+        This action will use fingerprint web service if fingerprint web URL is set by SetFingerprintWebServiceURL and if the 
+        service is available. If the fingerprint web service is not available, then it will default to local fingerprint service.
+        <br/><br/>
+
+        This action attempts to match the image associated with the current page to an existing fingerprint.
+        The action can optionally create a new fingerprint that matches the current page if none of the existing fingerprints
+        match the current image.<br/><br/>
+
+        A CCO file must be associated with the current page prior to calling this action.  The CCO file is typically
+        created using the action AnalyzeImage to create a geometric representation of the image that is used
+        to match with existing fingerprints.<br/><br/>
+
+        It is typically recommended to use image enhancement features, such as deskew and line removal to first adjust the image prior
+        to creating the fingerprint.  This will improve the matching quality of the fingerprints and
+        will also improve subsequent recognition, if it will also be performed on the image.<br/><br/>
+
+        A fingerprint match will occur if the current fingerprint matches an existing fingerprint
+        with a confidence higher than the value configured with the action SetMinimumMatchingTolerance.
+        If multiple fingerprints match with a tolerance greater than the configured tolerance,
+        then the fingerprint that has the best match is returned as the matching fingerprint.
+        If multiple fingerprints have a the highest confidence match of "1", then the first fingerprint
+        that matches at the highest confidence will be considered the best match.<br/><br/>
+
+        This action library has other actions that can be used to adjust how fingerprints are matched, such
+        as: SetFilterClassName, SetFilterPageType, SetFingerprintWebServiceFailureThreshold, SetMaximumMatchingOffset,
+        as: SetFilterClassName, SetFilterPageType, SetFingerprintWebServiceFailureThreshold,
+        SetFingerprintDirectory must be used prior to using this action.<br/><br/>
+
+        If required by Datacap Support, additional logging can be enabled by setting the batch level
+        variable "EnableCCOLogging" to "1". The logging will provide additional log details
+        during fingerprint matching. This setting is only applicable to local fingerprints. It has no effect
+        if the fingerprint service is in use.  Enable this logging only when required by Datacap Support.<br/><br/>
+        <e>
+          RotateImage()<br/>
+          AnalyzeImage()<br/>
+          RecognizePageOCR_A()<br/>
+          SetFingerprintSearchArea("0.0","0.5")<br/>
+          SetMinimumMatchingTolerance("0.7")<br/>
+          SetFingerprintDirectory("@APPPATH(fingerprint)")<br/>
+          <b>FindFingerprint("True","Invoice_Page")</b><br/><br/>
+
+          In this sequence, the FindFingerprint action will only use the top 50% of the current page to
+          search for a match.  However, it will accept a match with a confidence of 0.7 or higher.  If no match is found,
+          the sequence will create a new fingerprint and store it in the location specified by the
+          SetFingerprintDirectory action.  If the parameter has been set to False, a new fingerprint
+          will not be created in case there is no match.<br/><br/>
+
+          For illustration, this example shows a number of settings such as SetMinimumMatchingTolerance,
+          SetFingerprintSearchARea and SetFingerprintDirectory on the page object that is calling FindFingerprint.
+          These actions only need to be called once and they will remain in effect for the rest of the
+          task profile. They could be called once at the batch level. If implemented exactly as shown,
+          then these actions will be called over and over for each page of this type, which is
+          not required and will use some amount of unnecessary processing time.<br/><br/>
+
+          If the parameter is instead been set to False, no fingerprint will be created if a match is not found.<br/><br/>
+        </e>
+      </h>
+      <ret>
+        <b>False</b> if the action is not applied at the Page level, or if the parameter is False and a
+        fingerprint match does not occur. Otherwise, True.  If a new Fingerprint cannot be added, the
+        action still returns <b>True.</b><br/>
+      </ret>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using
+        fingerprints and the fingerprint service.<br/>
+      </see>
+    </method>
+
+    <method name="IdentifyBlankPagesBySize" qi="Uses the Image file's size to determine if the file represents a 'blank' page.">
+      <p name="MaximumSize" type="string" />
+      <p name="PageType" type="string" />
+      <p name="PageToEvaluate" type="string" />
+      <ap>
+        <b>MaximumSize:</b> Numeric value (0 to 2147483647) indicating the maximum size in bytes that qualifies a page as a blank page.<br/>
+        <b>PageType:</b> If the page is determined to be blank, the specified page type will be assigned to the page. This parameter cannot be blank.<br/>
+        <b>PageToEvaluate:</b> Numeric value (0, 1 or 2) to designate which pages in a multi-page dco are to be evaluated.
+        If this value is blank or invalid, then the value "0" will be used.<br/>
+        <br/>
+        Values 0, 1 and 2 mean the following:<br/>
+        0 : Every page under the current DCO object will be evaluated.<br/>
+        1 : Only "odd" dco page objects will be evaluated within the DCO. The first child, then the third child, the 5th child, etc.<br/>
+        2 : Only "even" dco page objects will be evaluated within the DCO. The second child, then the fourth child, the 6th child, etc.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <lvl>Batch, Document, or Page levels.</lvl>
+      <ret>
+        <b>False</b> if the MaximumSize or PageType parameter is invalid, the rule with this action is bound to a Field object of the Document Hierarchy
+        or if an error occurs.
+        Returns <b>true</b> if one or more child pages are identified as a "blank" page because the file size is smaller than the specified size.<br/><br/>
+      </ret>
+      <h>
+        Uses a page object's image file's size to determine if the file represents a 'blank' page.
+        The action looks exclusively at the physical file size to determine if the image is blank.
+        It does not look at the pixels of the image to determine if the page is blank.
+        The compression of a file will affect the size of a file and the ability of this action to accurately
+        detect blank pages.  A file using a compression such as fax or LZW compression, will likely be very small
+        if there are a small number of black pixels on an image.  A file that is uncompressed, will be the same
+        size on disk regardless of the number of black or white pixels on the image, making this action ineffective.<br/><br/>
+
+        The intent of this action is to identify pages that are likely to be blank because they are using
+        file compression and the physical file size is very small.
+        Any page or child page with an image file smaller than the size parameter (in bytes) will be
+        assigned the Page Type value provided as a parameter.<br/><br/>
+
+        The PageToEvalute parameter will determine if all child pages will be evaluated or if only
+        alternating pages within the DCO structure are evaluated.<br/><br/>
+        <e>
+          <b>IdentifyBlankPagesBySize("1000","Blank_Page","")</b><br/><br/>
+
+          This example will evaluate the current object and the child objects.  If called on
+          a page object, then just the page object will be evaluated. If called on a document object
+          then all of the document's pages will be evaluated.  If called at the batch level, then all
+          pages in the batch will be evaluated.
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for general information about this action library.<br/>
+        A similar action, IsBlankPage, in the SharedRecognitionTools action library counts the number of words
+        in a page's CCO, and if the count is smaller than the provided size, it is considered to be blank.<br/>
+      </see>
+    </method>
+
+      <method name="IsFingerprintClass" access="public" qi="Test that the fingerprint belongs to the specified class.">
+          <p name="FingerprintDatabase" type="string" qi="The connection to the fingerprint database."/>
+          <p name="ClassName" type="string" qi="Test for the fingerprint class name."/>
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              This action connects to the fingerprint database and verifies that the 
+              specified fingerprint class name contains the 
+              fingerprint ID loaded for the current page.<br/><br/>
+              <e>
+                  CheckDCOStatus("75")<br/>
+                  <b>IsFingerPrintClass("@APPVAR(*/fingerprintconn:cs)", "Invoice")</b><br/>
+                  DeleteFingerprint()<br/>
+                  IncrementVariable("@X.DeletedNewFingerprint", "1")<br/><br/>
+
+                  A parameter of "Invoice" checks to see if the current fingerprint exists in the class called "Invoice",
+                  and if it does, the action returns true and follow on actions can perform further processing in the same function.
+              </e>
+          </h>
+          <lvl>
+              Page Level.
+          </lvl>
+          <ret>
+              <b>False,</b> if there is an error or if the
+              current page's fingerprint ID does not exist in the specified class.
+          </ret>
+      </method>      
+      
+
+    <method name="MergeCCOsByType" access="public" qi="Merges the Fingerprint files (.cco) associated with Page objects of the Document Hierarchy.">
+      <p name="TypesToMerge" type="string" />
+      <ap>
+        <b>TypesToMerge:</b> Comma-separated string values indicating the Page Types of the Document Hierarchy objects to be merged.
+        At least one page type must be provided for CCO files to be merged.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <lvl>Document, Page or Field.</lvl>
+      <ret>
+        <b>False</b> if a Fingerprint file (.cco) for one of the Page Types is not available or if an error occurs
+        while merging. Otherwise, <b>True.</b>  If none of the pages match the specified page type,
+        the action will still return <b>True.</b><br/>
+      </ret>
+      <h>
+        Merges the Fingerprint files (.cco) associated with Page objects of the Document Hierarchy.<br/><br/>
+
+        The CCO for each page under the document node are merged with the CCO for the first page
+        within the document.  The final result will be that the CCO for the first page has been updated
+        to contain the CCOs for each following page merged into the first page CCO.<br/><br/>
+
+        Only the CCO for a page that has an associated TIF image can be merged.  If a page does
+        not have a CCO or if the associated page image is not a TIF image, then it will not
+        be merged.<br/><br/>
+
+        If called on a page or field level, then the current DCO node must have a parent document
+        object.  The CCOs for each page under the parent document DCO node will be merged
+        together.  For example, if called on a page, the pages under the current document will have
+        their CCO's merged together.  If the page does not have a parent document, such as the page type
+        "Other" which has a batch as a parent, then this action will not merge the CCOs.<br/><br/>
+
+        <b>Created DCO Variables:</b><br/><br/>
+
+        This action creates several DCO variables in the first page node that
+        has been merged with the rest of he pages.  The variables that contain the information about the merge.<br/><br/>
+
+        <b>CCOBlock</b> : The DCO variable "CCOBlock" will be set with the name of the merged CCO file.<br/><br/>
+
+        <b>id.CCO_n</b> : The name of this variable is comprised of the ID of the page that contains a merged CCO
+        followed by ".CCO_" and then suffixed by the index of the page within the CCO.  The value
+        of this variable is the name of the image file that was appended to the CCO. For example
+        "TM000002.CCO_2" with a value of "TM000003.tif" indicates the primary page is TM000002
+        and the second CCO that merged corresponds to image file "TM000003.tif". One of these entries
+        is created for each page that is merged.<br/><br/>
+
+        <b>mergedimagefile</b> : This variable is created based on the previous variable.  The
+        value of the variable is the height of the merged image.
+        For example, the value of the variable is "TM000003.TIF" the value could be 4800.  That means
+        the height of the merged CCO was 4800 pixels. One entry is created for each page merged.<br/><br/>
+
+        <e>
+          <b>MergeCCOsByType("Invoice_Page,Invoice_Cont")</b><br/><br/>
+
+          The <b>MergeCCOsByType</b> example above will merged all page types that are of "Invoice_Page"
+          and "Invoice_Cont" into a single CCO.  The CCO for the first page that matches
+          either of these types will become the primary CCO with all of the merged
+          pages.  All of the pages under the current document will be merged together.
+          If pages of the same type exist in the batch, but they are associated with a
+          different document object, they will not be included in the merged CCO.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for more information about fingerprints and CCO files.<br/><br/>
+
+        Refer to the top-level help topic for the "SharedRecognitionTools" action library
+        for additional information regarding the CCO file.<br/><br/>
+
+          The action AdjustMergedCCOPositions in the ZonesAndLineItems action library will
+          adjust the positions in the merged CCO.<br/><br/>
+      </see>
+    </method>
+
+
+    <method name="MergeLayoutByType" access="public" qi="Merges the layout files (*layout.xml) associated with Page objects of the Document Hierarchy.">
+      <p name="TypesToMerge" type="string" />
+      <ap>
+        Comma-separated string values indicating the Page Types of the Document Hierarchy objects to be merged.
+        Smart parameters are supported.
+      </ap>
+      <lvl>Document level only.</lvl>
+      <ret>
+        <b>False</b> if a layout file (*layout.xml) for one of the Page Types is not available or if the merged layout
+        cannot be created. Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        Merges the layout files (layout.xml) associated with Page objects of the Document Hierarchy.
+        The layout.xml for the first page merged will become the new merged layout.xml.
+        The merged layout.xml can be then loaded to create a merged CCO for the merged pages.
+        The layout file for the first merged page will be updated to contain
+        the recognition results from the layout block information for all of the merged pages.<br/><br/>
+
+        Only pages contained in the current document object will be merged. A layout file must
+        exist for each of the pages to be merged. Only page types indicated by the parameter
+        will be included in the merged file.<br/><br/>
+
+        This action can only be attached to a document node so a document structure must exist.
+        The document node's child pages will be merged if the page type matches one of the types
+        provided as a parameter.
+        <e>
+          <b>MergeLayoutByType("Main_Page,Trailing_Page")</b><br/><br/>
+
+          The <b>MergeLayoutByType</b> action above combines all of the text of the pages in the current DCO document
+          of type Main_Page and Trailing_Page into
+          a single, searchable layout file.
+        </e>
+      </h>
+    </method>
+
+
+    <method name="SetFilterClassName" access="public" qi="Sets the Fingerprint Class filter for the identification (matching) algorithm.">
+      <p name="ClassName" type="string" />
+      <ap>
+        <b>ClassName:</b> The name Fingerprint Class you want to use as the filter. Smart Parameters are supported.<br/>
+      </ap>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <h>
+        Sets the Fingerprint Class filter for the identification (matching) algorithm.
+        The filter will force the fingerprint-matching algorithm to use only fingerprints
+        associated with the specified Fingerprint Class.  This can improve accuracy and
+        performance by limiting the search of fingerprints to smaller subset of fingerprints
+        within the application.<br/><br/>
+
+        To disable this filter, call with an empty string as the parameter. If this action is not called then
+        this filter is not enabled.<br/><br/>
+
+        Once set, this setting will be in effect for the length of the current task profile or until it is change.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure the setting before using subsequent fingerprint actions.<br/><br/>
+        <e>
+          <b>SetFilterClassName("MyFingerprintClass")</b><br/>
+          FindFingerprint("False","")<br/><br/>
+
+          This example configures the fingerprint class prior to calling find fingerprint.  Only fingerprints
+          associated with the specified class will be matched. This example shows the filter is set just prior to
+          FindFingerprint for illustration.  As long as this action has been called by a prior rule, the configured
+          filter will be in effect for the length of the current profile, or until SetFilterClassName is called
+          again with a different parameter.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level action help topic for more information about fingerprints and this action library.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetFilterPageType" access="public" qi="Sets the Page Type filter for the identification (matching) algorithm.">
+      <p name="PageType" type="string" />
+      <ap>
+        <b>PageType:</b> The Page Type you want to use as the filter.  Smart parameters are supported.<br/>
+      </ap>
+      <lvl>All levels, but generally at the Page level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <h>
+        Sets the Page Type Filter For the identification (matching) algorithm.
+        The filter will force the fingerprint-matching algorithm to use only fingerprints
+        associated with the specified fingerprint type.  This can improve accuracy and
+        performance by limiting the search of fingerprints to smaller subset of fingerprints
+        within the application.<br/><br/>
+
+        A single page type is allowed to have multiple fingerprints.  For example, a page type could
+        be an invoice.  While an invoice will typically always have the same kind of data such as
+        dates, invoice numbers, vendor, shipping information, line item information, etc., the location
+        of the text on the page can be different on invoice from vendor "A" compared to the location
+        of data on an invoice from vendor "B".  The fingerprint will define the location of the data
+        based on the specific fingerprint that was matched.<br/><br/>
+
+        To disable this filter, call with an empty string as the parameter. If this action is not called then
+        this filter is not enabled.<br/><br/>
+
+        Once set, this setting will be in effect for the length of the current task profile, unless it is changed.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure the setting before using subsequent fingerprint actions.<br/><br/>
+        <e>
+          <b>SetFilterPageType("Invoice_Page")</b><br/>
+          FindFingerprint("False","")<br/><br/>
+
+          This example configures the fingerprint class prior to calling find fingerprint.  Only fingerprints
+          associated with the specified class will be matched. This example shows the filter is set just prior to
+          FindFingerprint for illustration.  As long as this action has been called by a prior rule, the configured
+          filter will be in effect for the length of the current profile, or until SetFilterPageType is called
+          again with a different parameter.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level action help topic for more information about fingerprints and this action library.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetFingerprint" access="public" qi="Sets a newly created fingerprint's Fingerprint Class and Fingerprint Class ID values. ">
+      <p name="FingerprintClass" type="string" />
+      <p name="FingerprintID" type="string" />
+      <ap>
+        <b>FingerprintClass:</b> The Fingerprint Class value.<br/>
+
+        <b>FingerprintID:</b> (optional) The Fingerprint ID value. All fingerprints must have a unique ID.
+        If left blank, a unique ID will be assigned automatically. It is recommended to allow the
+        fingerprint ID to be assigned automatically.<br/><br/>
+
+        Smart parameters are supported for all parameters. <br/>
+      </ap>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if either parameter is invalid.  Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        After using the action AddFingerprint to add a new fingerprint to the set of
+        fingerprints for the application, use this action to set the newly created fingerprint's Fingerprint Class
+        and Fingerprint Class ID values.<br/><br/>
+
+        The fingerprint class and ID are added to the Host table of the
+        application's Fingerprint database - as RefName and RefID values.<br/><br/>
+          
+          The combination of the actions AddFingerprint() followed by SetFingerprint() may only be used
+          when the fingerprint service is not enabled.  If the fingerprint service is enabled,
+          and a fingerprint host class ID must also be set for the fingerprint,
+          then you must use the AddAndSetFingerprint() action instead of the combination of 
+          AddFingerprint and SetFingerprint().<br/><br/>
+        <e>
+          AddFingerprint()<br/>
+          <b>SetFingerprint("@P\VendorName","@P\VendorID")</b><br/><br/>
+
+            In this example, smart parameter notation obtains the values at runtime from the field text of the
+            fields VendorName and VendorID and the text values of those fields
+            will populate the Host table of the application's Fingerprint Database.
+            Use this action combination only when the fingerprint
+            service is not enabled. If the fingerprint service is enabled, use AddAndSetFingerprint.<br/>
+        </e>
+      </h>
+        <see>
+            AddAndSetFingerprint
+        </see>
+    </method>
+
+
+    <method name="SetFingerprintDirectory" access="public" qi="Sets the Fingerprint directory of your application.">
+      <p name="Directory" type="string" />
+      <ap>
+        <b>Directory:</b> the path to the directory where the fingerprints (.cco files) are stored for the application. Smart parameters are supported.<br/><br/>
+      </ap>
+      <lvl>All levels.</lvl>
+      <ret>
+        Returns <b>True,</b> if successful.  Otherwise, <b>False</b> and sets the batch to an abort state.
+      </ret>
+      <h>
+        Sets the Fingerprint directory of your application. This directory contains the application's fingerprints.
+        This action must be called prior to creating or finding fingerprints.<br/><br/>
+
+        This action must be called if using local fingerprints or if the fingerprint service is used.
+        When using the application service, call SetFingerprintWebServiceURL prior to this action.<br/><br/>
+
+        This action only needs to be called once within a task profile.  It can be called at any level but is generally
+        called on a batch level object on a batch open event.  If this is placed on a lower level object, it may then
+        be called multiple times, which is unnecessary.  The setting is in effect for the length of the task profile.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure the fingerprint directory before using subsequent fingerprint actions.<br/><br/>
+        <e>
+          <b>SetFingerprintDirectory("C:\ParentDirectory\Application\Fingerprint")</b><br/><br/>
+
+          The action above identifies the location and path of an application's Fingerprint directory.<br/><br/><br/>
+
+          <b>SetFingerprintWebServiceURL(@APPVAR(FPServiceURL)</b><br/>
+          SetFingerprintDirectory(@APPPATH(fingerprint))<br/><br/>
+
+          This example is similar to the previous example. The difference is that the values of the parameters
+          are obtained from the application manager settings using smart parameter notation.  Storing values in the application manager allows
+          a single location to place application settings.  Commonly settings that could be different between
+          production and test systems are stored here.  This allows an application to be deployed without any
+          changes to the rules it would simply be the application manager configuration settings that
+          contain the correct values for the test environment or the production environment.<br/><br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic of this action library for more information about fingerprints.
+      </see>
+    </method>
+
+
+    <method name="SetFingerprintSearchArea" access="public" qi="Controls the portion of the current page that will be used to find a matching fingerprint.">
+      <p name="MatchStart"/>
+      <p name="MatchEnd"/>
+      <ap>
+        <b>MatchStart:</b> A decimal value from 0.01 (1%) to 1.00 (all) to indicate how much of the page is to be matched.
+        If the second parameter is empty the first parameter represents the bottom of the area for matching, starting from the top of the page.
+        If the second parameter is not empty, the first parameter is the top or start of the area for matching.
+        For example, a single parameter of 0.5 indicates that fingerprint matching will be limited to the first half of the page (0 to 50%).
+        Decimal separators must be appropriate for the current locale.
+        In applications which might be used in locales with different decimal separators, use percentage notation.
+        <br/><br/>
+
+        <b>MatchEnd:</b> Optional: A decimal value from 0.01 (1%) to 1.0 (all) to indicate the end point on the page to be
+        used for fingerprint matching.  If this parameter is supplied, the fist parameter is the starting point.
+        For example: if the first parameter is 0.6, and the second parameter is 1.0,
+        the last 40% of the page will be used for fingerprint matching (60-100%).<br/><br/>
+
+        Both parameters allow either a decimal value or a percentage.  The decimal values must match the decimal format for the current locale.
+        To indicate the value is a "Percentage" the action can use a number followed by "p" - 50p, for example - to represent 50%.<br/><br/>
+
+        When using the percentage values, the number must be a whole number, and cannot contain a decimal separator.<br/>
+        Decimal separators must be appropriate for the current locale.
+        In applications which might be used in locales with different decimal separators, use percentage notation.<br/><br/>
+
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        This action uses the numeric value(s) you supply to determine the portion of the current page
+        that will be used to find a matching fingerprint.<br/><br/>
+
+        This setting will be in effect for the length of the task profile that is running the rules.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure the search area before using subsequent fingerprint actions.<br/><br/>
+        <e>
+          <b>SetFingerprintSearchArea("0.5","")</b><br/><br/>
+
+          The example above compares lines and words in the upper 50% of the current page to the lines and
+          words in the same portion of each fingerprint.  Notice the second parameter has been left blank.<br/><br/>
+
+          <b>SetFingerprintSearchArea("0.5","1.0")</b><br/><br/>
+
+          This example compares lines and words in the lower 50% of the current page to the lines and
+          words in the same portion of each fingerprint. Remember: you can replace a parameter's decimal
+          value with a percentage(p) or metric(m) number.
+        </e>
+      </h>
+      <lvl>All levels, but generally at the Page level.</lvl>
+      <ret>
+        <b>False</b> if the first parameter is missing or is not numeric. Also returns <b>False</b>
+        if the second parameter is not numeric.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for more information regarding fingerprints and this action library.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetFingerprintWebServiceApplicationID" access="public" qi="Use this action to specify unique application ID.">
+      <p name="ApplicationID"/>
+      <ap>
+        <b>ApplicationID:</b> A unique Application ID.  This value used to retrieve correct list of fingerprints loaded to the server.<br/>
+        Smart parameters are supported.<br/>
+      </ap>
+      <lvl>Batch, Document, or Page levels.</lvl>
+      <ret>
+        <b>False</b> if action SetFingerprintWebServiceURL() has not been called.  Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        By specifying an application ID, it will cause the fingerprint service to segregate the fingerprints
+        from this calling application from other applications.  This will prevent fingerprints from another
+        application being matched with images from this application.  It will also limit the fingerprint
+        matching to the fingerprints within this application only.<br/><br/>
+
+        Unless there is a specific need to match fingerprints across different applications, then
+        each application that uses the fingerprint service should use its own unique application ID
+        to separate its fingerprints and fingerprint matching from other applications.<br/><br/>
+
+        Once this action is called, it remains in effect for the life of the current task profile.
+        It is typically called on a batch open event and does not need to be called over and
+        over on each page when FindFingerprint or other fingerprint actions are called.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure the application ID before using subsequent fingerprint actions.<br/><br/>
+
+        If this action is not called, then the default application name "datacap.ccodb" will
+        be used. To configure the use of an application name, this action must be called
+        immediately before or immediately after SetFingerprintWebServiceURL.<br/><br/>
+        <e>
+          SetFingerprintWebServiceURL("http://'FPSERVERNAME'/fpservice/Service.asmx?WSDL")<br/>
+          <b>SetFingerprintWebServiceApplicationID("1040ez")</b><br/><br/>
+
+          This example enables the application service by setting the URL, causing subsequent actions
+          to be handled by the fingerprint service.  The action SetFingerprintWebServiceApplicationID
+          configures all of the subsequent operations from this application to be processed using
+          the application ID "1040ez".<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for more information regarding fingerprints and the fingerprint service.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetFingerprintWebServiceFailureThreshold" access="public" qi="Uses this action to specify percentage of fingerprint upload failures to ignore.">
+      <p name="IgnorePercent"/>
+      <ap>
+        <b>IgnorePercent:</b> An integer that represents percent threshold of fingerprint upload failures to ignore.
+        The batch will abort if the percentage of fingerprints that are failed to load exceeds this value.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <lvl>Batch, Document, or Page levels.</lvl>
+      <ret>
+        Returns <b>False</b> when:<br/>
+        The fingerprint service is not configured using action SetFingerprintWebServiceURL().<br/>
+
+        Returns <b>False</b> and aborts the batch when:<br/>
+        The input parameter is not an integer value from 0 to 100.<br/>
+        If the percentage of fingerprints that failed to load is greater than the threshold.<br/>
+        If no fingerprints have been loaded and at least one has failed to load.<br/><br/>
+
+        Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        Uses this action to set the maximum number of fingerprint upload failures to ignore.
+        If the application has been set using the action SetFingerprintWebServiceApplicationID, then the threshold
+        will be set for that specific application only.<br/><br/>
+
+        This action is only used with the fingerprint service and SetFingerprintWebServiceURL must
+        be called prior to this action.<br/><br/>
+
+        If some fingerprints are not able to be loaded, that may or may not be a problem, depending
+        on the application.  This action will configure the threshold that will determine if too many missing
+        fingerprints needs to be considered an error.  Once this threshold is reached, it will likely cause
+        all subsequent batches to fail as the fingerprint service will be considered to be non-operational
+        until the fingerprint issue is resolved.<br/><br/>
+
+        The fingerprint service will load fingerprints only when an action that requires searching
+        of fingerprints is called, such as FindFingerprint or FindBlackFingerprint.
+        If the fingerprint service has not previously been called by an earlier batch using  the
+        same application ID, or if the current batch has not yet called an action that loads
+        the fingerprints for the specified application, then the service will report that no
+        fingerprints have been loaded and this action will still return true.<br/><br/>
+
+        This action typically only needs to be called once per batch.  Calling it multiple times
+        is allowed but is unnecessary and will take some amount of processing time.  Configure your rules
+        so this action is called once after the fingerprints are loaded and not so it is called
+        over and over within a single batch.  The setting will exist for the length of the
+        current task profile that is running rules.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure this setting again before using subsequent fingerprint actions.<br/><br/>
+        <e>
+          <b>SetFingerprintWebServiceURL("http://127.0.0.1/fpservice/Service.asmx?WSDL")</b><br/>
+          SetFingerprintDirectory(@APPPATH(fingerprint))<br/>
+          FindFingerprint("False","")<br/>
+          <b>SetFingerprintFailureThreshold("10")</b><br/><br/>
+
+            This example enables the use of the fingerprint service by configuring the URL for the service,
+            configures the fingerprint directory for the application, finds the fingerprint
+            for the current page and then checks to see if the number of failed fingerprints
+            exceeds the allowed percentage.  If it does exceed the maximum, the action returns
+            false and the batch will be set to abort.<br/><br/>
+        </e>
+      </h>
+    </method>
+
+
+    <method name="SetFingerprintWebServiceURL" access="public" qi="Provides the Uniform Resource Locator (URL) that is a link to a pre-established Fingerprint Service.">
+      <p name="URL"/>
+      <ap>
+        <b>URL:</b> The URL that is the link to the Fingerprint Web Service. Smart parameters are supported.
+      </ap>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <h>
+        This action configures the URL for the fingerprint service.  If using the fingerprint service, this action must
+        be called prior to an action that communicates with the service, such as FindFingerprint and FindBlackFingerprint.
+        Once connected, then the fingerprint service will be used for all subsequent calls.  The action SetFingerprintDirectory
+        must also be configured prior to using the fingerprint service.  When using the fingerprint service,
+        SetFingerprintWebService should be called within the task profile from this action library.<br/><br/>
+
+        This action will use fingerprint web service if fingerprint web URL is set by SetFingerprintWebServiceURL and if the
+        service is available. If the fingerprint web service is not available, then it will default to local fingerprint service.<br/><br/>>
+
+        This action should not be called if the application is using "local" fingerprints only.  The top-level help topic
+        for this action provides more information about the fingerprint service and the situations where the fingerprint
+        service should be used instead of local fingerprints.  The fingerprint service must be configured and running
+        prior to running an application that uses the service.<br/><br/>
+
+        This action only needs to be called once within a task profile.  It can be called at any level but is generally
+        called on a batch level object on a batch open event.  If this is placed on a lower level object, it may then
+        be called multiple times, which is unnecessary.  The setting is in effect for the length of the task profile.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure the fingerprint service URL before using subsequent fingerprint actions.<br/><br/>
+        <br/>
+        <br/>
+        <e>
+          <b>SetFingerprintWebServiceApplicationID("MyApplication")</b><br/>
+          <b>SetFingerprintWebServiceURL("http://'FPSERVERNAME'/fpservice/Service.asmx?WSDL")</b><br/>
+          SetFingerprintDirectory("\ParentDirectory\Application\Fingerprint")<br/><br/>
+
+          This example sets the application name for the fingerprint service and then configures
+          the web service URL and also sets the fingerprint directory. This example
+          would typically be called on a batch level object.<br/><br/><br/>
+
+
+          <b>SetFingerprintWebServiceURL(@APPVAR(FPServiceURL)</b><br/>
+          SetFingerprintDirectory(@APPPATH(fingerprint))<br/><br/>
+
+          This example is similar to the previous example. The difference is that the values of the parameters
+          are obtained from the application manager settings using smart parameter notation.  Storing values in the application manager allows
+          a single location to place application settings.  Commonly settings that could be different between
+          production and test systems are stored here.  This allows an application to be deployed without any
+          changes to the rules it would simply be the application manager configuration settings that
+          contain the correct values for the test environment or the production environment.<br/><br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic of this action library for more information about fingerprints and the fingerprint service.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetMaximumMatchingOffset" access="public" qi="Sets the Maximum Offset value while matching source pages to fingerprints.">
+      <p name="MaximumOffset"/>
+      <ap>
+        <b>MaximumOffset:</b> Integer value between 1 and 255. Smart parameters are supported.
+      </ap>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>False</b> if the parameter is invalid.  Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        Sets the Maximum Offset value while matching source pages to fingerprints.
+        The actual shift is four times the maximum offset value in pixels (4 * MaxOffset).
+        Increasing this value improves but slows the matching process.<br/><br/>
+
+        If this action is not called, the default value is 6: 4 * 6 = 24 pixels.<br/><br/>
+
+        This action has no effect when used with the Fingerprint Service<br/><br/>
+
+        Once set, this setting will be in effect for the length of the current task profile.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure the setting before using subsequent fingerprint actions.<br/><br/>
+        <e>
+          <b>SetMaximumMatchingOffset("12")</b><br/><br/>
+
+          This example results in a Maximum Offset value of 48 pixels, well above the 24 pixel default.
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for more information about fingerprints.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetMinimumMatchingTolerance" access="public" qi="Uses the decimal value you supply as a parameter to set a minimum Matching Tolerance Rating.">
+      <p name="Minimum" qi="The minimum matching tolerance level."/>
+      <ap>
+        <b>Minimum:</b> A decimal value from 0.00 (Lowest Tolerance) to 0.99 (Highest Tolerance).
+        The decimal separator must be appropriate for the locale. Smart parameters are supported.<br/>
+      </ap>
+      <lvl>All, but generally at the Page level.</lvl>
+      <ret>
+        <b>False</b> if the parameter is missing or the parameter is not numeric. Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        This action sets the minimum confidence matching tolerance rating to determine if a fingerprint is a match.
+        If none of the existing fingerprints match with the specified tolerance or greater, then it is
+        considered that none of the existing fingerprints correctly match the
+        fingerprint for the current page.<br/><br/>
+
+        A non-matching fingerprint is not necessarily an error.  For some applications, all of the expected types
+        of pages are known. Maybe there are 10 known page types or perhaps there are 10,000 known page types, but they
+        are all known when the application goes into production so it is expected that the FindFingerprint action
+        should match one of the predetermined fingerprints.  If it does not match, then the page may have been
+        ingested as an error, or perhaps needs other handling to be correctly processed.<br/><br/>
+
+        For other applications, such as APT, they may be deployed with a set of known fingerprints, but can also
+        learn new fingerprints as the application is used.  For example, a new vendor starts sending a new kind
+        of document. Fingerprint matching would also fail in that case, however, for APT, it would cause
+        alternate processing which will define the fingerprint at runtime during the course of processing the
+        new document.  Once the document has been fully processed, a new fingerprint will be generated, allowing
+        a successful fingerprint match the next time that new page format is ingested.<br/><br/>
+
+        A lower tolerance rating will allow greater chance for a match of a fingerprint, but also a greater chance for a <b>False</b> match.
+        It is recommended to adjust the tolerance against the set of fingerprints for an application to allow for poor quality documents
+        to successfully match the fingerprint, but not so low that fingerprints match incorrectly.<br/><br/>
+
+        Once set, this setting will be in effect for the length of the current task profile.
+        If fingerprint actions are used again in a later task profile, then this action must be called again
+        to configure the setting before using subsequent fingerprint actions.<br/><br/>
+        <e>
+          AnalyzeImage()<br/>
+          RotateImage()<br/>
+          RecognizePageOCR_S()<br/>
+          SetSearchArea("0.0","0.5")<br/>
+          <b>SetMinimumMatchingTolerance("0.70")</b><br/>
+          FindFingerprint("True","")<br/><br/>
+
+          In this sequence, the fingerprint is created for the current page to create the CCO and the recognition results are also
+          placed into the CCO.  The search area is configured to the top 50% of the page and the matching tolerance is set to ".7".
+          The FindFingerprint action then attempts to match the fingerprint for the current page to the existing set
+          of fingerprints.  If a fingerprint does not match the minimum tolerance, then the fingerprint for the
+          new page is added to the set of existing fingerprints.<br/><br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for more information about fingerprints.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetPageFingerprintID" access="public" bInter="bInter" bDebug="bDebug" strParam="StrParam" qi="Assigns a value to the FingerprintID property of the selected Page object of the Document Hierarchy.">
+      <p name="FingerprintID" qi="The fingerprint ID to associate with the page."/>
+      <ap>
+        <b>FingerprintID:</b> The fingerprint ID, sometimes called the template ID, to assign to this page.<br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Assigns a value to the FingerprintID property of the selected Page object of the Document Hierarchy.
+        This links a specific fingerprint template ID with the page.  The fingerprint template identifies the
+        zone locations for each field within the page, associating an area of the image to
+        the location of the text represented by the field.<br/><br/>
+
+        Typically fingerprint templates are automatically assigned with the action FindFingerprint which will
+        automatically identify the fingerprint template that matches the document.  However,
+        there are times when alternate techniques can be used to match a page to a specific fingerprint
+        template.  This action assigns a specific fingerprint template ID to the page.<br/><br/>
+
+        A common use for this action is to first determine what it is about that page that
+        determines which fingerprint should be associated with the page. One typical mechanism is
+        determining the fingerprint by some unique text on the page. Other methods are possible
+        such as the name of the source file or other attributes that can be detected about the page.<br/><br/>
+
+        Once the use case is understood, then rules can be written to determine which fingerprint
+        template ID should be assigned.  Once determined by the rules, then this action can be
+        used to assign a specific fingerprint template ID to the page.  Once assigned, then
+        the zones can be loaded to assign the position locations to the page's fields.<br/><br/>
+
+        The <b>SetPageFingerprintID</b> action
+        will create a fingerprint ID property/variable "TemplateID" of the
+        current Page object if it does not already exist.<br/><br/>
+
+        This action is functionally equivalent to the following generic action:<br/>
+        rrSet("1010","@X.TemplateID")<br/>
+        However, using SetPageFingerprintID can add additional context to the intention
+        of setting the fingerprint.<br/><br/>
+        <e>
+          RecognizePageOCR_A()<br/>
+          WordFind("MQSW")<br/>
+          <b>SetPageFingerprintID("1010")</b><br/><br/>
+
+          In this sequence, the page is recognized then the recognized text
+          is searched to see if it contains "MQSQ", which is an example of some
+          kind of unique text that identifies the page.
+          If the WordFind action locates "MQSW" on the current page,
+          the SetPageFingerprintID action assigns "1010" as the page's
+          Fingerprint ID. This links the page to a fingerprint with a Fingerprint ID of "1010"
+          as was setup in the Zones tab of Datacap Studio.<br/>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True</b> if the rule is applied at the Page level.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        FindFingerprint, ReadZones, ReadZonesFPX<br/>
+        Refer to the top-level help topic for more information about fingerprints.
+      </see>
+    </method>
+
+
+    <method name="UpdateFingerprintStatistics" access="public" qi="Updates the Fingerprint hit statistics.">
+      <ap>
+        None.
+      </ap>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>False</b> if called from any level other than Page level, or the Fingerprint database is not accessible.  Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        Fingerprint information is stored in the Fingerprint Database.  One piece of information is a count
+        of the number of times a fingerprint is matched.  This information can be useful for in
+        some instances. Use this action to increment the count for the current page and update the fingerprint statistics
+        in the fingerprint database.<br/><br/>
+        <e>
+          FindFingerprint("False","")<br/>
+          <b>UpdateFingerprintStatistics()</b><br/><br/>
+
+          This example calls UpdateFingerprintStatistics after matching the fingerprint to increment the count for the
+          number of times the specific fingerprint associated with the current page is matched.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for more information about fingerprints.<br/>
+      </see>
+    </method>
+
+
+      <method name="XMLReadZones" qi="Loads position information for current fingerprint.">
+          <ap>None.</ap>
+          <h>
+              This action reads the field zone information from the fingerprint XML file associated with the fingerprint for
+              the current page object and sets the zone coordinates for the fields from the zoned fingerprint.               
+              This action is similar to the ReadZones action in the ZonesAndLineItems library.
+              The primary difference is that ReadZones reads the zone information stored in the setup DCO from legacy
+              fingerprints and XMLReadZones
+              reads the zone information from the associated fingerprint XML file.
+              Typically this action will be called after the CreateFields action but before field recognition.<br/><br/>
+
+              XMLReadZones loads position information for each field in the calling object and it's children. If available, it adjusts
+              these values based on offset information stored in the 'Image_Offset' variable at any node level.
+              The offset value is applied to all child objects of a node where an 'Image_Offset' variable is found;
+              unless overwritten by a child node also having an Image_Offset value to apply.<br/><br/>
+
+              Position information is based on the Fingerprint XML position for the parent page's fingerprint ID.<br/><br/>
+
+              If 'Enable FPXML' setting is checked in the application settings 'Main' tab within the Taskmaster Application Manager,
+              when zoning fingerprints Datacap Studio will place field zone information into a fingerprint XML file instead of placing the zone
+              information into the applications setup DCO.  One XML file is created per fingerprint.
+              Depending on application needs, using fingerprint XML files may have
+              advantages over legacy fingerprints.  
+              If the application is using fingerprint XML files, then use this action to load the zones instead of the ReadZones action.
+              <br/><br/>
+              <e>
+                  SetFingerprintDirectory("@APPPATH(*/fingerprint)") <br/>
+                  <b>XMLReadZones()</b>
+              </e>
+          </h>
+          <lvl>Page or Field level.</lvl>
+          <ret>
+              <b>False,</b> if the fingerprint xml cannot be loaded or if SetFingerprintDirectory has not
+              been called to set the location of the fingerprint XML files. Otherwise, <b>True.</b>
+          </ret>
+          <see>
+              The top-level help of this action library contains an explanation of XML fingerprints.
+          </see>
+      </method>
+
+      <method name="XMLSetDetailsAndLineitemPair" qi="Sets the type of the special Details and Lineitem fields.">
+          <p name="DetailFieldType" qi="The type for the current page's detail field, if one exists."/>
+          <p name="LineitemFieldType" qi="The type for the current page's line item field, if one exists."/>
+          <ap>
+              Two comma separated parameters:<br/><br/>
+
+              <b>Detail field type:</b> type of the field that is the parent to the line item field, often called "Details". <br/><br/>
+              <b>LineItem field type:</b> type of the line item field which is the parent of the fields to be captured, often called "Lineitem".<br/><br/>
+
+              Smart parameters are supported for all parameters.
+          </ap>
+          <h>
+              Use this action if your page contains "Details" and "Lineitems" fields.
+              The action sets the type of the special Details and Lineitem fields. These fields, unlike other field types,
+              are handled by the XMLReadZones and XMLWriteZones actions in a special way that is compatible
+              with the Locate actions framework.<br/><br/>
+
+              If your page has Details and Lineitems, then this action is required to identify the types
+              so the position information will be properly saved.
+              Using SetDetailsAndLineitemPairFPX prior to calling XMLWriteZones will cause XMLWriteZones to save line
+              item field positions to the fingerprint file. The second parameter is the type of the line item
+              field which is the parent of the fields to be captured and is often called "Lineitem".<br/><br/>
+
+              If your page contains Detail and Lineitem fields, this action also needs to be used prior
+              to calling XMLReadZones.<br/><br/>
+
+              Details are the parent object of the line item fields.  Details are a collection of lineitems
+              and each line item has a collection of fields.  For example, in a typical invoice
+              application a single lineitem can contain the fields: quantity, item number, description, unit price, and total.<br/><br/>
+              
+              This setting will stay in effect until the current task profile completes.<br/><br/>
+              <e>
+                  <b>XMLSetDetailsAndLineitemPair("Details","Lineitem")</b><br/>
+                  XMLReadZones()<br/><br/>
+
+                  In this example, the details field is called "Details" and the line items are called "Lineitem".<br/><br/><br/>
+
+                  An example DCO hierarchy may look something like this:<br/>
+                  - Details<br/>
+                  --- Lineitem<br/>
+                  ------- Qty<br/>
+                  ------- ItemID<br/>
+                  ------- ItemDesc<br/>
+                  ------- Price<br/>
+                  ------- LineTotal<br/>
+              </e>
+          </h>
+          <lvl>Any level.</lvl>
+          <ret>
+              <b>True.</b>
+          </ret>
+          <see>
+              The top-level help of this action library contains an explanation of XML fingerprints.
+          </see>
+      </method>
+
+      <method name="XMLWriteZones"  qi="Writes position information for all fields of the page.">
+          <p name="FingerprintHostName" qi="Target fingerprint class name."/>
+          <p name="FingerprintHostID" qi="Target fingerprint host ID."/>
+          <p name="FingerprintPageType" qi="Target fingerprint page type."/>
+          <ap>
+              <b>Fingerprint host name:</b> This is the fingerprint class name and can be seen in the zones tab of Datacap Studio.
+              It is used to group or classify fingerprints.
+              If this value is not provided, then a blank class name will be used.<br/><br/>
+
+              <b>Fingerprint host id:</b> This is an internal numeric value that is associated with the fingerprint class name.
+              If a value is not provided, a blank value will be used.<br/><br/>
+
+              <b>Fingerprint page type:</b> This is the page type that corresponds to the fingerprint for the page.
+              If this value is not provided, it uses the page type of the current page.<br/><br/>
+
+              Smart parameters are supported for all parameters.  All parameters are optional.<br/>  
+          </ap>
+          <h>
+              This action will write out all of the field positions for the current page to the fingerprint XML file.
+              Typically this action is used for applications that are using fingerprint XML files and new pages
+              are dynamically zoned at runtime.  After the zoning of the page has been completed, then this action
+              is used to write out the zone information to the FPXML file, allowing subsequent pages of this
+              type to be processed using the saved zone information.  If pages are not being zoned by a verify operator
+              at runtime, then it is not necessary to use this action.<br/><br/>
+
+              If the fingerprint directory that had been previously specified using SetFingerprintDirectory does not exist, it will be created,
+              providing that the parent directory already exists.<br/><br/>
+
+              Fields with empty positions are not written to the fingerprint XML file.<br/><br/>
+              <e>
+                  SetFingerprintDirectory("@APPPATH(*/fingerprint)")<br/>
+                  <b>XMLWriteZones("MyFPClass,,MyPageType")</b><br/><br/>
+
+                  This example writes out the zones for the current page and sets the fingerprint class to "MyFPClass" and
+                  the page type to "MyPageType".<br/><br/>
+
+                  SetFingerprintDirectory("@APPPATH(*/fingerprint)")<br/>
+                  <b>XMLWriteZones("MyFPClass,,@P.MyType")</b><br/><br/>
+
+                  This example writes out the zones for the current page and sets the fingerprint class to "MyFPClass" and
+                  the page type to the value contained by the page variable "MyType".<br/><br/>
+              </e>
+          </h>
+          <lvl>Page level only.</lvl>
+          <ret>
+              <b>False,</b> if there is a problem saving to fingerprint XML file or if not called at the page level,
+              if the page does not have a fingerprint assigned, or a fingerprint directory has not been set. Otherwise <b>True.</b>
+          </ret>
+          <see>
+              The top-level help of this action library contains an explanation of XML fingerprints.
+          </see>
+      </method>
+
+  </com>
+</rrx>

@@ -1,0 +1,73 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="ICM" v="8.1.0.8">
+  <g>
+    <![CDATA[
+'**************************************************************************************************
+'IBM Content Classification Actions
+
+' Licensed Materials - Property of IBM
+' "Restricted Materials of IBM"
+' 5725-C15 5725-C69
+'
+' © Copyright IBM Corp. 1994, 2011 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+
+'Version = "8.1.0.0" 
+' Updated 05/05/2011 JMartinez
+' * 31996 - Initial implementation.
+
+'Version = "8.1.0.1" 
+' Updated 05/17/2011 JMartinez
+' * 31996 - Updated help text for actions UpdateKnowledgebaseICM and SetKnowledgeBaseNameICM.
+
+'Version = "8.1.0.2" 
+' Updated 08/09/2011 JMartinez
+' * 31996 - Added action SetMaxConnectionsICM.
+
+'Version = "8.1.0.3"
+' Updated 08/16/2011 JMartinez
+' * 31996 - Removed action SetMaxConnectionsICM as it is no longer relevant with the change to Datacap.Libraries.CC.dll v8.1.0.6
+'         - Added action SetLanguageICM to specify the language used in the working knowledge base.
+
+'Version = "8.1.0.4"
+' Updated 09/01/2011 CMcGhee
+' * 32902 - Updated help text:  fixed typos and grammar, changed name from InfoSphere 
+'to IBM Classification Module
+
+'Version = "8.1.0.5"
+' Updated 09/07/2011 JMartinez
+' * 32902 Re-added action SetMaxConnectionsICM as is required for multi-threaded processing in Datacap.Libraries.CC.dll v8.1.0.7
+'         Updated help text for the FindFingerprintICM action 
+
+'Version = "8.1.0.6"
+' Updated 09/08/2011 JMartinez
+' * 31996 - Removed action SetMaxConnectionsICM as it is no longer relevant with the change to Datacap.Libraries.CC.dll v8.1.0.8
+
+'Version = "8.1.0.7"
+' Updated 03/05/2012 JMartinez
+' Updated help for actions to state that they have been replaced by actions in CC.rrx library.
+
+'Version ="8.1.0.8"
+'Updated 03/07/2012 JMartinez
+'Changed Datacap.Libraries.ICM.Actions namespace to Datacap.Libraries.CC.Actions
+'**************************************************************************************************
+    ]]>
+</g>
+  <com ref="Datacap.Libraries.CC.Actions"  qi="IBM Content Classification Actions. This action library has been replaced by CC.rrx.">
+    <method name="FindFingerprintICM" qi="This action has been replaced by FindFingerprintCC in CC.rrx.">
+    </method>
+    <method name="SetKnowledgeBaseICM" qi="This action has been replaced by SetKnowledgeBaseCC in CC.rrx.">
+    </method>
+    <method name="SetProblemValueICM" qi="This action has been replaced by SetProblemValueCC in CC.rrx.">
+    </method>
+    <method name="SetLanguageICM" qi="This action has been replaced by SetLanguageCC in CC.rrx.">
+    </method>
+    <method name="SetListenerURLICM" qi="This action has been replaced by SetListenerURLCC in CC.rrx">
+    </method>
+    <method name="UpdateKnowledgeBaseICM" qi="This action has been replaced by UpdateKnowledgeBaseCC in CC.rrx.">
+    </method>
+  </com>
+</rrx>

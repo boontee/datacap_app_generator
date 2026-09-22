@@ -1,0 +1,267 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="Email.MSGraph" v="9.1.9.2">
+	<com ref="Datacap.Libraries.Email.MSGraph.Actions"  qi="Email.MSGraph action library">
+		<h>
+			The Email action library using the Microsoft Graph API.<br/><br/>
+
+      This action library allows creation of an email at runtime, with optional attachments.
+      The emails will be sent using a Microsoft Office 365 account.
+      The email recipient, subject and body can be set at runtime.
+      If attachments are added to the email, they have total size limit of 3 MB.<br/><br/>
+      
+      The actions in this action library must be used together and cannot be mixed with other
+      email action libraries.<br/><br/>
+		</h>
+
+		<method name="ms_login" qi="Login to Office 365 using the Microsoft Graph API.">
+			<p name="clientId" type="string" />
+			<p name="tenantId" type="string" />
+			<p name="username" type="string" />
+			<p name="password" type="string" />
+			<ap>
+				clientId : Application (client) ID from Azure Active Directory - App registrations.<br/>
+				tenantId : Directory (tenant) ID from Azure Active Directory - App registrations.<br/>
+				username : Username of Office 365 account.<br/>
+				password : Password of Office 365 account.<br/><br/>
+
+				Smart parameters are supported for all parameters.<br/><br/>
+
+				The parameters (clientId, tenantId, username, password) can be encrypted by storing them in the Advanced section of the Custom tab in the Application Manager.<br/><br/>
+        
+				To retrieve parameters that is stored in the Advanced section,
+				use a smart parameter for the action's parameters similar to
+				@APPVAR(values/adv/password) where password is the name entered for the value in the Application Manager.
+			</ap>
+			<h>
+        This action will login to the Office 365 mail service, allowing emails to be sent from Datacap at runtime. 
+        Once logged in, the other actions in this email library can be used to create an email to send.
+        The action uses a username and password to login to the mail system.  
+        If a client API key is required for login, then see the action ms_login_ClientSecret.<br/><br/>
+        
+				To use the authentication service provided by Azure Active Directory to enable Microsoft Graph, you will need to:<br/><br/>
+        
+				1) Register the application with Azure Active Directory.<br/>
+				2) For Authentication, under "Advanced settings", set "Yes" to "Allow public client flows."<br/>
+				3) For API permissions, under "Request API permissions", click "Microsoft Graph", choose "Delegated", add "User.Read" and "Mail.Send", and Grant admin consent.
+				<br/><br/>
+				<e>
+					<b>ms_login("00000000-0000-0000-0000-000000000000", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "user@organization.com", "@APPVAR(values/adv/password)")</b><br/>
+					ms_SetMessage("touser@organization.com","ccuser@organization.com","bccuser@organization.com","Document Integrity","Document Page Types and counts are accurate. Thanks for your help.")<br/>
+					ms_SendMail()<br/>
+					ms_logout()<br/><br/>
+
+					If more than one logins (ms_login or ms_login_ClientSecret) are used, second action will be ignored unless authentication fails/expires or ms_logout() was used before the second action to disconnect.
+				</e>
+			</h>
+			<lvl>All levels.</lvl>
+			<ret>
+				<b>True,</b> if the login succeeds.  Otherwise, <b>False.</b>
+			</ret>
+      <see>
+        ms_login_ClientSecret to login using an API key.<br/><br/>
+        Refer to the top level help topic in the RuleRunnerLogic action library for the complete smart parameter reference.<br/>
+      </see>
+		</method>
+
+		<method name="ms_login_ClientSecret" qi="Login to Office 365 with a Client Secret using the Microsoft Graph API.">
+			<p name="clientId" type="string" />
+			<p name="tenantId" type="string" />
+			<p name="clientSecret" type="string" />
+			<p name="impersonatedUserId" type="string" />
+			<ap>
+				clientId : Application (client) ID from Azure Active Directory - App registrations.<br/>
+				tenantId : Directory (tenant) ID from Azure Active Directory - App registrations.<br/>
+				clientSecret : Client Secret from Azure Active Directory - App registrations.<br/>
+				impersonatedUserId : User ID of Office 365 account to impersonate.<br/><br/>
+
+				Smart parameters are supported for all parameters.<br/><br/>
+
+				Parameters (clientId, tenantId, clientSecret, impersonatedUserId) can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.<br/><br/>
+        
+				To retrieve parameters that is stored in the Advanced section,
+				use a smart parameter for the action's parameters similar to
+				@APPVAR(values/adv/clientSecret) where clientSecret is the name entered for the value in the Application Manager.
+			</ap>
+			<h>
+        This action will login to the Office 365 mail service, allowing emails to be sent from Datacap at runtime.
+        Once logged in, the other actions in this email library can be used to create an email to send.
+        The action uses a "client secret" API key to login to the mail system. Alternatively,
+        the action ms_login can be used to login to the mail service using a username and password.<br/><br/>
+        
+				To use the authentication service provided by Azure Active Directory to enable Microsoft Graph, you will need to:<br/>
+				1) Register the application with Azure Active Directory.<br/>
+				2) For Certificates &amp; secrets, under "Client secrets", click "New client secret" to "Add" and get "Value."<br/>
+				3) For API permissions, under "Request API permissions", click "Microsoft Graph", choose "Application", add "User.Read.All" and "Mail.Send", and Grant admin consent.
+				<br/><br/>
+				<e>
+					<b>ms_login_ClientSecret("00000000-0000-0000-0000-000000000000", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "@APPVAR(values/adv/clientSecret)", "user@organization.com")</b><br/>
+					ms_SetMessage("touser@organization.com", "ccuser@organization.com", "bccuser@organization.com","Document Integrity", "Document Page Types and counts are accurate. Thanks for your help.")<br/>
+					ms_SendMail()<br/>
+					ms_logout()<br/><br/>
+
+					If more than one logins (ms_login or ms_login_ClientSecret) are used, second action will be ignored unless authentication fails/expires or ex_logout() was used before the second action to disconnect.
+				</e>
+			</h>
+			<lvl>All levels.</lvl>
+			<ret>
+				<b>True,</b> if the login succeeds.  Otherwise, <b>False.</b>
+			</ret>
+      <see>
+        ms_login to login using a username and password.<br/><br/>
+        Refer to the top level help topic in the RuleRunnerLogic action library for the complete smart parameter reference.<br/>
+      </see>
+		</method>
+
+		<method name="ms_SetMessage" qi="Set Message using the Microsoft Graph API.">
+			<p name="to" type="string" />
+			<p name="cc" type="string" />
+			<p name="bcc" type="string" />
+			<p name="subject" type="string" />
+			<p name="body" type="string" />
+			<ap>
+				to : The To: recipients for the message.<br/>
+				cc : The Cc: recipients for the message.<br/>
+				bcc : The Bcc: recipients for the message.<br/>
+				subject : The subject of the message.<br/>
+				body : The body of the message.<br/><br/>
+
+        Multiple email recipients can be specified by separating email addresses with a comma.
+        Smart parameters are supported for all parameters.
+      </ap>
+			<h>
+        This action creates email message to be sent at runtime. The recipients, subject and body are created for the email using the action's parameters.
+        <br/><br/>
+				<e>
+					<b>ms_SetMessage("touser@organization.com", "ccuser@organization.com", "bccuser@organization.com", "Document Integrity", "Document Page Types and counts are accurate. Thanks for your help.")</b><br/>
+					ms_SendMail()<br/><br/>
+
+          The above example creates an email using static text for the recipients, subject and email body.<br/><br/>          
+
+          <b>ms_SetMessage("touser@organization.com", "ccuser1@organization.com,ccuser2@organization.com", "", "@P\SubjectField", "This was run in batch +@BATCHID+ and the page total is: +@P\TotalField")</b><br/>
+          ms_SetAttachment("@PILOT(BATCHDIR)+\+@ID+.tif")<br/>
+          ms_SendMail()<br/><br/>
+          
+          In this example, it is assume that the actions are running on a page level object.  The email's subject is created using the text contents of the field "SubjectField", off of the current page.
+          The email subject is created using a mix of static and dynamic text. The current batch ID is placed into the email as well as the
+          text value from the field called "TotalField".  The TIF for the current page is attached and then the email is sent.<br/><br/>
+
+				</e>
+			</h>
+			<lvl>All levels.</lvl>
+			<ret>
+				<b>False</b> if the mail object cannot be initialized.  Otherwise, <b>True.</b>
+			</ret>
+      <see>
+        ms_SetAttachment.
+      </see>
+		</method>
+
+		<method name="ms_SetAttachment" qi="Set Attachment using the Microsoft Graph API.">
+			<p name="path" type="string" />
+			<ap>
+				path : The file’s path, name and extension.<br/><br/>
+
+				Smart parameters are supported.
+			</ap>
+			<h>
+				Attaches the specified file to the current email created by the action ms_SetMessage.<br/><br/>
+
+				ms_SetAttachment can be called multiple times to attach multiple files to an email before the action ms_SendMail. 
+        The Microsoft Graph mail API limits the total number of attachments that can be added to less than 3 MB.<br/><br/>
+				<e>
+					ms_SetMessage("touser@organization.com", "ccuser@organization.com", "bccuser@organization.com", "Document Integrity", "Document Page Types and counts are accurate. Thanks for your help.")<br/>
+					<b>ms_SetAttachment("h:+\+MyDir+\+MQSW+\+export+\+@BATCHID+.txt")</b><br/>
+					ms_SendMail()<br/><br/>
+
+					This example attaches the Export file of the current batch to the email.  It looks for a text file named using the current batch ID.
+          It would be expected that some previous step has created this text file using the current batch ID.<br/><br/>
+
+          <b>ms_SetAttachment("@PILOT(BATCHDIR)+\+@ID+.txt")</b><br/><br/>
+
+          In this example, it is assumed that the action is called on a page object and it will attach a text file that is associated
+          with the current page. It is assume a previous step created a text file for the page.<br/><br/>
+				</e>
+			</h>
+			<lvl>All levels.</lvl>
+			<ret>
+				<b>False</b> if the file does not exist or cannot be attached. Otherwise, <b>True.</b>
+			</ret>
+      <see>
+        ms_SetMessage.
+      </see>
+		</method>
+
+		<method name="ms_SendMail" qi="Send Mail using the Microsoft Graph API.">
+			<ap>None.</ap>
+			<h>
+				Sends an email assembled by previous actions from this action library using ms_SetMessage and ms_SetAttachment.
+        Once an email is complete, use ms_SendMail to send the new message. After ms_SendMail
+        is called, another email can be generated using ms_SetMessage, if necessary.<br/><br/>
+
+				After sending, this action will discard the contents of the email in memory.  Calls to the email actions
+				after ms_SendMail() will cause the creation of a new email message.
+				<br/><br/>
+				<e>
+					ms_SetMessage("touser@organization.com", "ccuser@organization.com", "bccuser@organization.com", "Document Integrity", "Document Page Types and counts are accurate. Thanks for your help.")<br/>
+					<b>ms_SendMail()</b><br/><br/>
+          
+          The above example shows the combination of actions to create an email and send it. If multiple emails
+          are to be created, ms_SendMail must be called to completed the email before calling ms_SetMessage again.<br/><br/>
+
+          ms_SetMessage("touser@organization.com", "ccuser@organization.com", "", "Email for batch: +@BATCHID","Here is the text file for page +@ID")<br/>
+          ms_SetAttachment("@PILOT(BATCHDIR)+\+@ID+.txt")<br/>
+          <b>ms_SendMail()</b><br/><br/>
+          
+          This example is similar to the first example, however it adjusts the text in the email subject and body based on runtime data. One file is attached
+          and then the email is sent.<br/><br/>
+				</e>
+			</h>
+			<lvl>All levels.</lvl>
+			<ret>
+				<b>False</b> if the rule does not include a previous ms_SetMessage() action, or if the email cannot be sent. Otherwise, <b>True.</b>
+			</ret>
+      <see>
+        ms_login, ms_login_ClientSecret and ms_SetMessage.
+      </see>
+		</method>
+
+		<method name="ms_logout" qi="Disconnect from the Office 365 mail service.">
+			<ap>None.</ap>
+			<h>
+				Closes the connection to the Office 365 mail service.
+				Call once for each batch after ms_login and ms_login_ClientSecret() have completed.
+				<br/><br/>
+				<e>
+          Send Mail Ruleset<br/>
+          - Batch Level Open Rule<br/>
+          - - Function<br/>
+          - - ms_login_ClientSecret("00000000-0000-0000-0000-000000000000", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "@APPVAR(values/adv/clientSecret)", "user@organization.com")<br/><br/>
+          
+          - Page Level Rule<br/>
+          - - ms_SetMessage("touser@organization.com", "ccuser@organization.com", "", "Email for batch: +@BATCHID","Here is the text file for page +@ID")<br/>
+          - - ms_SetAttachment("@PILOT(BATCHDIR)+\+@ID+.txt")<br/>
+          - - ms_SendMail()<br/><br/>
+          
+          - Batch Level Close Rule<br/>
+          - - <b>ms_logout()</b><br/><br/>
+          
+          This example shows how to setup a ruleset that will send emails on multiple pages within the batch.
+          The first ruleset performs the login, which would typically occur only once for the batch.
+          Next the page level ruleset will be called for pages that use it. For example, if the application has
+          "Main" and "Trailing" pages, then this rule could be attached to just the "Main" pages, or just specific
+          page types.  Then the page rule will be called for each of the pages that are attached to the rule, potentially
+          generating multiple emails.  At the end of the batch level close event, the email logout is called.<br/>          
+					<br/>
+				</e>
+			</h>
+			<lvl>All levels.</lvl>
+			<ret>
+				Always <b>True.</b>
+			</ret>
+      <see>
+        ms_login, ms_login_ClientSecret.
+      </see>
+		</method>
+
+	</com>
+</rrx>

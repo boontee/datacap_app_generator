@@ -1,0 +1,200 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="SplitBatch" v="9.1.7.1">
+  <com ref="Datacap.Libraries.SplitBatch.Actions"  qi=": Creates child batches from an existing batch.">
+    <h>
+      The SplitBatch action library will separate pages from an existing batch into one or more child batches.<br/><br/>
+
+      A DCO variable is used to control which pages are split into a child batch. The value of the variable will
+      determine which pages are moved to the new child batches.  Objects that have this variable
+      will be split based on the value of the variable.  Objects that have same variable value
+      will be included in the same child batch.  A child batch will be created for each
+      unique value of the variable, if the page is eligible to be split into
+      a child batch.
+      Child batches have the same name as the parent batch with additional two character
+      alpha-decimal suffix such as .01, .02, .0A, ..., up to .ZZ. <br/><br/>
+      
+      For example, if the variable has three unqiue values on pages that
+      are elegable to be split, then three child batches will be created and named using this pattern:<br/><br/>
+
+      ˂BatchID>.01<br/>
+      ˂BatchID>.02<br/>
+      ˂BatchID>.03<br/><br/>
+
+      This hexadecimal numbering for child batches is required by the Datacap Server. 
+      Datacap Server creates the batch and queue entries for the child batches after the task is finished, 
+      when the split condition is processed. There is a maximum of 1295 child batches.<br/><br/>
+
+      The values of the specified variable that is used to split the batch are user defined.
+      The action will group based on matching values of the variable,
+      regardless of what they are.  Matching is case sensitive.<br/><br/>
+
+      Only documents objects and unbound pages (pages that are not within a document structure)
+      are eligible to be split into a new batch.   Pages that are already placed within in a document
+      structure will not be processed individually, the pages will be as part of their document, not as a separate page.
+      So if a document is configured to be split into a new batch, then all of the child pages for that
+      document will be moved into the new batch.<br/><br/>
+
+      If a file cannot be accessed while a batch is being split, such as the associated image file is missing
+      or cannot be accessed due to permissions, the parent batch will abort.  The batch will
+      need to be reviewed when this condition occurs.<br/><br/>
+      
+      Refer to the top-level help of the Application Objects action library for more information
+      regarding the Setup DCO and Runtime DCO used by all Datacap applications.<br/><br/>
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+    </h>
+
+    <method name="SplitBatch" >       
+      <p name="SplitIndicatorVariable" type="string"></p>
+      <ap>
+        <b>SplitIndicatorVariable:</b> The specified variable must exist on document and page objects
+        that are to be split into one or more child batches.  The name of the variable is determined
+        by the user. It is expected that before calling this action, the application has added
+        the variable to the objects that are to be split and been configured with a value
+        indicating which objets are grouped together.  This variable can be pre-created
+        in the Setup DCO or can be set at runtime on the appropriate objects to split.<br/><br/>
+        
+        The values of the smart parameter variable found during the document and page evaluation are grouped into "buckets":<br/><br/>
+        
+        1. Pages/documents that contain the variable and the variable values are identical go into the same bucket.<br/><br/>
+        
+        2. If there are multiple buckets, all pages/documents that share the same value will split to the same child batch.  A child batch
+        will be created for each unique value of the variable. The values are user defined. The action only determines which
+        objects have the same value for the specified variable.<br/><br/>
+        
+        3. There can be only <i>one child batch</i> for <i>each unique bucket value.</i><br/><br/>
+
+        Child batches have the same name as the parent batch, but include an additional two character alpha-decimal suffix such as 
+        .01, .02, .0A, ..., up to .ZZ.  This hexadecimal numbering for child batches is required by the Datacap Server.  
+        Taskmaster Server creates the batch and queue entries for the child batches after the task is finished, 
+        when the split condition is processed.  There is a maximum of 1295 child batches.<br/><br/>        
+      </ap>
+      <h>
+        This action will process all of the documents and "unbound" pages that are in the batch and attempt to split
+        the identified documents and pages into child batches. The action will look in the documents or
+        unbound pages for the variable specified in the a parameter, group the objects that have a matching value,
+        and split each group into a unique child batch.<br/><br/>
+
+        Only documents and unbound pages will be processed.  An unbound page is a page that is not a child
+        of a document object.  An unbound page has the batch object as its direct parent.
+        Pages that are already placed within in a document
+        structure will not be processed individually, the pages will be as part of their document, not as a separate page.
+        If a document object contains the specified variable, then all of the child pages will be moved to the 
+        child batch and remain as child pages for the document. 
+        <br/><br/>
+
+        Additional considerations:<br/>
+        <br/>
+        There is only one "job routing condition" raised by this action: it is the first one in the task's list of conditions.<br/>
+        <br/>
+        The task's <i>Task Setup/Task Settings</i> screen <b><i>must</i></b> be configured as 
+        <i>Job Router</i>, and a single condition defined (by convention, call it <b>Split</b>).<br/><br/>
+        
+        1. Any and all <b>child batches</b> will be routed via this single condition.<br/>
+        2. If the application wants to treat the individual buckets differently, then the first step in 
+        the workflow after splitting can check the same smart parameter value and branch or re-route the child batch using that value.<br/>
+        3. All the structure and variables, etc. that were in the parent batch docs/pages are retained in the child batches.<br/>
+        4. In addition, new variables <b>ParentBatch</b> and <b>ParentBatchDir</b> are added.<br/>
+        5. The action can only be used once per Parent Batch.<br/>
+        6. The maximum number of child batches is 1295.<br/><br/>
+
+        If there is an error during the split batch processing, such as a file cannot be accessed,
+        then the operation will be automatically retried.  The DCO variables SPlitBatchRetryCount
+        and SplitBatchRetrySleep can be configured to control the retry operation.<br/><br/>
+        
+        <b>SplitBatchRetryCount</b>
+        This variable can be used to set the retry count for the SplitBatch action. To take affect, this variable must be set on the
+        object that calls the SplitBatch action.  If not set, the retry count will default to 3.<br/><br/>
+        
+        <b>SplitBatchRetrySleep</b>
+        This variable can be set sleeping time between the retries. To take affect, this variable must be set on the
+        object that calls the SplitBatch action.  If not set default value will be 1 second.<br/><br/>
+        <e>
+          <b>SplitBatch(@D.SplitBucket)</b><br/><br/>
+
+          This example uses a user defined variable called SplitBucket.  This variable must exist on all "unbound" page objects
+          or document objects that are to be moved to child batches.  Any unbound page or document object that does not have
+          this variable will remain in the main batch.<br/><br/>
+          
+          Assuming the batch has this document structure prior to calling split batch:<br/><br/>
+
+          ˂B id="MyApplication"><br/>
+          + ˂P ID="TM000001"><br/>
+          - - ˂V n="TYPE">Other˂/V><br/>
+          - - ˂V n="STATUS">0˂/V><br/>
+          - ˂/P><br/>
+          + ˂P ID="TM000002"><br/>
+          - - ˂V n="TYPE">Other˂/V><br/>
+          - - ˂V n="STATUS">0˂/V><br/>
+          - - ˂V n="SplitBucket">B1˂/V><br/>
+          - ˂/P><br/>
+          + ˂P ID="TM000003"><br/>
+          - - ˂V n="TYPE">Other˂/V><br/>
+          - - ˂V n="STATUS">0˂/V><br/>
+          - - ˂V n="SplitBucket">B2˂/V><br/>
+          - ˂/P><br/>
+          + ˂D type="20290425.000007.01"><br/>
+          - - ˂V n="TYPE">Document1˂/V><br/>
+          - - ˂V n="STATUS">0˂/V><br/>
+          - - ˂V n="SplitBucket">B2˂/V><br/>
+          + - ˂P ID="TM000004"><br/>
+          - - - ˂V n="TYPE">Main_Page˂/V><br/>
+          - - - ˂V n="STATUS">0˂/V><br/>
+          - - ˂/P><br/>
+          + - ˂P ID="TM000005"><br/>
+          - - - ˂V n="TYPE">Trailing_Page˂/V><br/>
+          - - - ˂V n="STATUS">0˂/V><br/>
+          - - ˂/P><br/>
+          - ˂/D><br/>
+          + ˂D type="20290425.000007.02"><br/>
+          - - ˂V n="TYPE">Document1˂/V><br/>
+          - - ˂V n="STATUS">0˂/V><br/>
+          + - ˂P ID="TM000006"><br/>
+          - - - ˂V n="TYPE">Main_Page˂/V><br/>
+          - - - ˂V n="STATUS">0˂/V><br/>
+          - - ˂/P><br/>
+          + - ˂P ID="TM000007"><br/>
+          - - - ˂V n="TYPE">Trailing_Page˂/V><br/>
+          - - - ˂V n="STATUS">0˂/V><br/>
+          - - ˂/P><br/>
+          - ˂/D><br/>
+          ˂/B><br/><br/>
+
+          Two child batches will be created because there are two unique values in the variable "SplitBucket".
+          One child batch will contain the page with ID=TM000002.  The other batch will contain
+          the page TM000003, the document "01" object and the pages TM000004 and TM000005.<br/><br/>
+
+          The original batch will still contain the page TM000001 and the document "02"
+          with the pages TM000006 and TM000007.<br/><br/>
+        </e>
+      </h>
+      <lvl>Batch level only.</lvl>
+      <ret>
+        False if an error occurs such as a file that could not be created, etc., and the batch will be set to abort.  Otherwise True.<br/><br/>
+        
+        If the specified variable is not found in any documents or unbound pages, meaning there is nothing to split,
+        the action is still considered to be successful and will return true.<br/><br/>
+        
+        Each child batch split off will generate a condition, which should be configured for <b>Split</b> in the workflow.<br/>
+        Any page or document with a blank value for the splitting value will remain in the original "parent" batch.<br/>
+      </ret>
+      <see>
+        Refer to the top-level help for general information about this action library.
+      </see>
+    </method>
+  </com>
+</rrx>

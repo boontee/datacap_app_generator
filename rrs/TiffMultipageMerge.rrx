@@ -1,0 +1,424 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="TiffMultipageMerge" v="9.1.9.2">
+  <com ref="Datacap.Libraries.TiffMultipageMerge.Actions"  qi=" : Merges multiple image into a single multiple page TIFF image.">
+
+    <h>
+      This action library will combine images associated with a DCO page to a multiple page TIFF image.
+      The source images do not need to be TIFF images, the resulting file will be a TIFF image that contains
+      multiple images within it.<br/><br/>
+
+      The action MergeToMultiplePageTIFFImage will create a multiple page TIFF image
+      in a single step. Pages can be optionally included by page type.  Additionally,
+      pages can be included or excluded by page status or by the status
+      of the parent document object.<br/><br/>
+
+      The action AddCurrentpageImageToMultiplePageTIFFImage will add the current page
+      object as the last page of a TIFF image. This action will not run as fast
+      as the MergeToMultiplePageTIFFImage action.<br/><br/>
+
+      A multi-page TIFF file has a maximum file size of 4GB.  It is possible that files between 2GB and 4GB
+      will not work with some applications. Images that have very large X or Y pixel dimensions may fail
+      to be added to the TIFF.<br/><br/>
+
+      <b>Action Summary</b><br/><br/>
+
+      AddCurrentPageImageToMultiplePageTIFFImage: Adds the current page as a new image of a multiple image TIFF.<br/><br/>
+
+      MergeToMultiplePageTIFFImage: Merges all pages under a document or batch object into a single multi-page TIFF.<br/><br/>
+
+      SetMergeFileName: The name of the multiple page TIFF to create.<br/><br/>
+
+      SetMergeOutputDirectory: Allows specification of the output directory. If not called, defaults to the batch directory.<br/><br/>
+
+      SetPreserveCompression: If the same compression should be used in the final file.<br/><br/>
+
+      SetStatusToIncludeOrExclude: Optionally allows inclusion or exclusion of images by document or page status.<br/><br/>
+
+        The compression defaults to fax compression for black and white images and LZW for grayscale and color images.
+        LZW is preferred for images
+        as it is a lossless compression and will not degrade the quality of the image. The default can be changed
+        from LZW to JPEG compression for color and grayscale images. JPEG is a lossy compression, which can degrade
+        the quality of the image. If OCR is to be performed, it is recommended to use LZW compression to preserve the
+        image quality.<br/><br/>
+
+        To enable JPEG compression, set the variable "MergeCompression" to "1" on the DCO object that
+        calls the AddCurrentPageImageToMultiplePageTIFFImage or MergeToMultiplePageTIFFImage action.
+        Set the variable "MergeTiffJpegQuality" to configure the quality of the JPEG compression.
+        The value must be an integer between 0 and 100. 0 uses maximum compression, the worst image quality.
+        100 uses minimum compression, the best image quality.
+        More compression produces a smaller file size while sacrificing image quality.
+        <br/><br/>
+        
+        For example:<br/>
+        rrSet("1", "@X.MergeCompression")<br/>
+        rrSet("80", "@X.MergeTiffJpegQuality")<br/><br/>        
+
+        Refer to the top-level action help of the Application Objects action library for more information
+        regarding the Datacap Object Hierarchy (DCO).<br/><br/>
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+    </h>
+
+    <method name="AddCurrentPageImageToMultiplePageTIFFImage" qi="Adds each single image to the multi-Image file.">
+      <ap>None.</ap>
+      <h>
+        Adds the image associated withe the current page object to the multi-Image TIF file.  The action SetMergeOutputDirectory and
+        SetMergeFileName determine the name and location of the output TIF file.
+        The source images can be TIFF, PNG, JPG or PNG files.<br/><br/>
+
+        The values set in SetStatusToIncludeOrExclude are ignored by this action. The page is unconditionally added.
+        Use rule logic to determine if the action should or should not be called for a page.<br/><br/>
+
+        The action MergeToMultiplePageTIFFImage is more efficient than this action because a single file
+        is opened and all of the images are added in one step. In contrast, this action will open and close the
+        same file for every page.  Each page within the image will lengthen the time required to
+        update the file. If efficiency is a concern, it is recommended to use MergeToMultiplePageTIFFImage.<br/><br/>
+
+        <e>
+          CheckDCOStatus("0")<br/>
+          <b>AddCurrentPageImageToMultiplePageTIFFImage()</b><br/><br/>
+
+          In this example, the <b>CheckDCOStatus</b> action checks that the status of the current page is “0”.
+          If so, the image for the current page will be added to the multi-Image file.
+          If the current status of this page is not “0”, the CheckDCOStatus will return false and control
+          will jump to the next function in the rule and the action to add the current page
+          to the file will not be called.  This us the flow of the rule logic based
+          on the action's return value.<br/><br/>
+
+          This <b>CheckDCOStatus</b> action is used as an example.  You can use many other
+          actions to be sure the current image meets your merging criteria.  Rules can be
+          created to determine if some criteria is met to then add the image.<br/><br/>
+
+          It is required that first the action SetMergeFileName is called to set the
+          output file name.  While not required,
+          SetMergeFileName would typically be called on a batch
+          or document level rule to set the file name, then multiple calls to AddCurrentPageImageToMultiplePageTIFFImage
+          on page level objects will add the pages to the specified file name.  SetMergeFileName
+          must be called within the same task as the specified output file name remains in effect only
+          for the current task.  If the action is used again in a later task, the output file
+          name, and optionally the output directory, will need to be set again.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>False</b> if the action is not called on a rule attached to a page object or if the
+        corresponding image file for the current page cannot be found or is not successfully added
+        to the destination image. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        SetMergeOutputDirectory, SetMergeFileName, MergeToMultiplePageTIFFImage<br/><br/>
+
+        Refer to the top-level help for this action library for general information about using these actions
+        and how to change the default compression.<br/>
+      </see>
+
+    </method>
+
+
+    <method name="MergeToMultiplePageTIFFImage" qi="Merges all pages under a document or batch object into a single multi-page TIFF.">
+      <p name="TypesToMerge" type="string"/>
+      <ap>
+        <b>TypesToMerge:</b> A comma separated list of all page types to include in the new multi-page image.<br/><br/>
+
+        If parameter is empty, or set to "All", then all pages under the calling object will
+        be added to the multi-page image.<br/><br/>
+
+        Smart parameters are supported<br/>
+      </ap>
+      <h>
+        This action will add the image associated with each child page object to
+        a multiple page TIFF file, providing that the page object meets the
+        required page type or status values.  The source page image can be
+        a TIFF, PNG, BMP or JPEG image.<br/><br/>
+
+        If one or more page types are provided as a parameter, only those page
+        types will be added to the TIFF.  The action SetStatusToIncludeOrExclude
+        can be used to place additional restrictions on what pages should be
+        added or excluded based on the status of the page or parent document object.<br/><br/>
+
+        The name of the output file must have been previously set by calling
+        the action SetMergeFileName. By default, the output file will be created
+        in the batch directory. The output directory can be changed using the
+        action SetMergeOutputDirectory.<br/><br/>
+
+        This action always creates a new file.
+        If the destination file exists, it will be replaced by the new file.<br/><br/>
+
+        If this action is attached to a batch level rule, all of the pages within the batch,
+        including pages that have the batch object as the parent and pages that have parent document
+        objects, will be added to the multi-page TIFF.<br/><br/>
+
+        If this action is attached to a document level rule, all of the child pages to the current
+        document object will be added to the multi-page TIFF.<br/><br/>
+        <e>
+          SetMergeFileName("@BATCHID+-+@DATE(dd.mm.yyyy)")<br/>
+          SetMergeOutputDirectory("@APPPATH(export)")<br/>
+          <b>MergeToMultiplePageTIFFImage("All")</b><br/><br/>
+
+          The above example will name the output file based on the current batch ID
+          and the current date. The file will be saved in the configured
+          export directory.  All of the chid pages under the current
+          object will be added to the TIFF. Instead of specifying "All",
+          a blank parameter would also include all child images.<br/><br/>
+
+          SetMergeFileName("Doc_+@ID+@DATE(dd.mm.yyyy)")<br/>
+          SetStatusToIncludeOrExclude("0,49","","","")<br/>
+          <b>MergeToMultiplePageTIFFImage("Invoice,Attachment")</b><br/><br/>
+
+          The second example assumes it is called on a document object and
+          names the output file based on the ID of the document and current date
+          with a "Doc_" prefix on the file name. The action is also configured
+          to only add pages that have a status of 0 or 49.  All other page statuses
+          will be excluded, even if they are of the expected type.
+          Finally the merge is performed, specifying that only pages of type "Invoice" and of
+          page type "Attachment" are added to the TIFF.<br/>
+        </e>
+      </h>
+      <lvl>Batch or Document.</lvl>
+      <ret>
+        <b>False</b> if the action cannot create the multi-Image file or if there are no eligible pages to merge. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for this action library for general information about using these actions
+        and how to change the default compression.<br/>
+      </see>
+    </method>
+
+    <method name="SetMergeOutputDirectory" qi="Sets the path for the image file.">
+      <p name="OutputDirectory" type="string"/>
+      <ap>
+        The output directory for the new multiple page TIFF. If this action is not called, the batch directory
+        will be used by default.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        This action allows specification of the output directory for the multi-page TIFF image that is created
+        by the action MergeToMultiplePageTIFFImage.<br/><br/>
+
+        If this action is not called, then the default location is the current batch directory.
+        If desired, the file can be created in the batch directory and then the file can be
+        moved or copied to another directory using the FileIO action library in a subsequent
+        rule, such as during an export task.<br/><br/>
+
+        If the folder designated in the parameter does not exist,
+        the action will create the folder in which the TIF file will be placed.  If it is expected for
+        the directory to be created, then ensure the account for the process running rules has permission
+        to create new directories.<br/><br/>
+
+        To take affect, this action must be called before the action MergeToMultiplePageTIFFImage
+        and must be called within the same task as the MergeToMultiplePageTIFFImage action.
+        The setting will remain in affect for the length of the current running task.
+        Once the task completes, this action would need to be called again in a new task
+        if MergeToMultiplePageTIFFImage is called again.<br/><br/>
+
+        Can be called at any level but is usually called at the batch or document level.<br/><br/>
+        <e>
+          <b>SetMergeOutputDirectory("c:\ParentDir\Invoice\MultiImage")</b><br/>
+          SetMergeFileName("@BATCHID+-+@ID")<br/>
+          MergeToMultiplePageTIFFImage("Doc_+@ID+@DATE(dd.mm.yyyy)", "All")<br/><br/>
+
+          This example sets the output directory to the parameter provided. The file is named
+          based on the current batch ID and the ID of the current object.<br/><br/>
+
+          <b>SetMergeOutputDirectory("@PILOT(BATCHDIR)")</b><br/>
+          If SetMergeOutputDirectory is not called, then the output directory defaults to the batch
+          directory.  It is identical to making the a call to this action with "@PILOT(BATCHDIR)".
+          If the default output directory has been changed to another directory, it can be
+          reset by using this smart parameter to set it back to the batch directory.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the specified drive does not exist or the path cannot be created. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        SetMergeFileName<br/><br/>
+
+        Refer to the top-level help for this action library for general information about using these actions.<br/>
+      </see>
+    </method>
+
+    <method name="SetMergeFileName" qi="Sets the name of the multi-Image file (.tif) to be created.">
+      <p name="MultiPageFileName" type="string"/>
+      <ap>
+        <b>MultiPageFileName:</b> The name of the new image file to create.  If the destination directory
+        has not been set by calling the action SetMergeOutputDirectory, then the file will be created in the
+        current batch directory by default.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        This action sets the name of the multi-Image TIFF file to be created by the action AddCurrentPageImageToMultiplePageTIFFImage
+        and MergeToMultiplePageTIFFImage.  Smart parameters can be used allowing the file name to be
+        a combination of text and data evaluated at runtime.<br/><br/>
+
+        If not provided, the action automatically adds the “.tif” extension to the file.<br/><br/>
+
+        Once set, the name is in effect for the remainder of the task, unless the action
+        is called again to change the output name.  Once the task completes, the name will have to
+        be configured again in a following ruleset if more images are merged.<br/><br/>
+        <e>
+          <b>SetMergeFileName("Doc_+@ID+@DATE(dd.mm.yyyy)")</b><br/>
+          SetMergeOutputDirectory("c:\ParentDir\Invoice\MultiImage")<br/>
+          MergeToMultiplePageTIFFImage("")<br/><br/>
+
+          The example above assumes that the rules with these actions are attached to a Document object.
+          The names combine text values such as “Doc_” with values assigned to variables by using smart parameters
+          to concatenate the current document ID and current date as the name of the output file.<br/><br/>
+
+          SetMergeFileName("MultiTif_+@ID")<br/><br/>
+          This example combines "MultiTif_" with the ID of the Document Hierarchy object to which the ruleset is
+          associated.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetMergeOutputDirectory<br/><br/>
+
+        Refer to the top-level help for this action library for general information about using these actions.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetPreserveCompression" qi="Determines the output compression type for merged images.">
+      <p name="PreserveCompression" type="string"/>
+      <ap>
+          <b>True:</b> Preserves the original compression type of the source image.
+          If the image does not have the compression type then the compression
+          type G4 for black and white and LZW for color images will be applied.<br/><br/>
+
+          <b>False:</b> Uses G4 compression for black and white images.
+          LZW compression is used for color images.<br/><br/>
+          
+          The default LZW compression can be configured as described below.<br/><br/>
+
+          Smart parameters are supported.<br/>
+      </ap>
+      <lvl>Any.</lvl>
+      <ret>True.</ret>
+      <h>
+        This action will configure the output format for the new multi-page TIF file
+        when for the AddCurrentPageImageToMultiplePageTIFFImage action.<br/><br/>
+
+        If this action is not called, then the default value of "FALSE" is used,
+        so the original image compression is not preserved and the action will
+        pick the optimal compression based on the color depth.<br/><br/>
+
+        If the compression is preserved, then the action will attempt to keep the
+        original compression of the image.  For example, if the image was uncompressed,
+        it will save the image in the TIFF as uncompressed. Each page in the image
+        can have a different compression and that compression isn't displayed in the
+        file properties in Windows explorer.  Depending on the original compression,
+        it may not be supported for saving, in that case, the next best compression
+        that preserves the original color depth will be used.<br/><br/>
+
+          By default, LZW compression is used for grayscale and color images. LZW is preferred for images
+          as it is a lossless compression and will not degrade the quality of the image. The default can be changed
+          from LZW to JPEG compression for color and grayscale images. JPEG is a lossy compression, which can degrade
+          the quality of the image. If OCR is to be performed, it is recommended to use LZW compression to preserve the
+          image quality.<br/><br/>
+
+          To enable JPEG compression, set the variable "MergeCompression" to "1" on the DCO object that
+          calls the AddCurrentPageImageToMultiplePageTIFFImage or MergeToMultiplePageTIFFImage action.
+          Set the variable "MergeTiffJpegQuality" to configure the quality of the JPEG compression.
+          The value must be an integer between 0 and 100. 0 uses maximum compression, the worst image quality.
+          100 uses minimum compression, the best image quality.
+          More compression produces a smaller file size while sacrificing image quality.
+          <br/><br/>
+          
+          <e>
+              <b>SetPreserveCompression("True")</b><br/>
+              AddCurrentPageImageToMultiplePageTIFFImage("")<br/><br/>
+
+              This example sets the compression to preserve the original compression of
+              the image then merges the image.
+          </e>
+          <br/><br/>
+          <e>
+              rrSet("1", "@X.MergeCompression")<br/>
+              rrSet("80", "@X.MergeTiffJpegQuality")<br/>
+              <b>SetPreserveCompression("False")</b><br/>
+              MergeToMultiplePageTIFFImage("All") <br/><br/>
+
+              This example configures the merge to use JPEG compression for color and grayscale images in the merged TIFF image.<br/>
+          </e>
+          <br/>
+      </h>
+      <see>
+        Refer to the top-level help for this action library for general information about using these actions.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetStatusToIncludeOrExclude" qi="Filters merged pages based on the page and document status.">
+      <p name="AcceptablePageStatuses" type="string"/>
+      <p name="DisregardPageStatuses" type="string"/>
+      <p name="AcceptableDocStatuses" type="string"/>
+      <p name="DisregardDocStatuses" type="string"/>
+      <ap>
+        <b>AcceptablePageStatuses:</b> A CSV list of Page status values that will be merged. <br/>
+        <b>DisregardPageStatuses:</b> A CSV list of Page status values that will not be merged.<br/>
+        <b>AcceptableDocStatuses:</b> A CSV list of Document status value that will be merged.<br/>
+        <b>DisregardDocStatuses:</b> A CSV list of Document status values that will not be merged.<br/>
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <lvl>Any.</lvl>
+      <ret>Always True.</ret>
+      <h>
+        This action will configure the acceptable statuses for documents and pages when calling TifMerge_MergeImages.
+        If this action is not called, then the status values of documents and pages will not be checked.<br/><br/>
+
+        If multiple parameters are set, be sure they will operate as expected.  It can make sense to set a document
+        status parameter and a page status parameter.  It would probably not make sense to set both page parameters or
+        both document parameters as it will cause multiple exclusions.<br/><br/>
+
+        If the AcceptablePageStatuses is set, then the status of the page object must be in the list or page image will not
+        be added to the merged TIFF image.  This effectively disregards all other page status values.<br/><br/>
+
+        If the AcceptableDocStatuses is set, then the status of the page's parent document object
+        must be in the list or the page image will not
+        be added to the merged TIFF image.  This effectively disregards all other document status values.<br/><br/>
+
+        If the DisregardPageStatus is set, then if the status of the page object is in the list, then the page
+        image will not be added to the merged TIFF image.<br/><br/>
+
+        If the DisregardDocStatus is set, then if the status of the page's parent document object is in the list, then the page
+        image will not be added to the merged TIFF image.<br/><br/>
+
+        All conditions must be met for the page to be included.
+        <e>
+          In the example below, only pages with an acceptable status of '0' or '49' will be merged.  Because
+          the document status is also set, then if the page's document object does not have a status of "0",
+          the page will not be included, regardless of it's status.
+          Empty parameters are ignored.<br/><br/>
+
+          <b>SetStatusToIncludeOrExclude("0,49","","0","")</b><br/>
+          <b>MergeToMultiplePageTIFFImage("All")</b>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help for this action library for general information about using these actions.<br/>
+      </see>
+    </method>
+
+
+  </com>
+</rrx>

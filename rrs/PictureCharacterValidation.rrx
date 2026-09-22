@@ -1,0 +1,453 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="PictureCharacterValidation" v="9.1.7.2">  
+  <com ref="Datacap.Libraries.PictureCharacterValidation.Actions"  qi=" : Valdate fields using type patterns">
+    <h>
+      The PictureCharacterValidation action library contains actions that are specialized validation actions
+      that verify and adjust individual characters and their confidence within a field.
+      The actions perform type validation on the input data on a character by character basis. It can confirm that the text within
+      a field matches expected patterns such as "upper-case alpha, alpha, numeric, numeric, alpha" where the string
+      is expected to have characters that follow this pattern.  A more specific example would be validation
+      of a social security number which must be in the format "nnn-nn-nnnn" where "n" is a number.  The
+      action can return a simple true or false indicating if a pattern is matched.  The action library
+      can also do additional manipulation such as lowering the confidence of incorrect characters
+      and automatically replacing failed characters with text from the alternate field text strings.
+      The characters with the lowered confidence will then be flagged to verification operators in
+      a verification panel.  Client verification panels highlight individual characters that are low confidence.
+      The verification panel can also enforce the same type requirements on each character prevent
+      field validation from succeeding until the operator has corrected all of the issues within each field.<br/><br/>
+
+      Picture strings improve and filter recognition
+      results, and are used to limit characters typed into that field during verify. 
+      Some of the actions obtain the required character pattern from a DCO variable called
+      "PictureString". If the required
+      picture string is defined in the PictureString variable, then the verify panel will require
+      that a user's input also meet the requirement.<br/><br/>
+      
+      The <b>FormatPictureFields</b>
+      and <b>FilterPictureFields</b> actions can be called to “enforce” the
+      specified PictureString after recognition rules are invoked. The ApplyPictureString action
+      is an exception that does not use the PictureString variable, instead the picture string
+      is passed as a parameter to the action.<br/><br/>
+
+      Recognition actions do not use the PictureString property variable.
+      However, individual recognition engines have their own
+      parameters to help guide the recognition and can limit the characters
+      recognized for a field, providing hints to the engine as to what characters
+      are expected on the source page, improving recognition quality.
+      Refer to the settings for the engine you are using to recognize text.
+      If the recognized character set for a field can be restricted to a set of characters, for example
+      all numeric only, all alpha only, or all upper-case only, etc., then this will improve recognition
+      results for the field.  Refer to the recognition best practices document for more information
+      and the recognition properties in the Zones tab of Datacap Studio.<br/><br/>
+
+      The Web Verify task always enforces the PictureString setting for a field that has the variable defined.
+      Thick client Verify panels constructed by
+      autoform also enforces PictureString specifications, if it is defined.
+      The DCEdit control enforces the PictureString requirements in a thick client verification panel.<br/><br/>
+
+      There are two typical ways that the picture values can be set in PictureString.<br/><br/>
+      
+      <b>1.</b> Use the rrunner action rrSet in a ruleset.  With this action, you can specify the PictureString
+      variable and set it to the desired value.<br/>
+      <b>2.</b> In the Zones tab of Datacap Studio, right click on the desired field in the DCO hierarchy
+      and choose "Manage Variables".
+      Enter the new variable PictureString and set its value to the desired picture string characters.
+      Setting the variable in the SetupDCO can be more efficient than setting it at runtime.<br/><br/>
+
+      See the help in the action library VoteUsingComparativeText for more information
+      regarding the use of alternative text within a field. Some actions in this library
+      will use the alternative text, if available, when picture string mismatches occur.<br/><br/>
+      
+      <b>Picture Character Identifiers</b><br/><br/>
+
+      Picture strings, as they are called, are created using single character identifiers that determine
+      the expected pattern.  Each picture character identifier corresponds to a specific type, or set, of
+      characters. The character in that position is expected to match the type.<br/><br/>
+      
+      The following lists the picture character identifiers that are available for configuring the picture string actions:<br/>
+
+      A: Alphabetic characters only or a space. Numeric and/or punctuation characters are not valid.<br/>
+      a: Alphabetic, space and punctuation characters.<br/>
+      D: Dates. The dates must be expressed with numeric characters. You can delimit months, dates, and years with hyphens, periods, and forward slashes.<br/>
+      F: Float numbers, which are fractional numbers. To accommodate fractional values, this picture string allows you to
+      include both numbers and a period (for the decimal separator). The F character also allows minus signs to represent negative numbers.<br/>
+      f: Numeric and punctuation characters.<br/>
+      L: Lower-case alphabetic and space characters.<br/>
+      l: Lower-case alphabetic, space and punctuation characters.<br/>
+      N: Numeric characters only.<br/>
+      n: Upper-case alphabetic, numeric or space characters.<br/>
+      P: Punctuation and space characters.<br/>
+      T: Time values. These values are expressed in numbers with a colon. In addition, the characters P, M, and A are allowed to distinguish between morning and afternoon times, and colon characters are allowed to delimit hours, minutes, and seconds.<br/>
+      U: Upper-case alphabetic and space characters.<br/>
+      u: Upper-case alphabetic, space and punctuation characters.<br/>
+      X: Alphabetic, space and numeric characters.<br/>
+      x: Alphabetic, space, numeric and punctuation characters.<br/>
+      Z: Any character.<br/>
+      #: Numeric characters and the minus sign.<br/><br/>
+
+      Additional custom picture characters can be defined if there are combinations of characters that are needed
+      which are not already covered by the provided identifiers.
+      SetPictureCharacters can be used to define up to 10 additional application specific picture character identifiers
+      at runtime, identified as 0 through 9.  For example, if character can be only one of these characters: "QWERTY",
+      then a custom picture identifier can be created containing that set of characters.  When the custom identifier
+      is used in a picture string, then the characters must match those provided in the custom set.
+      Verification panels will only validate characters using the built-in picture identifiers.  Custom identifiers
+      are not used by the verification panels.<br/><br/>
+
+      The text is validated for DCO field node objects.  For more information about the Datacap hierarchy, 
+      see the action help in the ApplicationObjects action library.<br/><br/>
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+    </h>
+
+    <method name="ApplyPictureString">
+      <p name="PictureString"/>
+      <ap>
+        <b>PictureString:</b> The picture string to validate the field.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Validates the current field using a PictureString as an argument.<br/><br/>
+        
+        Using the provided picture string, this action will test that each of the characters in the current field
+        meet the requirement of each picture character identifier.  
+        The provided picture string must be the same length or shorter than the data
+        on the field for the test to pass.  If the picture string is shorter, then the last character of the picture
+        string will be used to validate all remaining characters in the field.<br/><br/>
+        
+        Unlike FormatPictureFields, which uses the PictureString variable, ApplyPictureString
+        accepts the picture string as a parameter only.<br/><br/>
+        <e>
+          SetPictureCharacters("0","01")<br/>
+          SetPictureCharacters("1","0123")<br/>
+          SetPictureCharacters("2","-./")<br/>
+          <b>ApplyPictureString("0N21N2NN")</b><br/><br/>
+
+          This example first creates custom picture strings for picture character identifiers "0", "1" and "2" that
+          have sets of allowed characters that are not available in the predefined character identifiers.  
+          They are then used in the ApplyPictureString action to provide
+          tighter control on the allowed input.  "0N21N2NN" format matches a typical 6 digit date specification
+          like "01/07/67". The first character must be only a 0 or 1. The second character can be any number,
+          the third character must be a standard date separator "-", "." or "/", etc.<br/><br/>
+
+          Note that a value such as "01/07/1967" would also pass this test because if the field is longer than
+          the picture string, the last identifier will be used on all remaining characters.  Likewise, "01/07/1967123"
+          would also pass the test. This can be further validated by using length restrictions on the field
+          using the text length validation actions in the ValidationsAndTextAdjustments action library.<br/><br/>
+
+          <b>ApplyPictureString("AN")</b><br/><br/>
+
+          This example requires that the field text is at least 2 characters long. The first character must
+          be an alphabetic character or a space. The second character must be a number. If the field
+          is longer than 2 characters, then all subsequent characters must also be a number.
+          If the field is only 1 character long or is empty, then the validation will fail.<br/><br/>
+
+          <b>ApplyPictureString("@X.MyPictureString")</b><br/><br/>
+          
+          This example shows that the value of the picture string will be retrieved
+          from the DCO variable called "MyPictureString" on the current DCO node.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False,</b> if called at the wrong level, if the picture string is longer than the field value
+        or if the field fails the picture string validation.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for the list of available picture character 
+        identifiers that can be used to create a picture string.<br/>
+      </see>
+    </method>
+
+    <method name="FilterPictureFields">
+      <ap>None.</ap>
+      <h>
+        Uses a picture string to validate the text in a field.
+        Replaces a character and adjusts the confidence based on the "PictureString" variable defined for the field.
+        Before calling this action, the variable "PictureString" must be defined in the DCO node for the field
+        which will be used for validating the field.  The variable
+        can be defined for the node in the Setup DCO or set at runtime using an action like rrSet.<br/><br/>
+
+        The action lowers the Confidence Rating of any character in a field that does not satisfy the Picture String's criteria
+        and replaces the problem character with a low confidence space. It is very similar to the FormatPictureFields action but
+        does not use alternative recognition characters.  The picture string used to validate each field is not provided
+        to this action and instead must be defined in the PictureString variable.  This allows each field
+        to have a unique picture string.<br/><br/>
+
+        If a character in the field does not match the picture string format defined
+        for that field:<br/><br/>
+
+        1. It replaces any "problem" characters with a space character when it does not match the picture string.<br/><br/>
+
+        2. The character that has been replaced with a space will be set to a low confidence.<br/><br/>
+
+        3. Any alternative recognition characters are removed from the field after execution.<br/><br/>
+
+        Note: This Action is recursive and will affect all child fields of the calling node.  If called
+        on a page object, then all of the fields attached to the page will be processed.  If called on
+        a document object, then all pages in the document will have their fields processed.  If called
+        at the batch level, then all fields within the batch will be processed.<br/><br/>
+
+        <b>FilterPictureFields</b> replaces non-matching characters with low confidence spaces, <b>FormatPictureFields</b>
+        just lowers the confidence and replaces characters with alternative text, if it is available.<br/><br/>
+
+        While not direct input to this action, this action works with picture strings
+        that are defined for each field.  The picture string must be set in a DCO variable for
+        the field object and the variable must be named "PictureString".
+        If the variable is defined, then the field's data
+        will be adjusted based on the picture string.  If the variable does not exist or is empty,
+        then the field will not be processed.<br/><br/>
+        <e>
+          rrSet("XxN","@F.PictureString")<br/>
+          <b>FilterPictureFields()</b><br/><br/>
+
+          This example expects the rule is attached to a field and that the current field
+          must have the first character be either a alphabetic character or a digit,
+          the second character can be an alphabetic character, digit or punctuation character and the remaining characters
+          must only be digits. <br/><br/>
+          
+          This example also sets the picture string at runtime
+          by first calling rrSet for the current DCO object then the FilterPictureFields action.  
+          If FilterPictureFields action is called on a page, document or batch level, then
+          the PictureString variable must first be set on each field to be validated.
+          Typically this would be set in the SetupDCO for each field at application design time
+          in Datacap Studio.<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b><br/><br/>
+
+        The return value does not reflect if fields have passed or failed validation.  This action
+        can operate on multiple fields with a single call, determined by the parent DCO object that
+        is associated with the ruleset that contains this action.  This action will process all of child
+        fields and update the field text and confidence values based on the picture string as described in the details section.
+        The results will be shown to the user in a verification panel and can be acted on by subsequent
+        actions on a field by field basis.<br/>
+      </ret>
+      <see>
+        Refer to the top-level help topic for the list of available picture character
+        identifiers that can be used to create a picture string.<br/>
+      </see>
+    </method>
+
+
+    <method name="FormatPictureFields">
+      <ap>None.</ap>
+      <h>
+        Uses a picture string to validate the text in a field.
+        Replaces a character and adjusts the confidence based on the "PictureString" variable defined for the field.
+        Before calling this action, the variable "PictureString" must be defined in the DCO node for the field
+        which will be used for validating the field.  The variable
+        can be defined for the node in the Setup DCO or set at runtime using an action like rrSet.<br/><br/>
+        
+        This action Lowers the confidence rating of any character in a field that does not satisfy the criteria
+        specified in the "PictureString" variable.  The picture string used to validate each field is not provided
+        to this action and instead must be defined in the PictureString variable.  This allows each field
+        to have a unique picture string.<br/><br/>
+        
+        This action adjusts the character confidence of a field, and optionally replaces characters, based on the picture string
+        that has been set for the field.  It is very similar to the <b>FilterPictureFields</b> action.<br/><br/>
+
+        If a character in the field does not match the picture string format defined
+        for that field:<br/><br/>
+
+        1. It replaces any "problem" characters with an alternative character from a
+        secondary recognition engine if one exists.  If an alternative recognition character does
+        not exist, then the original character is left unchanged.<br/><br/>
+
+        Note: When using alternative text, there must be an equal number of
+        alternative characters as the field length, and
+        the alternative character must also be valid within the field's picture string for
+        substitution to occur. If the alternative recognition character is also not a valid
+        picture string character, then no substitution will occur.
+        Additionally, the alternate text must have spaces and punctuation
+        in the same location as the primary text.  For example, if there is a space in the
+        second position of the primary field text, then the alternate text must also have
+        a space in this location.  If the alternate text does not meet this requirement,
+        then none of the characters in the alternate text will be use to substitute characters
+        in the field's primary text.<br/><br/>
+
+        2. It lowers the Confidence Rating of any character in a field that does not
+        satisfy the picture string's criteria.<br/><br/>
+
+        3. Alternative recognition characters are removed from the field after execution.<br/><br/>
+
+        Note: This Action is recursive and will affect all child fields of the calling node.  If called
+        on a page object, then all of the fields attached to the page will be processed.  If called on
+        a document object, then all pages in the document will have their fields processed.  If called
+        at the batch level, then all fields within the batch will be processed.<br/><br/>
+        
+        <b>FilterPictureFields</b> replaces non-matching characters with low confidence spaces, <b>FormatPictureFields</b>
+        just lowers the confidence and replaces characters with alternative text, if it is available.<br/><br/>
+
+        While not direct input to this action, this action works with picture strings
+        that are defined for each field.  The picture string must be set in a DCO variable for
+        the field object and the variable must be named "PictureString".
+        If the variable is defined, then the field's data
+        will be adjusted based on the picture string.  If the variable does not exist or is empty,
+        then the field will not be processed.<br/><br/>
+        
+        <e>
+          rrSet("AN","@F.PictureString")<br/>
+          <b>FormatPictureFields()</b><br/><br/>
+
+          This example expects the rule is attached to a field and that the current field
+          must have the first character be an alphabetic character or a space,
+          the second character must be digit and the remaining characters, if any,
+          must only be digits. <br/><br/>
+
+          This example also sets the picture string at runtime
+          by first calling rrSet for the current DCO object then the FilterPictureFields action.
+          If FilterPictureFields action is called on a page, document or batch level, then
+          the PictureString variable must first be set on each field to be validated.
+          Typically this would be set in the SetupDCO for each field at application design time
+          in Datacap Studio.<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b><br/><br/>
+
+        The return value does not reflect if fields have passed or failed validation.  This action
+        can operate on multiple fields with a single call, determined by the parent DCO object that
+        is associated with the ruleset that contains this action.  This action will process all of child
+        fields and update the field text and confidence values based on the picture string as described in the details section.
+        The results will be shown to the user in a verification panel and can be acted on by subsequent
+        actions on a field by field basis.<br/>
+      </ret>
+      <see>
+        Refer to the top-level help topic for the list of available picture character
+        identifiers that can be used to create a picture string.<br/>
+      </see>
+    </method>
+
+    
+
+    <method name="SetPictureCharacters">
+      <p name="PictureID"/>
+      <p name="ValidCharacters"/>
+      <ap>
+        <b>PictureID:</b> The picture string identifier.  This must be a digit between 0 through 9.<br/>
+        <b>ValidCharacters:</b> A string of characters to associate with the picture string identifier.<br/><br/>
+
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        Configures application specific picture strings assigned to a picture character identifier.<br/><br/>
+        
+        In addition to the predefined character strings, custom picture strings can be configured and then
+        used in the actions that validate picture strings.  The picture character identifier of 
+        "0" through "9" can be configured to allow validations that are not covered by the predefined identifiers.<br/><br/>
+
+        It is possible to configure your verify panel edit control to restrict keyboard entry based on picture strings
+        when you use the 'PictureString' field variable.  Note that only predefined picture strings work with
+        the edit control.  Any custom picture strings created by SetPictureCharacaters action will not cause the edit control
+        to restrict user input.<br/><br/>
+        
+        <e>
+          <b>SetPictureCharacters("0","01")</b><br/>
+          <b>SetPictureCharacters("1","0123")</b><br/>
+          <b>SetPictureCharacters("2","-./")</b><br/>
+          ApplyPictureString("0N21N2NN")<br/><br/>
+
+          This example first creates custom picture strings for picture character identifiers "0", "1" and "2" that
+          have sets of allowed characters that are not available in the predefined character identifiers.
+          They are then used in the ApplyPictureString action to provide
+          tighter control on the allowed input.  "0N21N2NN" format matches a typical 6 digit date specification
+          like "01/07/67". The first character must be only a 0 or 1. The second character can be any number,
+          the third character must be a standard date separator "-", "." or "/", etc.<br/><br/>
+
+          Note that a value such as "01/07/1967" would also pass this test because if the field is longer than
+          the picture string, the last identifier will be used on all remaining characters.  Likewise, "01/07/1967123"
+          would also pass the test. This can be further validated by using length restrictions on the field
+          using the text length validation actions in the ValidationsAndTextAdjustments action library.<br/><br/>
+
+          <b>SetPictureCharacters("0","01")</b><br/>
+          <b>SetPictureCharacters("1","0123")</b><br/>
+          <b>SetPictureCharacters("2","-./")</b><br/>
+          ValidatePictureField()<br/><br/>
+
+          This example is the same as the one above it, the difference is that the picture string has
+          been setup in the PictureString variable in Datacap Studio, so it is not seen here.
+          The action ValidatePictureField will then use the custom patterns to validate text
+          depending on the specification in the PictureString variable in each field object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False,</b> if the parameter input is invalid.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for the list of available picture character
+        identifiers that can be used to create a picture string.<br/>
+      </see>
+    </method>
+
+
+    <method name="ValidatePictureField">
+      <ap>None.</ap>
+      <h>
+        Checks the value of all characters in a field against that field's PictureString criteria.
+        The DCO variable PictureString must exist in the current fields DCO node.  The variable
+        can be set at runtime or in the SetupDCO as discussed in the top-level help of
+        this action library.<br/><br/>
+        
+        If a character in the field does not match the picture string format defined
+        for that field, it lowers the Confidence Rating of any character in a field that does not
+        satisfy the Picture String's criteria.<br/><br/>
+
+        Note: Fields with a status of '-1' (Hidden) are checked but this action will not return false if
+        the value does not match the picture string criteria.<br/><br/>
+
+        While not direct input parameters to this action, this action works with picture strings
+        that are defined for a field in the DCO variable PictureString.  The predefined picture
+        character identifiers are described in the top-level help of this action library.
+        Custom picture identifiers can also be defined using the <b>SetPictureCharacters</b> action.<br/><br/>
+
+        If the validation fails, this action will set the "MESSAGE" variable of the current field with
+        a failure message. Verify panels will display this message to the user when the field
+        is visited to give them information as to why the validation failed.<br/><br/>
+        <e>
+          <b>ValidatePictureField()</b><br/><br/>
+          
+          This example assumes that the field already has the PictureString
+          variable set on the current field object.  Assuming the PictureString
+          variable is set to "NfAAZ", then these would be the return values
+          of this action based on the following field values.<br/><br/>
+          
+          "Hello" returns false<br/>
+          "8.0000" returns false<br/>
+          "8.Hello" returns true<br/>
+          "8." returns false<br/>
+          "88Rocket" returns true<br/>
+        </e>
+      </h>
+      <lvl>Field level only.</lvl>
+      <ret>
+        <b>False</b> if the field value does not satisfy the field's Picture String criteria.
+        Otherwise <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for the list of available picture character
+        identifiers that can be used to create a picture string.<br/>
+      </see>
+    </method>
+
+  </com>
+</rrx>

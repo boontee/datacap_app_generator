@@ -1,0 +1,1624 @@
+﻿<?xml version="1.0"?>
+<rrx namespace="Nenu" v="9.1.9.36">
+
+  <g>
+    <![CDATA[
+'**************************************************************************************************
+' NENU Actions
+
+' Licensed Materials - Property of IBM
+' 'Restricted Materials of IBM'
+' 5725-C15
+' © Copyright IBM Corp. 1994, 2021, 2022 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+
+' Version = "8.0.1"
+' Updated 12/17/2009 OGorbunov
+' * 22425 Inital implementation.
+
+' Version = "8.0.2"
+' Updated 12/17/2009 OGorbunov
+' Consolidated SetaTMLog actions
+' Added functionality to QuerySetAge function to recognize seconds. 
+'
+' Version = "8.0.3"
+' Updated 08/06/2010 RFerin
+' 29187 Added help text. Removed SetDebugFlag.  SetTMLog was changed to ConfigureMessageLog.
+'
+' Version = "8.0.4"
+' Updated 08/11/2010 RFerin
+' 29196 Update help text for parameters that accept smart parameters. 
+'       OpenApplicationEx, SetApplication, SetServer, SetAdminDB, SetEngineDB, SetUser, SetPassword, SetStation, 
+'       ChangeBatchesStatus, ChangeBatchesStatusOrder, ChangeBatchesStatusTaskOrder, MoveBatches, 
+'       SendEmail, ResetPendingOrNotify, ConfigureMessageLog, SetSQLSeparator, QuerySetJobID, 
+'       QuerySetTaskID, QuerySetStatus, QuerySetOperator, QuerySetStation, QuerySetDateRange,
+'       QuerySetAge, QuerySetGeneric and WriteEventLog.
+'
+' Version = "8.0.5"
+' Updated 09/01/2010 AGorbunov
+' Added actions (help review needed):
+' ClearLog()
+' SetReportingTable(...)	
+' SetUsageDBTable(...)
+' ClearAudit()
+' ClearDebug()
+' Added classes(header review needed. Copied the same one from "Datacap.Libraries.Nenu.Actions".):
+' "Datacap.Libraries.Nenu.aTMSetup"
+' "Datacap.Libraries.Nenu.Reporting"
+' "Datacap.Libraries.Nenu.BatchProcess"
+' "Datacap.Libraries.Nenu.SQLQuerySetup"
+'
+' Version = "8.0.6"
+' Updated 09/01/2010 AGorbunov
+' Renamed class "Datacap.Libraries.Nenu.Actions" to "Datacap.Libraries.Nenu.Logging"
+' Renamed class "Datacap.Libraries.Nenu.aTMSetup" to "Datacap.Libraries.Nenu.AppSetup"
+' Renamed action ConfigureMessageLog to ConfigureLogging and moved it to Logging class
+' Moved DisconnectAll to AppSetup class
+' Renamed action GetRecordSet to WriteRecordSet and moved to Logging class
+' Renamed GetSQLQuery to WriteSQLQuery and moved to Logging class
+' Renamed ChangeBatchesStatus to ChangeBatchStatus
+' Renamed ChangeBatchesStatusOrder to ChangeBatchStatusOrder
+' Renamed ChangeBatchesStatusTaskOrder to ChangeBatchStatusTaskOrder
+' Remamed class "Datacap.Libraries.Nenu.SQLQuerySetup" to "Datacap.Libraries.Nenu.QuerySetup"
+' Renamed action SetSQLSeparator to QuerySetSeparator
+' Moved action RunSQLQuery to QuerySetup class
+' Renamed action ClearAudit to ClearAuditTable
+' Renamed action ClearDebug to ClearDebugTable
+'
+'' Version = "8.0.7"
+' Updated 09/09/2010 AGorbunov
+' moved all the actions to a single class "Actions"
+' renamed:
+' ConfigureLogging to LogConfigure
+' WriteRecordSet to LogWriteRecordSet
+' WriteSQLQuery to LogWriteSQLQuery
+' ClearLog to LogClear
+' SendEmail to LogSendEmail
+' WriteEventLog to LogWriteEventLog
+' DisconnectAll to SetupDisconnectAll
+' OpenApplication to SetupOpenApplication
+' OpenApplicationEx to SetupOpenApplicationEx
+' RunSqlQuery to ProcessRunSqlQuery
+' ClearAuditTable to ProcessClearAuditTable
+' ClearDebugTable to ProcessClearDebugTable
+' MoveDBRecords to ProcessMoveDBRecords
+' ChangeBatchStatus to ProcessChangeBatchStatus
+' ChangeBatchStatusOrder to ProcessChangeBatchStatusOrder
+' ChangeBatchStatusTaskOrder to ProcessChangeBatchStatusTaskOrder
+' DeleteBatches to ProcessDeleteBatches
+' MoveBatches to ProcessMoveBatches
+' ResetPendingOrNotify to ProcessResetPendingOrNotify
+' QueryTMUsage to ReportQueryTMUsage
+' SetReportingTable to RetorpSetReportingTable
+' SetUsageDBTable to ReportSetUsageDBTable
+'
+' Version = "8.0.8"
+' Updated 09/23/2010 RFerin
+' 29187 Minor help updates.
+'
+' Version = "8.0.9"
+' Updated 09/28/2010 AGorbunov
+' Renamed RetorpSetReportingTable to ReportSetReportingTable
+'
+' Version = "8.0.10"
+' Updated 09/28/2010 AGorbunov
+' Added parameter asAttachment to ProcessResetPendingOrNotify
+'
+' Version = "8.0.11"
+' Updated 09/30/2010 RFerin
+' 29187 Minor help updates.
+'
+' Version = "8.0.12"
+' Updated 10/18/2010 AGorbunov
+' Added parameter to ProcessMoveDBRecords action to select target DB date time separator.
+'
+' Version = "8.0.13"
+' Updated 10/22/2010 RFerin
+' 29886 Clarified the help to state that when performing multiple operations that include
+'       moving the database records, the database move should be performed last.
+'
+' Version = "8.0.14"
+' Updated 10/27/2010 AGorbunov
+' Moved parameter targetDBSQLSeparator in the action ProcessMoveDBRecords to the end of list, as it is not likely to be used.
+' Updated help for QuerySetSeparator.
+'
+' Version = "8.0.1.15"
+' Updated 12/13/2010 RFerin
+' 30131 Fixed help text for ProcessDeleteBatches.
+'
+' Version = "8.1.0.16"
+' Updated 03/01/2011 AGorbunov
+' Added ProcessInjectBatches Function
+' Added QuerySetBatchRange Function
+'
+' Version = "8.1.0.17"
+' Updated 07/21/2011 AGorbunov
+' Added function QuerySetDateFormat and QuerySetDateTimeFormat
+'
+' Version = "8.1.0.18"
+' Updated 07/22/2011 RFerin 
+' 32144 Removed support for DCSit.  Use smart parameters to obtain passwords from the application service.
+'
+' Version = "8.1.0.19"
+' Updated 07/22/2011 AGorbunov
+' 31243 Fixed help for action SetupOpenApplication
+'
+' Version = "8.1.0.20"
+' Updated 11/03/2011 AGorbunov
+' Moved parameter information from the qi= tag to the standard parameter help section
+' Moved action information from the qi= tag to the standard action help section
+'
+' Version = "8.1.0.21"
+' Updated 11/03/2011 AGorbunov
+' Fixed typo in coma word
+' Added location of the audit and debug tables to the help
+'
+' Version = "8.1.0.22"
+' Updated 03/14/2012 AGorbunov
+' Fixed typos in action's help
+'
+' Version = "8.1.0.23"
+' Updated 04/20/2012 AGorbunov
+' Fixed typos in action's help
+'
+' Version = "8.1.0.24"
+' Updated 04/20/2012 AGorbunov
+' Fixed help for QuerySetGeneric action
+'
+' Version = "8.1.0.25"
+' Updated 04/20/2012 AGorbunov
+' Fixed help for SetupOpenApplication, SetupOpenApplicationEX, SetPasword, SetUser and SetStation (LDAP - leave blank user, pwd and station).
+'
+' Version = "8.1.0.26"
+' Updated 06/03/2013 MQureshi
+' Added action ProcessDeleteBatchesEx
+' Deprecated action ProcessDeleteBatches
+' Fixed help to use better examples for QuerySetJobID
+'
+' Version = "8.1.0.27"
+' Updated 06/13/2013 MQureshi
+' Added action ProcessMoveBatchesEx
+' Deprecated action ProcessMoveBatches
+'
+' Version = "9.0.0.28"
+' Updated 01/20/2014 MQureshi
+' Added action ProcessRunSqlQueryEx
+' Deprecated action ProcessRunSqlQuery
+'
+' Version = "9.0.4.29"
+' Updated 01/25/2016 IMIKHAYLOVA
+' Made private actions ProcessRunSqlQuery,ProcessDeleteBatches,ProcessMoveBatches
+
+' Version = "9.1.6.30"
+' Updated 03/07/2019 VShriva6
+' Removed code and help for deprecated actions.
+
+' Version = "9.1.9.31"
+' Updated 08/24/2021 VShriva6
+' Added new action ProcessDeleteTaskStatsData
+
+' Version = "9.1.9.32"
+' Updated 08/24/2021 VShriva6
+' Updated action help of action ProcessRunSqlQueryEX.
+
+' Version = "9.1.9.33"
+' Updated 09/16/2021 VShriva6
+' Update help of action ProcessDeleteTaskStatsData
+
+' Version = "9.1.9.34"
+' Updated 01/17/2022 Ramhari.Shinde
+' Created new action ProcessDeleteBatchesInBulk
+
+' Version = "9.1.9.35"
+' Updated 04/11/2022 Ramhari.Shinde
+' Helptext updated for action ProcessDeleteBatchesInBulk
+
+' Version = "9.1.9.36" DBACLD-47072
+' Updated 04/27/2022 VShriva6
+' Updated action help of action ProcessRunSqlQueryEX.
+'**************************************************************************************************
+   ]]>
+  </g>
+  <com ref="Datacap.Libraries.Nenu.Actions" qi="Logging actions">
+    <h>
+      NENU, the New Enhanced Notification Utility, can monitor one or more applications, perform maintenance
+      and reporting on them.  Everything NENU does is action based, allowing it to be
+      highly customized to the needs of specific applications.  NENU has the ability to build queries using
+      rulesets and actions from within Datacap Studio.  The results of the queries can be acted
+      on directly to send notifications or automatically adjust batch states.<br/><br/>
+
+      Using the "QuerySet" actions, queries can be dynamically generated at run time, piece by piece.
+      Each action will specify aspects of the query until it is finally executed.  The result is
+      a record set of batches that can be acted upon as required.
+      For example, it is possible to delete or mote batches that have reached a certain age.  If batches
+      have become stuck in an aborted state, an email can be generated to a set of recipients to notify them
+      of the issue.
+    </h>
+    <method name="LogClear" qi="Clears current Log.">
+      <ap>None.</ap>
+      <h>
+        Clears current log.
+        <e>
+          <b>LogClear()</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+    <method name="LogConfigure" qi="Configures features of aTM logging.">
+      <p name="severity"     type="int" />
+      <p name="filePath"     type="string" />
+      <p name="overwrite"    type="bool" />
+      <p name="reflash"      type="bool" />
+      <p name="showTime"     type="bool" />
+      <p name="showDate"     type="bool" />
+      <p name="showSeverity" type="bool" />
+      <ap>
+        severity: The log severity limit [0-9]. 0 = maximum logging.  4 or 5 = typically informational or error logging. <br/>
+        filePath: Log file path name or blank to disable logging.  Smart parameters are supported. <br/>
+        overwrite: True will overwrite any existing file. <br/>
+        reflash: True will flush the error message buffer to disk after every write. <br/>
+        showTime: True adds the current time to each log message. <br/>
+        showDate: True adds the current date to each log message. <br/>
+        showSeverity: True adds the severity to the log. <br/>
+      </ap>
+      <h>
+        Configures aTM logging.  The severity controls verbosity of the log; logging only severe errors will provide
+	the best performance at expense of reduced debugging information, should a debug trace be required.<br/><br/>
+
+        This will not change logging as configured for each of the tasks in the target application (i.e. RRS logs).
+	If this action is not called, no aTM log file will be created.  aTM logging can be evaluated to see which
+	requests were transmitted to the Taskmaster Server.
+        <e>
+          <b>LogConfigure("5", "@STRING(C:\ParentDir\NENU\Logs\NENU.aTM)")</b><br/>
+          In this example, rolling 'NENU.aTM.#.log' logs will be placed into the custom directory.<br/><br/>
+
+          <b>LogConfigure("5", "@APPPATH(export)")</b><br/>
+          In this example, the output directory is retrieved from the application service
+          using Smart parameters.  The path is the export directory for the current application.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if logging is successfully configured.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    <method name="LogWriteRecordSet" qi="Outputs the results of ProcessRunSqlQueryEx to the error log.">
+      <ap>None.</ap>
+      <h>
+        Writes out the result of the last call to ProcessRunSqlQueryEx to the error file.
+        This action can be useful for debugging an application.
+        <e>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          ProcessRunSqlQueryEx("")<br/>
+          <b>LogWriteRecordSet("")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the write is successful.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx, LogWriteSQLQuery</see>
+    </method>
+    <method name="LogWriteSQLQuery" qi="Outputs the constructed SQL query to the error log.">
+      <ap>None.</ap>
+      <h>
+        Writes out the result of the previous calls to the "QuerySet" actions to the error file.
+        This action can be useful for debugging an application, allowing you to view the
+        exact SQL that was constructed and used in ProcessRunSqlQueryEx.
+        <e>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          <b>LogWriteSQLQuery("")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+        </e>
+      </h>
+      <lvl>Any level</lvl>
+      <ret>
+        <b>True,</b> if the log is successfully written.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx, LogWriteRecordSet</see>
+    </method>
+    <method name="LogSendEmail" qi="Sends email with log to comma separated list of recipients.">
+      <p name="asattachment" type="bool" />
+      <p name="addressFrom" type="string" />
+      <p name="addressTo" type="string" />
+      <p name="subject" type="string" />
+      <p name="user" type="string" />
+      <p name="password" type="string" />
+      <p name="domain" type="string" />
+      <p name="server" type="string" />
+      <p name="port" type="string" />
+      <ap>
+        All parameters support Smart parameters.<br/>
+        asattachment: Boolean value True or False .If True, Send the log as attachment to the e-mail. By default it is false. <br/>
+        addressFrom: Address From (Optional). Default value: currentUser@currentDomain. <br/>
+        addressTo: Comma separated list of recipients. <br/>
+        subject: email subject (Optional). Default value: 'NENU notification current_date_and_time'. <br/>
+        user: Mail user name (Optional). Default value: current user credentials. <br/>
+        password: Mail user password (Optional). Default value: current user credentials. <br/>
+        domain: Mail user domain (Optional). Default value: current domain. <br/>
+        server: Mail Server name (Optional). Default value: mail.current_domain. <br/>
+        port: Mail Server Port number (Optional). Default value: 25. <br/>
+      </ap>
+      <h>
+        Sends an email using the SMTP protocol.  As NENU actions run, an in-memory log keeps track of each of the NENU actions
+        that are called and their parameters.  The LogSendEmail action will place the action activity information into an
+        email and send it.
+        <e>
+          <b>LogSendEmail("False","jsmith@somewhere.com", "jdoe@somewhere.com","mmoore@somewhere.com", "", "", "", "", "", "")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the email is sent.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    <method name="LogWriteEventLog" qi="Writes a message to the Event Log.">
+      <p name="message" type="string" />
+      <p name="level"   type="int" />
+      <p name="eventID" type="int" />
+      <ap>
+        message: Message to write to the Event Log and the local log.  Smart parameters are supported. <br/>
+        level: Integer value. 0 - informational, 1 - Warning, 2 - Error. <br/>
+        eventID: Integer value. Desired Event ID. <br/>
+      </ap>
+      <h>
+        Unconditionally writes out a message to the Windows Event Log and to the application log file for the running task.
+        Set the level and event ID to the values that is appropriate for the message being logged.
+        <e>
+          <b>LogWriteEventLog("This is an informational message.", "0", "10")</b><br/>
+          This example writes the message 'This is an informational message.' to the event log.<br/><br/>
+
+          <b>LogWriteEventLog("@B.MyMessage", "0", "10")</b><br/>
+          This example uses Smart parameters to write out the value of the batch level variable "MyMessage".
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the event is successfully logged.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    
+    <method name="SetupDisconnectAll" qi="Disconnect from all Taskmaster servers.">
+      <ap>None.</ap>
+      <h>
+        Closes the connections to all Taskmaster databases that were opened by NENU actions.
+        Some NENU actions will automatically close the connection to the database
+        after a query has been performed.
+        <e>
+          <b>SetupDisconnectAll()</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+    <method name="SetupOpenApplication" qi="Creates connection to the application based on default settings.">
+      <ap>None.</ap>
+      <h>
+        A simplified version of SetupOpenApplicationEx.  It is identical in operation with the difference that
+        all of the default parameters are used.  The default values can be set
+        independently by individual actions, such as SetApplication, SetServer, etc.  See SetupOpenApplicationEx for more information.<br/>
+        When using LDAP or ADSI authentication use the <b>SetUser</b>, <b>SetStation</b> and <b>SetApplication</b> actions instead of SetupOpenApplication.
+        <e>
+          SetApplication("APT")<br/>
+          SetServer("Server 1")<br/>
+          SetUser("user")<br/>
+          SetPassword("password")<br/>
+          SetAdminDB("*/tmadmin:cs")<br/>
+          SetEngineDB("*/tmengine:cs")<br/>
+          SetStation("1")<br/>
+          <b>SetupOpenApplication()</b>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>True,</b> if the application exists in the application service the connection was successful.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        SetupOpenApplicationEx, SetApplication, SetServer, SetAdminDB, SetEngineDB, SetUser, SetPassword, SetStation
+      </see>
+    </method>
+	  <method name="SetupOpenApplicationEx" qi="Creates connection to the application based on the parameters provided.">
+		  <p name="application" type="string" />
+		  <p name="server"    type="string" />
+		  <p name="admin"     type="string" />
+		  <p name="engine"    type="string" />
+		  <p name="debugFlag" type="bool"   />
+		  <p name="user"      type="string" />
+		  <p name="password"  type="string" />
+		  <p name="station"   type="string" />
+      <ap>
+        All parameters, except for debugFlag, support Smart parameters. <br/>
+        application: Application name (Optional). Default value: the name of the application that is running this action. <br/>
+        server: Server name (Optional). Default value: first available server in the application. <br/>
+        admin: Administration Database name (Optional). Default value: first available Admin DB. <br/>
+        engine: Engine Database name (Optional). Default value: first available Engine DB. <br/>
+        debugFlag: Debug Flag (Optional). Default value: false. <br/>
+        user: User name (Optional). Default value: current user credentials.<br/>
+        password: Password (Optional). Default value: current user credentials.<br/>
+        station: Station ID (Optional). Default value: Current station name.<br/>
+      </ap>
+      <h>
+        Similar to SetupOpenApplication, this action will connect NENU to a specific application.
+        The difference between the two actions is that here the default parameters
+        can be overridden in one single action.  These parameters determine what application
+        is to be monitored by NENU.  This action, or SetupOpenApplication, should be called first, then
+        the NENU actions can be used to perform queries on the application and perform any
+        required actions based on the results.<br/>
+        When using LDAP or ADSI authentication use the <b>SetUser</b>, <b>SetStation</b> and <b>SetApplication</b> actions instead of SetupOpenApplicationEx.
+        <e>
+          <b>SetupOpenApplicationEX("Survey", "", "SurveyAdm.mdb", "SurveyEng.mdb", "False", "", "", "1")</b>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>True,</b> if the application exists in the application service the connection was successful.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        SetupOpenApplication, SetApplication, SetServer, SetAdminDB, SetEngineDB, SetUser, SetPassword, SetStation
+      </see>
+    </method>
+    <method name="SetApplication" qi="Specifies the name of the Application used by NENU.">
+      <p name="application" type="string" />
+      <ap>
+        application: The application name.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Sets the name of the application, as defined within the application service, which
+        will be used by NENU.  The application
+        will determine the rules and databases that will be used by subsequent actions.
+        This will be the default value used for the action SetupOpenApplication.
+        <e>
+          <b>SetApplication("APT")</b><br/>
+          SetServer("Server 1")<br/>
+          SetupOpenApplication("")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>False,</b> if the application name is missing.  Otherwise, <b>True.</b>
+      </ret>
+      <see>SetupOpenApplication, SetupOpenApplicationEx</see>
+    </method>
+    <method name="SetServer" qi="Specifies the name of the Taskmaster Server.">
+      <p name="server" type="string" />
+      <ap>
+        server: Server name.  Smart parameters are supported. <br/>  
+      </ap>
+      <h>
+        The name of the Taskmaster server as it is defined in the application service, which will be
+        the server used by subsequent NENU actions.
+        This will be the default value used for the action SetupOpenApplication.
+        <e>
+          SetApplication("APT")<br/>
+          <b>SetServer("Server 1")</b><br/>
+          SetupOpenApplication("")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>False,</b> if a server name is not specified.  Otherwise, <b>True.</b>
+      </ret>
+      <see>SetupOpenApplication, SetupOpenApplicationEx</see>
+    </method>
+    <method name="SetAdminDB" qi="Specifies the Administration database.">
+      <p name="adminDB" type="string" />
+      <ap>
+        adminDB: Administration Database key in the Application Service.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Obtains the Administrator database connection information from the application service.
+        This will be the default value used for the action SetupOpenApplication.
+        <e>
+          SetApplication("APT")<br/>
+          SetServer("Server 1")<br/>
+          <b>SetAdminDB("*/tmadmin:cs")</b><br/>
+          SetEngineDB("*/tmengine:cs")<br/>
+          SetupOpenApplication("")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>SetupOpenApplication, SetupOpenApplicationEx</see>
+    </method>
+    <method name="SetEngineDB" qi="Specifies the Engine database.">
+      <p name="engineDB" type="string"/>
+      <ap>
+        engineDB: Engine Database key in the Application Service. <br/>
+      </ap>
+      <h>
+        Obtains the Engine database connection information from the application service.
+        This will be the default value used for the action SetupOpenApplication.
+        <e>
+          SetApplication("APT")<br/>
+          SetServer("Server 1")<br/>
+          SetAdminDB("*/tmadmin:cs")<br/>
+          <b>SetEngineDB("*/tmengine:cs")</b><br/>
+          SetUser("Admin")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>SetupOpenApplication, SetupOpenApplicationEx</see>
+    </method>
+    <method name="SetUser" qi="Action to set a user name to login to the Server.">
+      <p name="user" type="string"/>
+      <ap>
+        user: User name.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Specifies the name of the user for the login to the Administrator and Engine databases.
+        This will be the default value used for the action SetupOpenApplication.<br/>
+        When using LDAP or ADSI authentication use the <b>SetUser</b>, <b>SetStation</b> and <b>SetApplication</b> to login.
+        <e>
+          SetApplication("APT")<br/>
+          SetServer("Server 1")<br/>
+          SetAdminDB("*/tmadmin:cs")<br/>
+          SetEngineDB("*/tmengine:cs")<br/>
+          <b>SetUser("Admin")</b><br/>
+          SetupOpenApplication("")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>SetupOpenApplication, SetupOpenApplicationEx</see>
+    </method>
+    <method name="SetPassword" qi="Action to set password to connect to the Server.">
+      <p name="password" type="string"/>
+      <ap>
+        password: Password. Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Specifies the password for the previously specified user ID.
+        This will be the default value used for the action SetupOpenApplication.<br/>
+        When using LDAP or ADSI authentication use the <b>SetUser</b>, <b>SetStation</b> and <b>SetApplication</b> to login, do not call the SetPassword action with an empty value.
+        <e>
+          SetApplication("APT")<br/>
+          SetServer("Server 1")<br/>
+          SetAdminDB("*/tmadmin:cs")<br/>
+          SetEngineDB("*/tmengine:cs")<br/>
+          SetUser("Admin")<br/>
+          <b>SetPassword("@APPVAR(values/adv/MyNENUPassword)")</b><br/>
+          SetupOpenApplication("")<br/><br/>
+          
+          This example uses the Smart Parameter @APPPVAR to obtain the value of the password from the value name "MyNENUPassword"
+	  in the "Custom Values" tab of the application service manager.  The value name is configurable.
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>SetupOpenApplication, SetupOpenApplicationEx</see>
+    </method>
+    <method name="SetStation" qi="Action to set station ID to connect to the Server.">
+      <p name="station" type="string" />
+      <ap>
+        station: Station ID. Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Specifies the station ID for login.
+        This will be the default value used for the action SetupOpenApplication.<br/>
+        When using LDAP or ADSI authentication use the <b>SetUser</b>, <b>SetStation</b> and <b>SetApplication</b> to login.
+        <e>
+          SetApplication("APT")<br/>
+          SetServer("Server 1")<br/>
+          SetAdminDB("*/tmadmin:cs")<br/>
+          SetEngineDB("*/tmengine:cs")<br/>
+          <b>SetStation("1")</b><br/>
+          SetupOpenApplication("")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>SetupOpenApplication, SetupOpenApplicationEx</see>
+    </method>
+  
+    <method name="ProcessChangeBatchStatus" qi="Changes the status of one or more batches.">
+      <p name="newStatus" type="string" />
+      <ap>
+        newStatus: The new batch status: aborted, cancelled, finished, hold, job done, pending, running.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Using the results from a previous query performed by NENU actions, the selected batches
+        will have their status attribute changed.<br/><br/>
+
+        The database connection will be closed by this action.
+        <e>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          ProcessRunSqlQueryEx("")<br/>
+          <b>ProcessChangeBatchStatus("hold")</b>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>True,</b> if the batch status is successfully changed.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    <method name="ProcessChangeBatchStatusOrder" qi="Changes batch status and order.">
+      <p name="newStatus" type="string" />
+      <p name="newOrder" type="int" />
+      <ap>
+        newStatus: The new batch status: aborted, cancelled, finished, hold, job done, pending, running.  Smart parameters are supported. <br/>
+        newOrder: New task order, zero-based index of task inside its job. <br/>
+      </ap>
+      <h>
+        Using the results from a previous query performed by NENU actions, the selected batches
+        will have their status and order attributes changed.<br/><br/>
+
+        The database connection will be closed by this action.
+        <e>
+          <b>ProcessChangeBatchStatusOrder("hold", "1")</b>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>True,</b> if the batch status is successfully changed.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    <method name="ProcessChangeBatchStatusTaskOrder" qi="Changes batch status, task and order.">
+      <p name="newStatus" type="string" />
+      <p name="newOrder"  type="int" />
+      <p name="newTask"   type="string" />
+      <ap>
+        newStatus: The new batch status: aborted, cancelled, finished, hold, job done, pending, running.  Smart parameters are supported. <br/>
+        newOrder: New task's order, zero-based index of task inside its job. <br/>
+        newTask: New task's name. <br/>
+      </ap>
+      <h>
+        Using the results from a previous query performed by NENU actions, the selected batches
+        will have their status, order and task attributes changed.<br/><br/>
+
+        The database connection will be closed by this action.
+        <e>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          ProcessRunSqlQueryEx("")<br/>
+          <b>ProcessChangeBatchStatusTaskOrder("hold", "1", "Verify")</b>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>True,</b> if the batch status is successfully changed.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    <method name="ProcessClearAuditTable" qi="Clears the Audit table located in the admin database.">
+      <ap>None.</ap>
+      <h>
+        Clears the Audit table located in the admin database.  This action can be called to ensure
+        that Audit table is cleared when information is moved from one
+        database to another.
+        <e>
+          <b>ProcessClearAuditTable("")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the table is cleared.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessClearDebugTable</see>
+    </method>
+    <method name="ProcessClearDebugTable" qi="Clears the Debug table located in the engine database.">
+      <ap>None.</ap>
+      <h>
+        Clears the Debug table located in the engine database.  This action can be called to ensure
+        that Debug table is cleared when information is moved from one
+        database to another.
+        <e>
+          <b>ProcessClearDebugTable("")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the table is cleared.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessClearAuditTable</see>
+    </method>
+    
+    <method name="ProcessDeleteTaskStatsData" qi="Delete records from Taskstats table.">
+      <p name="deleteOrphanData" type="bool" qi="True deletes the records from TaskStats table which are orphan.
+        Orphan records means those records in TaskStats table whose related data from the main tables are already deleted or does not exists." />
+      <p name="station" type="string" qi=" Optional. If orphan data from TaskStats table to be deleted from specific station. In case nothing is provided then orphan records will be deleted from Taskstats table irrespective of station value." />
+      <p name="taskOperator" type="string" qi="Optional. If orphan data from TaskStats table to be deleted which belongs to specific task operator. In case nothing is provided then orphan records will be deleted from Taskstats table irrespective of Task Operator value." />
+      <p name="job" type="string" qi="Optional. If orphan data from TaskStats table to be deleted from specific task job for e.g Main Job. In case nothing is provided then orphan records will be deleted from Taskstats table irrespective of Job value."/>  
+	       
+      <h>
+	  
+	  <b>Note:</b> <br/>
+        Parameters Station, TaskOperator and Job will be used as filter parameter only to get orphan records.Support smart parameters. <br/>
+        These parameters will not be applied to fetch records which are not orphan. <br/><br/>
+		
+        This action can delete two types of Data from TaskStats table. <br/>
+        <b>1. Orphan Data - </b> Orphan data here refers to that data which do not have reference data in main tables returned by Job monitor view.<br/>
+        There is a possibility that batches from main tables gets deleted earlier and data left over in the Taskstats table.<br/><br/>
+        For example: ProcessDeleteBatchesEX action deletes the record from the main tables but not from the TaskStats table. <br/>
+        <b> Query parameters using set of query actions cannot be use here. </b> Since the query actions works on Job Monitor table data, and orphan data cannot be fetch from Job Monitor table.<br/>
+        Thus, action have the separate parameter list provided which can be used to delete the selected set of records.
+        <br/><br/>
+
+        <b>2. Non-Orphan Data - </b> Non-Orphan data here refers to the data from Taskstats table which have reference data in main tables. <br/>
+        There can be scenario where the Taskstats data needs to be deleted only or there can be a requirement where at the time of deleting batches
+        using ProcessDeleteBatchesEX action, <br/> the data from the TaskStats table needs to be deleted along with.
+        <br/>
+        To set which all batches to be deleted from TaskStats table can be set using Query actions. Similar to ProcessDeleteBatchesEX action.<br/>
+        One can use ProcessRunSqlQueryEx action to view the query formed and how many batches were fetched. To view the fetched batches please refer to LogWriteRecordSet action. <br/>
+        For more details, please refer action ProcessRunSqlQueryEX.
+        <br/><br/>
+        <e>
+          <br/>
+          <b>
+            Example 1:
+            TaskStats table have few Orphan records along with other records but user wants to delete all Orphan records only.
+          </b> <br/><br/>
+
+          SetupOpenApplicationEX("TravelDocs", "", "TravelDocsAdm.mdb", "TravelDocsEng.mdb", "False", "", "", "1") <br/>
+          <b>ProcessDeleteTaskStatsData(True,””,””,””) </b> <br/><br/>
+
+          The first parameter in the action is set to True which denotes, orphan records from Taskstats table is expected to be deleted. Rest of the optional parameters are not provided which denotes all orphan records, irrespective of any filter is expected to be deleted from the Taskstats table. <br/><br/><br/>
+
+          <b>
+            Example 2:
+            TaskStats table have few Orphan records along with other records and user wants to delete all Orphan records belongs to specific job.
+          </b> <br/><br/>
+
+          SetupOpenApplicationEX("TravelDocs", "", "TravelDocsAdm.mdb", "TravelDocsEng.mdb", "False", "", "", "1") <br/>
+          <b>ProcessDeleteTaskStatsData(True,””,””,”Main Job”) </b> <br/><br/>
+
+          The first parameter in the action is set to True which denotes, orphan records from Taskstats table is expected to be deleted but only those which belongs to Job ID <b>Main Job</b>. <br/><br/><br/>
+
+          <b>
+            Example 3:
+            TaskStats table have few Orphan records along with other records. User wants to delete all Orphan records if any along with specific non-orphan data.
+          </b> <br/><br/>
+
+          SetupOpenApplicationEX("TravelDocs", "", "TravelDocsAdm.mdb", "TravelDocsEng.mdb", "False", "", "", "1") <br/>
+          QuerySetJobID(“Main Job”) <br/>
+          QuerySetStation(“1) <br/>
+          QuerySetStatus(“Cancelled”) <br/>
+          <b>ProcessDeleteTaskStatsData(True,””,””,”Navigator Job”) </b> <br/><br/>
+
+          By using above set of query actions along with ProcessDeleteTaskStatsData action, will provide facility to delete orphan data as well as the data of those batches filtered out thru Query actions. In this example, the action will first delete the orphan records belonging to Navigator Job from task stats table and then it will delete the data from Taskstats table for those batches where batch status have cancelled status, station is 1 and Job ID is Main Job. <br/><br/>
+
+          <b>Note: The parameters value passed in the action will not be used to filter out the batches in case of non-orphan data. Vice Versa, the parameter passed in Query actions will not be used in case of deleting orphan data. </b> <br/><br/><br/>
+
+
+
+          <b>Example 4: ProcessDeleteBatchesEX called before ProcessDeleteTaskStatsData. </b><br/><br/>
+
+          SetupOpenApplicationEX("TravelDocs", "", "TravelDocsAdm.mdb", "TravelDocsEng.mdb", "False", "", "", "1") <br/>
+          QuerySetJobID(“Main Job”) <br/>
+          QuerySetStation(“1) <br/>
+          QuerySetStatus(“Cancelled”) <br/>
+          ProcessDeleteBatchesEX() <br/>
+          <b>ProcessDeleteTaskStatsData(False,””,””,””) </b> <br/><br/>
+
+          In this example ProcessDeleteBatchesEX action is called before ProcessDeleteTaskStatsData which means the ProcessDeleteBatchesEX action will delete the batches from the main tables. Thus, these batches corresponding data in TaskStats table will become orphan as no reference is available in database for them in main tables.<br/>
+          Calling action ProcessDeleteTaskStatsData with parameter False will not delete any data from TaskStats table for two reasons:- <br/>
+          First – by setting parameter as False the action is expected to not delete any orphan records. <br/>
+          Secondly, there is no non-orphan records for the given set of query actions available in Database. As they are already deleted and has become orphan now. <br/><br/><br/>
+
+          <b>Example 5: ProcessDeleteBatchesEX called after ProcessDeleteTaskStatsData.</b> <br/><br/>
+
+          SetupOpenApplicationEX("TravelDocs", "", "TravelDocsAdm.mdb", "TravelDocsEng.mdb", "False", "", "", "1") <br/>
+          QuerySetJobID(“Main Job”) <br/>
+          QuerySetStation(“1) <br/>
+          QuerySetStatus(“Cancelled”) <br/>
+          <b>ProcessDeleteTaskStatsData(True,””,””,””) </b> <br/><br/>
+          ProcessDeleteBatchesEX() <br/>
+
+          In this example, the action will first delete all the orphan records. Then it will query for non-orphan data on the basis of query actions and will delete data from TaskStats Table. Later, ProcessDeleteBatchesEX action will delete the batches from main tables. <br/><br/>      
+       
+        </e>
+		<br/>
+		<b>To view the count of non-orphan batches targeted for deletion, one can use ProcessRunSqlQueryEX action. To view these batches use the action LogWriteRecordSet action.</b> <br/> <br/>
+
+          <b>To view the count of orphan records that are going to be deleted can be seen in rrs logs. To view which all batches are going to be deleted, one need to check directly in database using a query.</b>
+		   <br/><br/>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the data deleted successfully.  Otherwise <b>False.</b>
+      </ret>
+      <see>ProcessRunSQLQueryEX, ProcessDeleteBatchesEx, LogWriteRecordSet</see>
+    </method>
+
+
+    <method name="ProcessDeleteBatchesEx" qi="Delete selected batches.">
+      <p name="deleteSubFolders" type="bool" />
+      <p name="preserveEngineDBRecords" type="bool" />
+      <ap>
+        deleteSubFolders: True deletes any sub-folders within batch directories regardless of creation source. <br/>
+	preserveEngineDBRecords: True retains engine database records (only batch directories are deleted). <br/>
+      </ap>
+      <h>
+        Using the results from a previous query performed by NENU actions, the selected batches
+        will be deleted from disk.<br/><br/>
+
+        A previous query must have been run to identify the batches to delete.
+        The database connection will be closed by this action.
+        <e>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          ProcessRunSqlQueryEx("")<br/>
+          <b>ProcessDeleteBatchesEx("false,false")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the batches are deleted.  Otherwise <b>False.</b>
+      </ret>
+      <see>ProcessMoveBatchesEx, ProcessMoveDBRecords</see>
+    </method>
+	
+	<method name="ProcessDeleteBatchesInBulk" qi="Delete selected batches.">
+      <p name="deleteSubFolders" type="bool" />
+      <p name="preserveEngineDBRecords" type="bool" />
+	  <p name="detailDebugLog" type="bool" />
+      <ap>
+        deleteSubFolders: True deletes any sub-folders within batch directories regardless of creation source. <br/>
+		preserveEngineDBRecords: True retains engine database records (only batch directories are deleted). <br/>
+		detailDebugLog: True writes the detailed rrs log of action execution. Will help to debug the action execution.
+		  Recommended to keep it false. Performance may be affected due to enabling this parameter. <br/>
+      </ap>
+      <h>
+        Using the results from a previous query performed by NENU actions, the selected batches
+        will be deleted from disk. Action deletes batches in bulk. The performance of the delete operation is improved.<br/>
+		This delete process needs a different stored procedure for different databases and one table name 'DeleteRecordList'.
+		Database-specific stored procedures and table scripts are provided in \\Datacap\support\DBScript folder.<br/><br/>
+		
+		<b>Note:</b><br/>
+				1. This Action will not save deleted batch info in debug table.<br/>
+				2. This action is limited to SQL Server, Oracle, and DB2 databases.<br/>
+				3. If huge number of records are present in debug table, it is recommended to use ProcessClearDebugTable() Action before calling ProcessDeleteBatchesInBulk() action.
+				   But ProcessClearDebugTable() action will delete all records from debug table and debug report in RV2 reports may be affected.		<br/>
+				4. If huge number of records are present in debug table and ProcessClearDebugTable() action is not used before ProcessDeleteBatchesInBulk() action, SQL query execution will take more time to execute and could be timeout before complete execution. To increase the timeout for SQL query execution, it is recommended to set the below registry value according to the number of records present in debug table.<br/>
+				   for x86 "Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Datacap\TMS\InterThread"<br/>
+				   for x64 "Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Datacap\TMS\InterThread" <br/><br/> 
+        A previous query must have been run to identify the batches to delete.
+        The database connection will be closed by this action.
+        <e>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          ProcessRunSqlQueryEx("")<br/>
+          <b>ProcessDeleteBatchesInBulk("false,false,false")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the batches are deleted.  Otherwise <b>False.</b>
+      </ret>
+      <see>ProcessMoveBatchesEx, ProcessMoveDBRecords, ProcessClearDebugTable</see>
+    </method>
+    
+    <method name="ProcessMoveBatchesEx" qi="Move selected batches to folder specified in the parameter.">
+      <p name="pathTo" type="string" />
+      <p name="moveSubFolders" type="bool" />
+      <p name="preserveEngineDBPaths" type="bool" />
+      <p name="continueOnError" type="bool" />
+      <ap>
+        pathTo: The destination directory for the batches. Smart parameters are supported. <br/>
+	      moveSubFolders: True moves any sub-folders within batch directories regardless of creation source.
+                        Required if batches contain sub-folders, else operations, including database update, will fail.<br/>
+	      preserveEngineDBPaths: True preserves original batch directory paths inside the engine database. <br/>
+	      continueOnError: True continues processing if any single batch fails to be moved with non-fatal error. <br/>
+      </ap>
+      <h>
+        Using the results from a previous query performed by NENU actions, the selected batches
+        will be moved to the specified destination directory.<br/><br/>
+
+        A previous query must have been run to identify the batches to move to the new directory.
+        The destination directory must exist.  The database connection will be closed by this action.<br/><br/>
+        
+        If you are moving batches from one location to another and also moving database records from
+        one database to another, move the batches first.  The movement of the database records should
+        be performed last.
+        <e>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          ProcessRunSqlQueryEx("")<br/>
+          <b>ProcessMoveBatchesEx("@STRING(C:\My Old Batches\),false,false,false")</b><br/>
+          This example runs a query to select all batches from station "1" where the Job ID
+          does not equal "Demo Job", then moves the batches to a directory called "My Old Batches".<br/><br/>
+
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          ProcessRunSqlQueryEx("")<br/>
+          <b>ProcessMoveBatchesEx("@APPPATH(BatchArchiveDirectory),false,false,false")</b><br/>
+          This example also selects the same set of batches as above, however it uses a
+          Smart parameter to obtain the full path to directory from the Application Service.
+          A key called "BatchArchiveDirectory" will have to exist in the Application Service.
+          If these rules are used for multiple applications, each application can have
+          a unique definition of this value within the Application Service, making these rules
+          very flexible.<br/>
+          One benefit of this approach is that in an environment where there is a test system
+          and a production system, each system will have unique values stored in the
+          Application Service.  Each of the environments can have a different physical directory
+          specified within the Application Service, allowing the rules in each system to remain identical.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the batches are successfully moved.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessDeleteBatchesEx, ProcessMoveDBRecords</see>
+    </method>
+    <method name="ProcessMoveDBRecords" qi="Creates connection to the application based on the parameters provided and moves selected database data to this application.">      
+      <p name="application" type="string" />
+      <p name="server"    type="string" />
+      <p name="admin"     type="string" />
+      <p name="engine"    type="string" />
+      <p name="debugFlag" type="bool"   />
+      <p name="user"      type="string" />
+      <p name="password"  type="string" />
+      <p name="station"   type="string" />
+      <p name="deleteOriginal" type="bool" />
+      <p name="targetDBSQLSeparator" type="string" />
+      <ap>
+        application: Application name (Optional). Default value: the name of the application that is running this action. <br/>
+        server: Server name (Optional). Default value: first available server in the application. <br/>
+        admin: Administration Database name (Optional). Default value: first available Admin DB. <br/>
+        engine: Engine Database name (Optional). Default value: first available Engine DB. <br/>
+        debugFlag: Debug Flag (Optional). Default value: false. <br/>
+        user: User name (Optional). Default value: current user credentials. <br/>
+        password: Password (Optional). Default value: current user credentials. <br/>
+        station: Station ID (Optional). Default value: Current station name<br/>
+        deleteOriginal: Delete database records in source database. <br/>
+        targetDBSQLSeparator: Target Database date and time separator (Optional). If left blank action will try to detect the correct separator based on the connection string. <br/>
+      </ap>
+      <h>
+        Creates connection to the application based on the parameters provided and moves
+        selected database data to this application.  When performing operations on a batch and you are also
+        going to be moving the database records from one database to another, perform the database
+        move operation last.  When database records are moved, the database connection is still
+        connected to the original database.  Performing subsequent operations will still be
+        working on the original database, not the records in the new database.
+        <e>
+          <b>ProcessMoveDBRecords("APTBack","tms","admin","engine","false","admin","admin","1","true","")</b><br/>
+          In this example the source database is Oracle and the target is Access.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ProcessMoveBatchesEx, ProcessDeleteBatchesEx</see>
+    </method>
+    <method name="ProcessResetPendingOrNotify" qi="Resets all selected batches to 'Pending' status.">
+      <p name="threshold" type="int" />
+      <p name="asattachment" type="bool" />
+      <p name="addressFrom" type="string" />
+      <p name="addressTo" type="string" />
+      <p name="subject"   type="string" />
+      <p name="user"      type="string" />
+      <p name="password"  type="string" />
+      <p name="domain"    type="string" />
+      <p name="server"    type="string" />
+      <p name="port"      type="string" />
+      <ap>
+        All parameters, except for threshold, support Smart parameters.
+        threshold: Maximum amount of attempts to reset the batch to status 'Pending'. <br/>
+        asattachment: Send the log as attachment to the e-mail. <br/>
+        addressFrom: Address From (Optional). Default value: currentUser@currentDomain. <br/>
+        addressTo: The email recipient.  If multiple recipients, separate using a comma. <br/>
+        subject: Email subject (Optional). Default value: 'NENU notification current_date_and_time'. <br/>
+        user: Mail user name (Optional). Default value: current user credentials. <br/>
+        password: Mail user password (Optional). Default value: current user credentials. <br/>
+        domain: Mail user domain (Optional). Default value: current domain. <br/>
+        server: Mail Server name (Optional). Default value: mail.current_domain. <br/>
+        port: Mail Server Port number (Optional). Default value: 25. <br/>
+      </ap>
+      <h>
+        Resets the status of all batches selected by a previous SQL query to 'Pending' status.
+        The action will attempt to reset the batch by the amount specified in the 'threshold' parameter.
+        if the maximum reset attempts are reached, the action sends an email, along with the a log,
+        to the provided list of recipients.
+        <e>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          ProcessRunSqlQueryEx("")<br/>
+          <b>ProcessResetPendingOrNotify("3", "rrodrig@somewhere.com", "tom@somewhere.com,john@somewhere.com","","","","","","")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the email is sent.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    <method name="ProcessRunSqlQueryEx" qi="Runs the previously defined NENU query.">
+      <p name="minRecords" type="int" />
+      <p name="maxRecords" type="int" />
+      <ap>
+        minRecords - Minimum number of records required.<br/>
+        maxRecords - Maximum number of records required, equal to or greater than minRecords.  Use -1 for no limit.<br/>
+      </ap>
+      <h>
+        Performs the SQL select query using a query previously built using NENU actions.
+        The "QuerySet" actions need to have been previously called to create the
+        query.  The resulting record set is retained in memory and can be acted upon
+        using other actions.<br/><br/>
+
+        ProcessRunSqlQueryEx action has been enhanced to expose a variable that can be enabled or disabled to dump a batch recordset in the task rrs logs to assist with debugging issues.  For example, to write the recordset in the task rrs logs, use rrSet action to set the value of the variable "EnableRecordSetLogs" to True and to prevent writing out the recordset, set the value of the variable "EnableRecordSetLogs" to False.  By default, the value of the variable "EnableRecordSetLogs" is set to ‘False’ to prevent writing recordset in the log file.
+        <br/>
+        <b>Note: Enabling the variable to write out the recordsets in the logs can affect performance in cases when working with a large volume of batches.</b>
+
+        <br/><br/>
+        The action LogWriteRecordSet can be used to write out the recordset, usually for
+        debugging, as well as LogWriteSQLQuery which will output the constructed query.
+        QueryClear can be used to remove any existing query settings. <br/>
+
+        <e>
+          <b>Example 1.</b><br/>
+          QuerySetStation("1")<br/>
+          QuerySetJobID("!Demo Job")<br/>
+          <b>ProcessRunSqlQueryEx("1,-1")</b><br/><br/>
+
+          This example obtains results that include all batches, except for Demo Job, that have been run on station "1".
+          The action will return true if at least one non-Demo Job batch is found for that station ID.<br/>
+          <br/>
+          <b>Example 2. Enabling or disabling the variable "EnableRecordSetLogs” </b>
+          <br/>
+          <b> rrset("False","@X.EnableRecordSetLogs“) </b> <br/>
+          ProcessRunSqlQueryEX (1,-1)
+          <br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query is successful and the number of batches identified is within range of specified parameters.
+        Otherwise, <b>False.</b>
+      </ret>
+      <see>LogWriteRecordSet, LogWriteSQLQuery, QueryClear</see>
+    </method>
+    
+    <method name="ReportQueryTMUsage" qi="Update the ReportUser Database with the current users.">
+      <ap>None.</ap>
+      <h>
+        This action will query the number of users current logged on and place the information
+        into the reportUser.  This information is statistical information that can later
+        be used to generate usage reports with the RV2 reporting system.
+        <e>
+          <b>ReportQueryTMUsage("")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the database update was successful.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    <method name="ReportSetReportingTable" qi="Sets database that contains reports on all processed batches">
+      <p name="tbName" type="string" />
+      <p name="batchColumn" type="string" />
+      <p name="attemptColumn" type="string" />
+      <p name="doneColumn" type="string" />
+      <p name="actionColumn" type="string" />
+      <ap>
+        tbName: Table name in Engine database. <br/>
+        batchColumn: Optional. Name of the column that contains Batch ID. <br/>
+        attemptColumn: Optional. Name of the column that contains attempts. <br/>
+        doneColumn: Optional. Name of the column that contains completion result. <br/>
+        actionColumn: Optional. Name of the column that contains last action performed. <br/>
+      </ap>
+      <h>
+        Sets database that contains reports on all processed batches. Table must exist in the engine database.
+        <e>
+          ReportSetReportingTable("NENU","nn_batch","nn_attempt","nn_done","nn_action")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ReportSetUsageDBTable</see>
+    </method>
+    <method name="ReportSetUsageDBTable" qi="Sets database that contains reports on users logged in to TM">
+      <p name="tbName" type="string" />
+      <p name="ipAddressColumn" type="string" />
+      <p name="jobIDColumn" type="string" />
+      <p name="portColumn" type="string" />
+      <p name="processedBathcesColumn" type="string" />
+      <p name="stationColumn" type="string" />
+      <p name="taskIDColumn" type="string" />
+      <p name="userIDColumn" type="string" />
+      <p name="queryTimeColumn" type="string" />
+      <ap>
+        tbName: Table name in Engine database. <br/>
+        ipAddressColumn: IP Address column. <br/>
+        jobIDColumn: Job ID column. <br/>
+        portColumn: Port column. <br/>
+        processedBathcesColumn: Processed batches column. <br/>
+        stationColumn: Station ID column. <br/>
+        taskIDColumn: Task ID column. <br/>
+        userIDColumn: User ID column. <br/>
+        queryTimeColumn: Query time column. <br/>
+      </ap>
+      <h>
+        Sets database that contains reports on users logged in to TM. Table must exist in the engine database.
+        <e>
+          ReportSetUsageDBTable("reportUsers","ru_ip","ru_job","ru_port","ru_bathces","ru_station","ru_task","ru_user","ru_time")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ReportSetUsageDBTable</see>
+    </method>
+  
+    <method name="QuerySetSeparator" qi="Sets SQL Date and Time Separator for SQL queries.">
+		  <p name="separator" type="string" />
+      <ap>
+        separator: Date separator. Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Configures the Date and Time separator used by the database.  If this action is not called, the
+        value for the separator will be selected based on the connection string. Some database
+        separators are: MS SQL"'", Oracle "'", Access "#".
+        <e>
+          <b>QuerySetSeparator("#")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+    <method name="QuerySetDateFormat" qi="Sets custom Date format for SQL queries.">
+      <p name="dateFormat" type="string" />
+      <ap>
+        dateFormat: Date format. Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Configures the Date format used by the database.  If this action is not called, the
+        value for the Date format will be <b>"yyyy/MM/dd"</b>.
+        Detailed description of available values are:<br/>
+
+        <b>d</b>	Represents the day of the month as a number from 1 through 31. A single-digit day is formatted without a leading zero<br/>
+        <b>dd</b>	Represents the day of the month as a number from 01 through 31. A single-digit day is formatted with a leading zero<br/>
+        <b>ddd</b>	Represents the abbreviated name of the day of the week (Mon, Tues, Wed etc.)<br/>
+        <b>dddd</b>	Represents the full name of the day of the week (Monday, Tuesday etc.)<br/>
+        <b>h</b>	12-hour clock hour (e.g. 7)<br/>
+        <b>hh</b>	12-hour clock, with a leading 0 (e.g. 07)<br/>
+        <b>H</b>	24-hour clock hour (e.g. 19)<br/>
+        <b>HH</b>	24-hour clock hour, with a leading 0 (e.g. 19)<br/>
+        <b>m</b>	Minutes<br/>
+        <b>mm</b>	Minutes with a leading zero<br/>
+        <b>M</b>	Month number<br/>
+        <b>MM</b>	Month number with leading zero<br/>
+        <b>MMM</b>	Abbreviated Month Name (e.g. Dec)<br/>
+        <b>MMMM</b>	Full month name (e.g. December)<br/>
+        <b>s</b>	Seconds<br/>
+        <b>ss</b>	Seconds with leading zero<br/>
+        <b>t</b>	Abbreviated AM / PM (e.g. A or P)<br/>
+        <b>tt</b>	AM / PM (e.g. AM or PM<br/>
+        <b>y</b>	Year, no leading zero (e.g. 2001 would be 1)<br/>
+        <b>yy</b>	Year, leading zero (e.g. 2001 would be 01)<br/>
+        <b>yyy</b>	Year (e.g. 2001 would be 001)<br/>
+        <b>yyyy</b>	Year (e.g. 2001 would be 2001)<br/>
+        <b>K</b>	Represents the time zone information of a date and time value (e.g. +05:00)<br/>
+        <b>z</b>	With DateTime values, represents the signed offset of the local operating system's time zone from Coordinated Universal Time (UTC), measured in hours. (e.g. +6)<br/>
+        <b>zz</b>	As z but with leading zero (e.g. +06)<br/>
+        <b>zzz</b>	With DateTime values, represents the signed offset of the local operating system's time zone from UTC, measured in hours and minutes. (e.g. +06:00)<br/>
+        <b>f</b>	Represents the most significant digit of the seconds fraction; that is, it represents the tenths of a second in a date and time value.<br/>
+        <b>ff</b>	Represents the two most significant digits of the seconds fraction; that is, it represents the hundredths of a second in a date and time value.<br/>
+        <b>fff</b>	Represents the three most significant digits of the seconds fraction; that is, it represents the milliseconds in a date and time value.<br/>
+        <b>ffff</b>	Represents the four most significant digits of the seconds fraction; that is, it represents the ten thousandths of a second in a date and time value. While it is possible to display the ten thousandths of a second component of a time value, that value may not be meaningful. The precision of date and time values depends on the resolution of the system clock. On Windows NT 3.5 and later, and Windows Vista operating systems, the clock's resolution is approximately 10-15 milliseconds.<br/>
+        <b>fffff</b>	Represents the five most significant digits of the seconds fraction; that is, it represents the hundred thousandths of a second in a date and time value. While it is possible to display the hundred thousandths of a second component of a time value, that value may not be meaningful. The precision of date and time values depends on the resolution of the system clock. On Windows NT 3.5 and later, and Windows Vista operating systems, the clock's resolution is approximately 10-15 milliseconds.<br/>
+        <b>ffffff</b>	Represents the six most significant digits of the seconds fraction; that is, it represents the millionths of a second in a date and time value. While it is possible to display the millionths of a second component of a time value, that value may not be meaningful. The precision of date and time values depends on the resolution of the system clock. On Windows NT 3.5 and later, and Windows Vista operating systems, the clock's resolution is approximately 10-15 milliseconds.<br/>
+        <b>fffffff</b>	Represents the seven most significant digits of the seconds fraction; that is, it represents the ten millionths of a second in a date and time value. While it is possible to display the ten millionths of a second component of a time value, that value may not be meaningful. The precision of date and time values depends on the resolution of the system clock. On Windows NT 3.5 and later, and Windows Vista operating systems, the clock's resolution is approximately 10-15 milliseconds.<br/>
+        <b>F</b>	Represents the most significant digit of the seconds fraction; that is, it represents the tenths of a second in a date and time value. Nothing is displayed if the digit is zero.<br/>
+        <b>:</b>	Represents the time separator defined in the current DateTimeFormatInfo..::.TimeSeparator property. This separator is used to differentiate hours, minutes, and seconds.<br/>
+        <b>/</b> 	 Represents the date separator defined in the current DateTimeFormatInfo..::.DateSeparator property. This separator is used to differentiate years, months, and days.<br/>
+        <b>"</b> 	 Represents a quoted string (quotation mark). Displays the literal value of any string between two quotation marks ("). Your application should precede each quotation mark with an escape character (\).<br/>
+        <b>'</b>	 Represents a quoted string (apostrophe). Displays the literal value of any string between two apostrophe (') characters.<br/>
+        <b>%c</b> 	Represents the result associated with a c custom format specifier, when the custom date and time format string consists solely of that custom format specifier. That is, to use the d, f, F, h, m, s, t, y, z, H, or M custom format specifier by itself, the application should specify %d, %f, %F, %h, %m, %s, %t, %y, %z, %H, or %M. For more information about using a single format specifier, see Using Single Custom Format Specifiers.<br/>
+        
+        <e>
+          <b>QuerySetDateFormat("dd-MMM-yy")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+      <see>QuerySetDateTimeFormat</see>
+    </method>
+    <method name="QuerySetDateTimeFormat" qi="Sets custom DateTime format for SQL queries.">
+      <p name="dateTimeFormat" type="string" />
+      <ap>
+        dateTimeFormat: DateTime format. Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Configures the Date and Time format used by the database.  If this action is not called, the
+        value for the Date format will be <b>"yyyy/MM/dd HH:mm:ss"</b>.
+        Detailed description of available values are:<br/>
+
+        <b>d</b>	Represents the day of the month as a number from 1 through 31. A single-digit day is formatted without a leading zero<br/>
+        <b>dd</b>	Represents the day of the month as a number from 01 through 31. A single-digit day is formatted with a leading zero<br/>
+        <b>ddd</b>	Represents the abbreviated name of the day of the week (Mon, Tues, Wed etc.)<br/>
+        <b>dddd</b>	Represents the full name of the day of the week (Monday, Tuesday etc.)<br/>
+        <b>h</b>	12-hour clock hour (e.g. 7)<br/>
+        <b>hh</b>	12-hour clock, with a leading 0 (e.g. 07)<br/>
+        <b>H</b>	24-hour clock hour (e.g. 19)<br/>
+        <b>HH</b>	24-hour clock hour, with a leading 0 (e.g. 19)<br/>
+        <b>m</b>	Minutes<br/>
+        <b>mm</b>	Minutes with a leading zero<br/>
+        <b>M</b>	Month number<br/>
+        <b>MM</b>	Month number with leading zero<br/>
+        <b>MMM</b>	Abbreviated Month Name (e.g. Dec)<br/>
+        <b>MMMM</b>	Full month name (e.g. December)<br/>
+        <b>s</b>	Seconds<br/>
+        <b>ss</b>	Seconds with leading zero<br/>
+        <b>t</b>	Abbreviated AM / PM (e.g. A or P)<br/>
+        <b>tt</b>	AM / PM (e.g. AM or PM<br/>
+        <b>y</b>	Year, no leading zero (e.g. 2001 would be 1)<br/>
+        <b>yy</b>	Year, leading zero (e.g. 2001 would be 01)<br/>
+        <b>yyy</b>	Year (e.g. 2001 would be 001)<br/>
+        <b>yyyy</b>	Year (e.g. 2001 would be 2001)<br/>
+        <b>K</b>	Represents the time zone information of a date and time value (e.g. +05:00)<br/>
+        <b>z</b>	With DateTime values, represents the signed offset of the local operating system's time zone from Coordinated Universal Time (UTC), measured in hours. (e.g. +6)<br/>
+        <b>zz</b>	As z but with leading zero (e.g. +06)<br/>
+        <b>zzz</b>	With DateTime values, represents the signed offset of the local operating system's time zone from UTC, measured in hours and minutes. (e.g. +06:00)<br/>
+        <b>f</b>	Represents the most significant digit of the seconds fraction; that is, it represents the tenths of a second in a date and time value.<br/>
+        <b>ff</b>	Represents the two most significant digits of the seconds fraction; that is, it represents the hundredths of a second in a date and time value.<br/>
+        <b>fff</b>	Represents the three most significant digits of the seconds fraction; that is, it represents the milliseconds in a date and time value.<br/>
+        <b>ffff</b>	Represents the four most significant digits of the seconds fraction; that is, it represents the ten thousandths of a second in a date and time value. While it is possible to display the ten thousandths of a second component of a time value, that value may not be meaningful. The precision of date and time values depends on the resolution of the system clock. On Windows NT 3.5 and later, and Windows Vista operating systems, the clock's resolution is approximately 10-15 milliseconds.<br/>
+        <b>fffff</b>	Represents the five most significant digits of the seconds fraction; that is, it represents the hundred thousandths of a second in a date and time value. While it is possible to display the hundred thousandths of a second component of a time value, that value may not be meaningful. The precision of date and time values depends on the resolution of the system clock. On Windows NT 3.5 and later, and Windows Vista operating systems, the clock's resolution is approximately 10-15 milliseconds.<br/>
+        <b>ffffff</b>	Represents the six most significant digits of the seconds fraction; that is, it represents the millionths of a second in a date and time value. While it is possible to display the millionths of a second component of a time value, that value may not be meaningful. The precision of date and time values depends on the resolution of the system clock. On Windows NT 3.5 and later, and Windows Vista operating systems, the clock's resolution is approximately 10-15 milliseconds.<br/>
+        <b>fffffff</b>	Represents the seven most significant digits of the seconds fraction; that is, it represents the ten millionths of a second in a date and time value. While it is possible to display the ten millionths of a second component of a time value, that value may not be meaningful. The precision of date and time values depends on the resolution of the system clock. On Windows NT 3.5 and later, and Windows Vista operating systems, the clock's resolution is approximately 10-15 milliseconds.<br/>
+        <b>F</b>	Represents the most significant digit of the seconds fraction; that is, it represents the tenths of a second in a date and time value. Nothing is displayed if the digit is zero.<br/>
+        <b>:</b>	Represents the time separator defined in the current DateTimeFormatInfo..::.TimeSeparator property. This separator is used to differentiate hours, minutes, and seconds.<br/>
+        <b>/</b> 	 Represents the date separator defined in the current DateTimeFormatInfo..::.DateSeparator property. This separator is used to differentiate years, months, and days.<br/>
+        <b>"</b> 	 Represents a quoted string (quotation mark). Displays the literal value of any string between two quotation marks ("). Your application should precede each quotation mark with an escape character (\).<br/>
+        <b>'</b>	 Represents a quoted string (apostrophe). Displays the literal value of any string between two apostrophe (') characters.<br/>
+        <b>%c</b> 	Represents the result associated with a c custom format specifier, when the custom date and time format string consists solely of that custom format specifier. That is, to use the d, f, F, h, m, s, t, y, z, H, or M custom format specifier by itself, the application should specify %d, %f, %F, %h, %m, %s, %t, %y, %z, %H, or %M. For more information about using a single format specifier, see Using Single Custom Format Specifiers.<br/>
+
+        <e>
+          <b>QuerySetDateFormat("dd-MMM-yy hh:mm:ss tt")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+      <see>QuerySetDateFormat</see>
+    </method>
+    <method name="QueryClear" qi="Clears the SQL query.">
+      <ap>None.</ap>
+      <h>
+        Clears any SQL query that may be in memory.  This action can be called to ensure
+        that any NENU query that you build is not building on any previous information.
+        <e>
+          <b>QueryClear("")</b>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query is cleared.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+    <method name="QuerySetJobID" qi="Sets the Job ID for the SQL query.">
+		  <p name="jobid" type="string" />
+      <ap>
+        jobid: Job name.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        When building a query, this action sets the job ID that will be selected in the result set.
+        If you wish to match multiple job IDs, use commas to separate values.  An exclamation point
+        can be used to negate the query.
+        <e>
+          <b>QuerySetJobID("Demo Job,Web Job")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example will create a result set that contains batches with job ID of "Demo Job" and "Web Job".<br/><br/>
+          
+          <b>QuerySetJobID("Demo Job")</b><br/>
+          <b>QuerySetJobID("Web Job")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example will create an empty result set.<br/><br/>
+
+          <b>QuerySetJobID("!Demo Job")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example will create a result set that contains all batches except for the job ID of "Demo Job".
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+	  </method>    
+	  <method name="QuerySetTaskID" qi="Sets the Task ID for the SQL query.">
+		  <p name="taskid" type="string" />
+      <ap>
+        taskid: Task ID.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        When building a query, this action sets the task ID that will be selected in the result set.
+        The current task batches selected will match the supplied value.<br/><br/>
+        
+        To find multiple values, separate them with commas.
+        An exclamation point can be prefixed to the value to find all values except the ones specified.
+        <e>
+          <b>QuerySetTaskID("Verify")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example will query all batches for the survey application that are
+          at the verify task.<br/><br/>
+
+          <b>QuerySetTaskID("@B.MyQueryTask")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example uses Smart parameters to retrieve the name of
+          the task to query from a batch level variable called 'MyQueryTask'.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+    <method name="QuerySetStatus" qi="Sets the Task status for the SQL query.">
+		  <p name="status" type="string" />
+      <ap>
+        status: The batch status: aborted, cancelled, finished, hold, job done, pending, running.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Selects all of the batches that match the specified status.<br/><br/>
+
+        To find multiple values, separate them with commas.
+        An exclamation point can be prefixed to the value to find all values except the ones specified.
+        <e>
+          <b>QuerySetStatus("finished")</b><br/>
+          ProcessRunSqlQueryEx("")
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+    <method name="QuerySetPriority" qi="Sets the Priority for the SQL query.">
+		  <p name="priority" type="string" />
+      <ap>
+        priority: Batch Priority. <br/>
+      </ap>
+      <h>
+        Selects all of the batches that match the specified priority.<br/><br/>
+
+        To find multiple values, separate them with commas.
+        An exclamation point can be prefixed to the value to find all values except the ones specified.
+        <e>
+          <b>QuerySetPriority("1")</b><br/>
+          ProcessRunSqlQueryEx("")
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+    <method name="QuerySetBranch" qi="Sets the minimum number of children for the SQL query.">
+		  <p name="children" type="int" />
+      <ap>
+        children: The minimum number of children for the batch. <br/>
+      </ap>
+      <h>
+        Selects all of the batches that have at least the minimum number of specified children.
+        <e>
+          <b>QuerySetBranch("3")</b><br/>
+          ProcessRunSqlQueryEx("")
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+    <method name="QuerySetOperator" qi="Sets the operator for the SQL query.">
+		  <p name="operator" type="string" />
+      <ap>
+        operator: The operator ID.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Selects all of the batches that match the specified operator ID.<br/><br/>
+
+        To find multiple values, separate them with commas.
+        An exclamation point can be prefixed to the value to find all values except the ones specified.
+        <e>
+          <b>QuerySetOperator("Admin")</b><br/>
+          ProcessRunSqlQueryEx("")
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+	  </method>    
+	  <method name="QuerySetStation" qi="Sets the station for the SQL query.">
+		  <p name="station" type="string" />
+      <ap>
+        station: The station ID.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Selects all of the batches that match the specified station.<br/><br/>
+        
+        To find multiple values, separate them with commas.
+        An exclamation point can be prefixed to the value to find all values except the ones specified.
+        <e>
+          <b>QuerySetStation("1")</b><br/>
+          ProcessRunSqlQueryEx("")
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+	  <method name="QuerySetDateRange" qi="Sets Date range for SQL query.">
+		  <p name="start" type="string"  />
+		  <p name="end"   type="string"  />
+		  <p name="queryAgeStart" type="bool"  />
+      <ap>
+        start: Date Range Start.  Smart parameters are supported. <br/>
+        end: Date Range End.  Smart parameters are supported. <br/>
+        queryAgeStart: True will use the batch start date.  False will use the batch end date. <br/>
+      </ap>
+      <h>
+        Selects all of the batches that match the specified priority.
+        If queryAgeStart is set to True, the query will use the batch start date, qs_start.  If queryAgeStart
+        is set to False, the query will use the batch end date, qu_done.<br/><br/>
+        
+        An exclamation point can be prefixed to the value to find all values except the ones specified.
+        <e>
+          <b>QuerySetDateRange("03/16/2010","05/26/2010","True")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example will select all of the batches that have been created 
+          between the two specified dates.<br/><br/>
+
+          <b>QuerySetDateRange("03/16/2010","@DATE(mm/dd/yyyy)","True")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example uses a Smart parameter to obtain the current date.  The query will
+          select all batches that have been created between 03/16/2010 and the current date.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+	  <method name="QuerySetAge" qi="Selects batches based on age using a date or number of seconds.">
+		  <p name="age" type="string" />
+		  <p name="queryAgeStart" type="bool" />
+      <ap>
+        age: All dates prior or within this date will be selected.  Smart parameters are supported. <br/>
+        queryAgeStart: If true, age will use the start time of the batch.  If false, age will use the end time of the batch. <br/>
+      </ap>
+      <h>
+        Builds a query that selects batches based on the age of a batch.  The age can be specified using a date or in seconds.
+        The queryAgeStart parameter determines if the age is based on the start of the batch, the qs_start column, 
+        or based on the end of the batch, the qu_done column.
+        If a date is specified, all batches will be selected based on the date. 
+        If a number is specified, all batches will be selected based on the number of seconds.<br/><br/>
+        
+        To control the age range use the exclamation point '!'.   When the exclamation point is not specified,
+        the age between now and the specified value will be selected.  When the exclamation point is specified,
+        the ages that are older than the value specified will be selected.         
+        <e>
+          <b>QuerySetAge("300","True")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example will select all batches started within last 300 seconds.<br/><br/>
+
+          <b>QuerySetAge("!300","true")</b><br/>
+          ProcessRunSqlQueryEx("")<br/>
+          This example will select all batches started prior to 300 seconds ago.
+          Use the same pattern when using dates.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+	  <method name="QuerySetGeneric" qi="Builds an SQL query using the provided column name and value.">
+		  <p name="column" type="string"  />
+		  <p name="value" type="string"  />
+      <ap>
+        column: Column in the database table to query.  Smart parameters are supported. <br/>
+        value: Value to match within the specified column.  Smart parameters are supported. <br/>
+      </ap>
+      <h>
+        Allows building of a query where the column and value of the tmbatch, queue or qstats table are explicitly specified.<br/><br/>
+        
+        Any wild card specified in the "value" parameter would need to be appropriate for your target database.
+        The column value is not validated until the query is run using ProcessRunSqlQueryEx.
+        <e>
+          <b>QuerySetGeneric("pb_userid", "admin")</b><br/>
+          ProcessRunSqlQueryEx("")
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ProcessRunSqlQueryEx</see>
+    </method>
+    <method name="QuerySetBatchRange" qi="Sets range of batches for SQL query.">
+      <p name="start" type="string" />
+      <p name="end" type="string" />
+      <ap>
+        start: BatchID of the first batch in the range. Default value 00000000.000". <br/>
+        end: BatchID of the last batch in the range. Default value zzzzzzzz.zzz". <br/>
+      </ap>
+      <h>
+        Allows selecting batch range based on the BatchID.<br/><br/>
+        <e>
+          QuerySetBatchRange("20110059.001","20110059.010")<br/>
+          <b>InjectBatches("20110059.001")</b><br/>
+
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if the query has been successfully set.  It does not mean
+        the query has been performed.  Otherwise, <b>False.</b>
+      </ret>
+      <see>InjectBatches</see>
+    </method>
+    <method name="ProcessInjectBatches" qi="Injects the data from master batch to all batches selected and updates DB.">
+      <p name="masterBatchID" type="string" />
+      <ap>
+        masterBatchID: Master batch to copy data from. <br/>
+      </ap>
+      <h>
+        Allows creating large set of batches at some predefined  state.<br/><br/>        
+        <e>
+          QuerySetBatchRange("20110059.001","20110059.010")
+          <b>InjectBatches("20110059.001")</b><br/>
+
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if all the all the batches were successfully set.
+        Otherwise, <b>False.</b>
+      </ret>
+      <see>QuerySetBatchRange</see>
+    </method>
+  </com>
+</rrx>

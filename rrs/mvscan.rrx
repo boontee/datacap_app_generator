@@ -1,0 +1,637 @@
+﻿<?xml version='1.0' ?>
+
+<!---
+' Licensed Materials - Property of IBM
+' “Restricted Materials of IBM”
+' 5725-C15 
+'
+' © Copyright IBM Corp. 1994, 2023 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+-->
+
+<rrx namespace="mvscan" v="9.1.9.35">
+  <com ref="Datacap.Libraries.mvScan.Actions"  qi="MultiThreaded vScan Actions">
+    <!-- action declarations -->
+    <h>
+      The mvscan action library contains actions that will control how a Datacap application will
+      ingest files such as images scanned as TIF images or electronic documents such as PDF, so they
+      can be processed.
+      Use these actions to create batches from files on disk, typically on a network file share. 
+      The input files may be image files produced by a Multifunction Device (MFD) or fax, or arbitrary files dropped off for processing.<br/><br/>
+
+      Mvscan actions can safely run in multiple threads or processes, on a single computer or on multiple computers.
+      These instances coordinate with each other by creating *.lock files in the input folder.
+      mvscan scans one or more folders within a single subtree and maintains a cached list of files for ingestion,
+      for performance and to reduce load on the network and file system.<br/><br/>
+      
+      In a typical situation, the mvscan actions would monitor a directory, or set of directories, looking for
+      files that are placed into these directories by some external process. 
+      As the images are placed into these directories, they are ingested by the scan actions into a
+      batch and then processed by a Datacap application.
+	    External processes that place files in the input folders must never overwrite an existing file.<br/>
+    </h>
+
+		<method name="set_folder" qi=": Specifies the top level folder to search for files to be ingested">
+			<p name="folderpath" type="string" qi="Path to folder containing files to be ingested"/>
+      <ap>
+        folderpath : A string value specifying the path an input folder. Multiple input folders can be separated by vertical bar symbols (|).  
+        The scan() action ingests selected file types from these folders, and optionally subfolders, into batches for processing.
+        Each ingested batch will contain files from a single folder.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action configures the folder from where the "Scan" action will look for files to ingest
+        into the batch. Call this action before calling the Scan action.<br/><br/>  
+        <e>
+          <b>set_folder("@APPPATH(vscanimagedir)+@STRING(\input folder)")</b><br/>
+          scan()<br/><br/>
+
+          The example uses a smart parameter to set the input directory.  This smart parameter references
+          the variable vscanimagedir which is specified in the application file (*.app) and appends the additional
+          folder "\input folder" to the path.  Because the root scan directory is read from the application
+          file, it makes it easy to change the source directory using the application manager to update
+          the root directory as necessary, without having to update the rules in the application.
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+		</method>
+
+    <method name="set_copy_folder" qi=": Optional, sets a folder to contain a copy of each ingested file">
+      <p name="folderpath" type="string" qi="Path to folder to contain a copy of each ingested file"/>
+      <ap>
+        folderpath : A string value specifying the path of the folder where a copy of each input files will be placed, 
+        in addition to the batch.  This folder must exist or the scan() action will produce an error.<br/><br/>
+        
+        Smart Parameters are supported.<br/>
+      </ap>
+      <h>
+        This action designates the name of the folder where ingested files will be copied.  Files are still
+        ingested into the batch. The files ingested into the batch will have their file names changed
+        to the standard Datacap naming convention of TMXXXXXX.ext.  An additional copy of each ingested file
+        will be placed into the copy folder with the original file names.  This can be useful if you
+        wish to retain the ingested files.<br/><br/>
+        
+        This action must be called before scan() to take effect.<br/><br/>
+
+        For demo purposes, set the copy folder the same as the input folder.
+        In this case the scan action leaves ingested files in place and rescans the input folder, ignoring the cache file.
+        This allows a user to ingest a batch for the application and the ingested files will be placed back
+        into the input directory, allowing the same set of images to be ingested batch after batch. This scenario is
+        useful for testing or when demoing an application.<br/><br/>
+
+        The folderpath can be specified as a relative path to the scan directory.  For example, if the scan
+        directory is configured as "C:\Datacap\MyApp\Input" and if the copy folder is configured as "Done"
+        then the problem directory name will resolve as C:\Datacap\MyApp\Done.  Using a relative path
+        for the folder can be useful when scan is configured to ingest from multiple root directories.<br/><br/>
+        <e>
+          <b>set_folder("@APPPATH(vscanimagedir)+@STRING(\input folder)")</b><br/>
+          set_copy_folder(@APPPATH(vscanimagedir)+@STRING(\copy folder))<br/>
+          scan()<br/><br/>
+
+          The example uses a smart parameter to set the input directory.  This smart parameter references
+          the variable vscanimagedir which is specified in the application file (*.app) and appends the additional
+          folder "\copy folder" to the path.  Because the root scan directory is read from the application
+          file, it makes it easy to change the source directory using the application manager to update
+          the root directory as necessary, without having to update the rules in the application.<br/><br/>          
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+    
+    <method name="set_problem_folder" qi=": Required, sets folder for any files that cannot be ingested">
+      <p name="folderpath" type="string" qi="Path to folder to contain any files that cannot be ingested"/>
+      <ap>
+        folderpath : A string value specifying the path of the folder where files that cannot be ingested will be placed.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action must be called before scan().  If this action is not called, and scan is unable to ingest a file, 
+        the batch will be aborted. Any files already ingested into the batch will remain in the batch. 
+        The file which cannot be ingested may be left in a locked state.  Manual intervention will be required.<br/><br/>
+        
+        The folderpath can be specified as a relative path to the scan directory.  For example, if the scan
+        directory is configured as "C:\Datacap\MyApp\Input" and if the problem folder is configured as "Problem"
+        then the problem directory name will resolve as C:\Datacap\MyApp\Problem.  Using a relative path
+        for the folder can be useful when scan is configured to ingest from multiple root directories.<br/><br/>
+        <e>
+          <b>set_folder("@APPPATH(vscanimagedir)+@STRING(\input folder)")</b><br/>
+          set_problem_folder(@APPPATH(vscanimagedir)+@STRING(\problem folder))<br/>
+          scan()<br/><br/>
+
+          the variable vscanimagedir which is specified in the application file (*.app) and appends the additional
+          folder "\problem folder" to the path.  Because the root scan directory is read from the application
+          file, it makes it easy to change the source directory using the application manager to update
+          the root directory as necessary, without having to update the rules in the application.<br/><br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+    
+		<method name="scan" qi=": Poll the specified folder for files to ingest.">
+      <ap>None.</ap>
+      <h>
+        Scans the source folder for files with desired extensions, then ingests them into a batch.
+        Call this action once for each batch.
+        All desired options for scan must be set prior to calling this action.
+        If no files are present for ingestion the batch is set to pending status and the action returns immediately.<br/><br/>
+
+        Each input file will generate one or more "pages" in the batch with the following DCO page variables set:<br/><br/>
+        
+          <b>TYPE</b>: Always set to "Other".<br/>
+          <b>IMAGEFILE</b>: The filename within the batch, e.g. "TM000002.tif".<br/>
+          <b>PageName</b>: The original input filename without the extension, e.g. "APT0001".<br/>
+          <b>ScanSrcPath</b>: The full path to the original file, e.g. "C:\Datacap\1040EZ\images\1040ez01.tif".<br/><br/>
+
+        Once the files are ingested, they can then be operated on by subesquent rules and actions.
+        Typical next steps could be page separation of electronic documents, such as PDFs,
+        to convert them to single tiff images;
+        image enhancements or other preparations so page identification can be performed
+        to change the page type of "Other" to the correct page type for continued
+        processing by the application.<br/><br/>
+
+        <e>
+          set_folder("@APPPATH(vscanimagedir)+@STRING(\mvscan folder)")<br/>
+          set_problem_folder(@APPPATH(vscanimagedir)+@STRING(\problem folder))<br/>
+          set_types("jpg,pdf,tif")<br/>
+          set_max_docs("2")<br/>
+          <b>scan()</b><br/><br/>
+          
+          This example specifies the input folder, the problem folder, the types to be ingested and the maximum
+          number of images per batch.  Scan is then called to ingest the files from the input directory.
+          The order of the "set" actions does not matter, they simply need to be called prior to calling
+          scan().
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        Returns <b>True.</b><br/>
+        Action returns when timeout is reached, or the requested number of files have been ingested.
+        If no files are ingested, the batch will remain in a pending state.
+        If a serious error occurs, the batch will be placed into an aborted state so the issue can be reviewed.
+      </ret>
+		</method>
+	
+		<method name="set_types" qi=": Comma-separated list of file extensions to be ingested. Can be specified with or without period. Default is TIF. Overrides set_metadata_types().">
+			<p name="extensions" type="string" qi="Comma-separated list of file image file extensions to import"/>
+      <ap>
+        String value of extension(s) of input files that should be ingested.  For multiple types, separate
+        each one with a comma. Any files with extensions not in this list are ignored.  
+        A smart parameter that evaluates to a file extension or list of extensions is accepted.<br/><br/>
+
+        It is optional to include a period before each extension. The parameter is not case-sensitive.<br/><br/>
+      </ap>
+      <h>
+        Uses the value of a file extension(s) to specify the type of files the task will scan.<br/><br/>
+
+        This is an optional action: the task will scan .tif files by default.
+        For this action to take effect, it must be called before the scan action.<br/><br/>
+        
+        This action overrides any previous call to set_metadata_types(), and causes files to be ingested without metadata.
+        <e>
+          <b>set_types("tif,tiff,pdf")</b><br/>
+          Scan()<br/>
+          This sequence will ingest files ending with ".tif", ".tiff", and ".pdf".<br/><br/>
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        <b>True</b>
+      </ret>
+		</method>
+
+    <method name="set_metadata_types" qi=": Specifies metadata trigger file extension or comma-separated list. Overrides set_types().">
+      <p name="extensions" type="string" qi="Metadata image file extension(s). If specified, XML metadata files (AKA trigger files) control ingestion of pages into batches, along with associated metadata. If specified, these extensions override any prior call to set_types()"/>
+      <ap>
+        String value of extension(s) of input files containing "pointers" to files to be ingested 
+        along with metadata to be included in the batch for each file.  For multiple types, separate
+        each one with a comma. Any files with extensions not in this list are ignored.<br/><br/>
+
+        It is optional to include a period before each extension. The parameter is not case-sensitive.<br/><br/>
+      </ap>
+      <h>
+        This action overrides any previous call to set_types(), and forces the action to read properly 
+        formatted XML from the metadata trigger file to determine which files get ingested, 
+        rather than ingesting individual files into the batch.  Other settings such as set_min_age() are applied to the metadata files.<br/><br/>
+        
+		    The XML file must follow the format below.<br/><br/>
+        
+    The tag name of the XML root node must be ᐸinputᐳ.<br/>
+    The ᐸitemᐳ nodes represent a group of input files or images that share metadata.<br/>
+    The ᐸitemᐳ nodes must contain at least one attribute, but can have a number of attributes. 
+    In this example, the ᐸitemᐳ nodes contain the attributes name=, vendor_number=, vendor_name=, invoice_number=.<br/>
+    The ᐸitemᐳ attribute names are entered in the item as text following the =.
+    These name values are prepended with Meta_Item_ when they are written to the DCO to define
+    the metadata variable names that are placed on each page. The attribute values populate the variable values.<br/>
+    The inner most nodes must be ᐸfilenameᐳ and contain items that represent single input files.<br/>
+    A ᐸfilenameᐳ can be either a fully qualified path, for example \\server\folder\filename, or a partial path
+    relative to the location of the metadata file such as folder\filename. The number of file names in each
+    repeating item is only limited to the practical limit of how many files you want to ingest in a single batch.
+    Each file is ingested as a Page in the batch, regardless of the file type or contents.<br/>
+    <br/>
+    All of the items in a metadata file are ingested into the same batch. For example, if a 
+    metadata file contains 1 node with 50 filen ames, 50 files are ingested for that single metadata file. 
+    If the metadata file contains 5 nodes with 50 file names in each of them, then 250 files are ingested. 
+    The external system that creates the metafile must create all of the files to be ingested before writing the metafile that refers to them.<br/><br/>
+    Here is an example of a valid XML metadata file:
+    <br/>
+    ᐸinputᐳ<br/>
+    ᐸitem name="Invoice1" vendor_number="TS265329" vendor_name="Busy Car Repair" invoice_number="28100"ᐳ<br/>
+        ᐸfilenameᐳC:\Datacap\APT\images\Input\Invoice_0001S1.tifᐸ/filenameᐳ<br/>
+        ᐸfilenameᐳC:\Datacap\APT\images\Input\Invoice_0002S1.tifᐸ/filenameᐳ<br/>
+    ᐸ/itemᐳ<br/>
+    ᐸitem name="Invoice2" vendor_number="TS23785354" vendor_name="Trucking Co." invoice_number="876-3456"ᐳ<br/>
+        ᐸfilenameᐳC:\Datacap\APT\images\Input\Invoice_0003S1.tifᐸ/filenameᐳ<br/>
+        ᐸfilenameᐳC:\Datacap\APT\images\Input\Invoice_0004S1.tifᐸ/filenameᐳ<br/>
+    ᐸ/itemᐳ<br/>
+    ᐸ/inputᐳ<br/><br/>
+        <e>
+          <b>set_metadata_types("xml")</b><br/>
+          Scan()<br/>
+          This sequence will scan for metadata trigger files ending in ".xml".<br/><br/>
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        <b>True</b>
+      </ret>
+    </method>
+
+
+    <method name="set_sort_method" qi=": Selects method for sorting files for ingestion">
+      <p name="method" type="string" qi="Sort method can be either DATE (default) or NAME.  The parameter is not case sensitive."/>
+      <ap>
+        
+      </ap>
+      <h>
+        The scan action takes snapshots of the input folder, sorts the files by either date last modified 
+        (default) or by filename, and then tries to ingest the files in that order.  This action allows you to override the default sort order.<br/><br/>
+        <e>
+          <b>set_sort_method("NAME")</b><br/>
+          Scan()<br/>
+          This sequence will ingest files in alphabetical order.<br/><br/>
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        <b>True</b>
+      </ret>
+    </method>
+    
+		<method name="set_wait_time" qi=": Specifies interval to wait for additional files to ingest, before finishing a batch which has not reached the specified maximum size or time limits.">
+      <p name="nSecs" type="int" qi="Time to wait for files to complete a batch."/>
+      <ap>
+        nSecs : The maximum number of seconds to wait for files to complete a batch.
+      </ap>
+      <h>
+        The maximum time to wait for input files to arrive to meet the total quantity specify by the set_max_docs action.
+        If at least one file was ingested, no more files are available, and the batch has not reached capacity, the scan
+        action will wait for additional files to be placed into the directory configured by the set_folder action.
+        Ingestion of files into the batch will stop when the wait limit is reached
+        or when the maximum number of files per batch has been reached.<br/><br/>
+
+        If no files are available during the scan() action, and this time is reached, the scan action will return and the batch status will remain "pending".<br/><br/>
+
+        If this action is not called, the default wait time of 2 seconds will be used.<br/><br/>
+        
+        NOTE: This action can be used to group incoming files when ingesting from a single input folder. It is not effective in tree mode or for metadata XML.  
+        When ingesting from multiple folders or in tree mode, use set_min_age instead to wait for a group of files to appear in the input folders.  
+        See set_min_age for the special case set_wait_time(0) in tree mode.<br/>
+        <e>
+          <b>set_wait_time("60")</b><br/>
+          scan()
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        set_min_age
+      </see>
+		</method>
+
+		<method name="set_abort_time" qi=": Specifies delay time if batch aborts">
+      <p name="nSecs" type="int" qi="Time to wait before continuing when a serious error occurs."/>
+      <ap>
+        nSecs : Time to wait before continuing when a serious error occurs.
+      </ap>
+      <h>
+        The scan action will wait the specified time before returning if a fatal error is detected that would cause the batch to abort.
+        This action can be useful to prevent a large number of aborted batches due to an abort condition.
+        For example, if the source folder should become unavailable for some time,
+        the abort timeout will limit the number of aborted batches until the folder becomes available again.
+        If such an even could occur, this wait time can be adjusted to slow down ingestion processing
+        until the source directory is available again.<br/><br/>
+
+        If this action is not called, the default abort time value of 5 seconds will be used.<br/><br/>
+        
+        Rulerunner has settings that control how it responds to an abort situation.  Review the Rulerunner settings
+        to ensure they are set as desired based on how it should respond should a batch abort.<br/><br/>
+        <e>
+          <b>set_abort_time("60")</b><br/>
+          scan()
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+		</method>
+
+    <method name="set_move_wait_time" qi=": Specifies time to wait for source file to be deleted after move">
+      <p name="nSecs" type="int" qi="Number of seconds to wait for source file to be deleted, before failure."/>
+      <ap>
+        nSecs : Number of seconds to wait for source file to be deleted, before failure.
+      </ap>
+      <h>
+        Over a slow network, and especially with large input files, moving the file from the source 
+        folder to the batch folder may take a significant length of time.  The scan configuration action checks that the 
+        source file has been deleted after moving it.  If the source file still exists, the scan action waits for a length of time, 
+        checking periodically if the file has been deleted.  At the end of this time period, if the source file still exists, 
+        the copy in the batch folder is renamed with an extension ".failed" and it is not included in the batch.  
+        It is then assumed that the original source file will be ingested by another subsequent scan task.<br/><br/>
+        <e>
+          <b>set_move_wait_time("120")</b><br/>
+          scan()
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="set_max_docs" qi=": Specifies maximum number of pages in each batch.  If Metadata files are used, this is the maximum number of metadata files to import.">
+			<p name="nDocs" type="int" qi="Number of documents in a batch.  Default 100."/>
+      <ap>
+        nDocs : An integer value which specifies the maximum number of input files to place into a batch.<br/><br/>
+        
+        If Metadata files are used, action set_metadata_types() is called instead of set_types(), 
+        this specifies the maximum number of metadata files to ingest.<br/><br/>
+        
+        All files referenced in each metadata file are included in the batch, there is no limit on the number of pages in the batch in this case.
+        The default value is 100.<br/>
+      </ap>
+      <h>
+        This action configures the maximum number of files to be ingested into a batch.  If the number of
+        available files is less than this number, the Scan action will wait for more files based on the
+        time configured with the action set_wait_time.<br/><br/>
+        
+        For this action to take effect, it must be called before the Scan action.<br/><br/>
+        <e>
+          set_tree_mode(false)<br/>
+          <b>set_max_docs("1")</b><br/>
+          scan()
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        set_wait_time
+      </see>
+		</method>
+    
+    <method name="set_tree_mode" qi=": Determines whether subdirectories are included in the scan for files to ingest">
+      <p name="bTreeFlag" type="bool"/>
+      <ap>
+        bTreeFlag : A Boolean value that enables or disables ingesting files from sub-folders within the top level scan folder.<br/><br/>
+        
+        <b>True:</b> Search for files in subfolders to any depth below the scan folder. 
+        Folder names beginning with underscore (_) are ignored.  This is the default if the action is not called.<br/>
+        <b>False:</b> Ingest files located in the scan folder only.  Ignore subfolders.<br/>
+      </ap>
+      <h>
+        When "tree mode" is enabled, which is the default, the scan action will ingest files from an subdirectories
+        that are present in the configured ingestion folder.<br/><br/>
+       
+        Each batch will contain files from only one folder regardless of the tree mode setting.  
+        If there are multiple folders, scan will only operate on one at at time.
+        Files from multiple folders will never be ingested into the same batch.<br/><br/>
+        
+        When tree mode is enabled, the scan action will first ingest files from the root folder directory.
+        When all of those files have been ingested, it will then ingest from the sub folders, one at a time.<br/>
+        <br/><br/>
+        Tree mode is true by default. For this action to take effect, it must be called before the Scan action.<br/><br/>
+        <e>
+          set_types("tif")<br/>
+          <b>set_tree_mode(false)</b><br/>
+          <b>scan()</b>
+        </e>
+      </h>
+    </method>
+
+    <method name="set_delete_empty_folders" qi=": Determines whether empty subdirectories will be deleted">
+      <p name="bParam" type="bool"/>
+      <ap>
+        bParam : A Boolean value that enables or disables deleting sub-folders if they are empty.  
+        The root folder specified for ingestion is never deleted. Subfolders are only deleted if both this setting and tree mode are enabled.<br/><br/>
+        <b>True:</b> Delete subfolders of the main ingestion folder if they are empty. This is the default if the action is not called.<br/>
+        <b>False:</b> Leave empty subfolders intact.<br/>
+      </ap>
+      <h>
+        set_delete_empty_folders action enables or disables deleting sub-folders, if they are empty.
+        The root folder specified for ingestion is never deleted. Subfolders are only deleted if they are empty and tree mode are enabled.
+        <br/><br/>
+        Note: If subfolders of the main ingestion folder has files, then the directory will not be deleted until it is empty and the next time the folders are polled.
+        If the folder is empty at the start of the ingestion operation, only at that point sub-folders will be deleted.
+        <br/><br/>
+        Use this action prior to calling scan to configure the deletion of empty input subdirectories.
+        <br/><br/>
+        If tree mode is not enabled, this setting has no effect.
+        <br/><br/>        
+        <e>
+          set_types("tif")<br/>
+          <b>set_min_age("10")</b><br/>
+          <b>set_tree_mode(True)</b><br/>
+          <b>set_delete_empty_folders(False)</b><br/>
+          scan()
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        set_tree_mode
+      </see>
+    </method>
+    
+    <method name="set_min_age" qi=": Specifies minimum age of file since last modified">
+      <p name="nSecs" type="int" qi="Number of seconds to wait after file modified before ingesting"/>
+      <ap>
+        nSecs : An integer value, the number of seconds to wait after file modified before ingesting.<br/><br/>
+        The default value is zero, meaning ingest files as soon as they are present.
+      </ap>
+      <h>
+        This setting can be used to prevent premature ingestion of a file which may be incomplete. 
+        For example, a network scanner or multifunction device might create the image file and write contents over a period of time, 
+        rather than all at once.  In that case ingesting the file immediately could cause errors, 
+        whereas waiting for 5 or 10 seconds would provide sufficient time for the file to be completed.<br/><br/>
+
+        If required, the appropriate value must be determined experimentally.
+        If tree mode is enabled, all files in a given folder must meet the minimum age before any
+        file from that folder is ingested. This allows you to keep files written to a subfolder in the same batch.
+        To override this behavior and check the age of files individually in tree mode, set_wait_time to zero.
+        <br/><br/>
+        For this action to take effect, it must be called before the Scan action.<br/><br/>
+        <e>
+          set_types("tif")<br/>
+          <b>set_min_age("10")</b><br/>
+          scan()
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="set_image_validation" qi=": Forces TIFF images to be checked before ingesting">
+      <p name="bValidate" type="bool" />
+      <ap>
+        bValidate : A Boolean value that enables or disables validating image files during ingestion.<br/><br/>
+        <b>True:</b> Check to confirm that each file ingested contains a valid TIFF or JPG image.<br/>
+        <b>False:</b> Copy input files regardless of type or contents.  This is the default if the action is not called.<br/>
+      </ap>
+      <h>
+        Enables testing that each file ingested is a valid image file. 
+        If enabled, converts black and white TIF files to G4 compression.  
+        This action should not be enabled if ingested file types are not images, such as PDFs, due to incompatibility.
+        <br/><br/>
+        For this action to take effect, it must be called before the Scan action.<br/><br/>
+        <e>
+          set_types("tif")<br/>
+          <b>set_image_validation("True")</b><br/>
+          scan()
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+        </method>
+
+    <method name="set_multipage_burst" qi=": Forces multipage TIFF images to be split into single pages during ingestion">
+      <p name="bBurst" type="bool" qi="Nonzero to force bursting of TIFF image files. Default = 0, no bursting."/>
+      <ap>
+        bBurst : A Boolean value that enables or disables bursting multipage image files during ingestion.<br/><br/>
+        <b>True:</b> Any multipage TIFF file will be separated into multiple pages in the batch, one per image.<br/>
+        <b>False:</b> One page is output per input file.  This is the default if the action is not called.<br/>
+      </ap>
+      <h>
+        Enables splitting or bursting multipage source image files into one image per page in the batch.
+        For this action to take effect, it must be called before the Scan action.<br/><br/>
+
+        Only multi-page TIF files will be split. Other types will be ingested as-is.<br/><br/>
+        <e>
+          set_types("tif,tiff")<br/>
+          <b>set_multipage_burst(True)</b><br/>
+          scan()<br/><br/>
+
+          If the scan action in this sequence encounters a multipage .tif file, then it will
+          read each one into the current batch as a separate image, thereby "bursting" the multipage
+          file into individual images.
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="mv_retain_folders" qi=": Preserves the directory structure of files in the input folder tree">
+      <p name="bRetain" type="bool" qi="Set to True to enable this option, default is False."/>
+      <ap>
+        bRetainFolders : A Boolean value that enables or disables preserving the directory structure.<br/><br/>
+        
+        <b>True:</b> If and when an input file is moved to the Problem or Copy folders, 
+        the path relative to the base input folder is reproduced within the Problem or Copy folder.<br/>
+        <b>False:</b> Input files are placed directly in the Problem or Copy folder as appropriate. 
+        The relative path within the input folder is only retained in the ScanSrcPath variable.<br/>
+      </ap>
+      <h>
+        If the option is enabled, the Problem and Copy folders are populated with subfolders to 
+        match the path of the input files relative to the root input folder.
+        If retain folders is set to false, then the copied files will be placed
+        in the root of the copy directory, regardless of the original subfolder where
+        they were located in the scan directory.<br/><br/>
+        
+        Additionally, the following variables are added to the page to allow the application to 
+        determine the path of the input file:<br/><br/>
+
+        <b>ScanSrcInputFolder</b> : The full path of the root input folder for this file.  It does not include the file name. For example: c:\shared\group1<br/>
+        <b>ScanSrcSubFolder</b> : The relative path of the ingestion folder where the file was found,
+        including the input root folder name but not the path leading up to it. For example: \shared\group1\batch1.  If the file was ingested from the root of the source directory, this value
+        will be blank.<br/>
+        <b>ScanSrcFileName</b> : The original file name without the path. For example: invoice_0001.tif<br/><br/>
+
+        <b>Directory Structure When Retain Is Enabled</b><br/><br/>
+
+        When the folder directory is retained, the copy directory includes the source directory as the root within
+        the copy directory. The following illustrates a sample set of input directories and how they
+        will appear in the copy directory after scan has completed.<br/><br/>       
+        
+        This example assumes the following actions were used:<br/>
+        set_folder("C:\Datacap\MyApplication\Input")<br/>
+        set_copy_folder("C:\Datacap\MyApplication\Done")<br/><br/>
+
+        Files as they existed in the scan directory:<br/><br/>
+
+        C:\Datacap\MyApplication\Input\Sub1\File1.tif<br/>
+        C:\Datacap\MyApplication\Input\Sub1\File2.tif<br/>
+        C:\Datacap\MyApplication\Input\Sub1\Sub2\File3.tif<br/>
+        C:\Datacap\MyApplication\Input\Sub3\File4.tif<br/>
+        C:\Datacap\MyApplication\Input\File5.tif<br/><br/>
+
+        Files as they exist after multiple scans to ingest all of the files:<br/>
+        C:\Datacap\MyApplication\Done\Input\Sub1\File1.tif<br/>
+        C:\Datacap\MyApplication\Done\Input\Sub1\File2.tif<br/>
+        C:\Datacap\MyApplication\Done\Input\Sub1\Sub2\File3.tif<br/>
+        C:\Datacap\MyApplication\Done\Input\Sub3\File4.tif<br/>
+        C:\Datacap\MyApplication\Done\Input\File5.tif<br/><br/>
+
+        <e>
+          set_folder(“c:\scan\group1\Input|c:\scan\group2\Input|d:\scan\group3\Input”)<br/>
+          set_copy_folder(“Done”)<br/>
+          set_problem_folder("Error")<br/>
+          <b>mv_retain_folder(True)</b><br/>
+          scan()<br/><br/>
+
+          In this example, the set_folder action specifies three input folders. The following table shows the copy and problem folders for each input folder:<br/><br/>
+
+          Scan folder ------------- Copy folder ------------ Problem folder<br/>
+          c:\scan\group1\Input c:\scan\group1\Done c:\scan\group1\Error<br/>
+          c:\scan\group2\Input c:\scan\group2\Done c:\scan\group2\Error<br/>
+          d:\scan\group3\Input d:\scan\group3\Done d:\scan\group3\Error<br/><br/>
+
+          Within the copy or problem folder, files are placed in a directory structure 
+          that replicates the file’s original input folder except for the root input folder. The following table shows some examples:<br/><br/>
+
+          Input file placement ------- Copy folder placement ------------ Problem folder placement<br/>
+          c:\scan\group1\input\f1.tif c:\scan\group1\done\input\f1.tif c:\scan\group1\error\input\f1.tif<br/>
+          d:\scan\group3\input\f2.tif c:\scan\group3\done\input\f2.tif d:\scan\group3\error\input\f2.tif<br/><br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+  </com>
+</rrx>

@@ -1,0 +1,3365 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="ValidationsAndTextAdjustments" v="9.1.9.7">
+  <com ref="Datacap.Libraries.ValidationsAndTextAdjustments.Actions"  qi="Description of action library">
+    <h>
+      The Validations and Text Adjustments action library focus on actions that perform validation and manipulation
+      of recognized text within an application.  When recognizing a field it is recommended to configure the field
+      properties for the target engine to correctly specify the type of text being recognized and limit the
+      field to the expected character set.  For example, if a field is expected to be numeric only, then the field
+      should be preset to recognize only numeric values.  Perhaps a field may have some other restricted character set
+      such as numeric values plus "A, B, C, D, E, F", then the field can be setup to allow just those characters.  This
+      improves the recognition quality.<br/><br/>
+
+      It isn't always possible to tell the recognition engine exactly what is expected.  This action library can help
+      filter out invalid characters or flag fields that do not match expected patterns or expected data types.  For example,
+      if a date does not match the expected date pattern for the locale, then the validation actions can flag the field
+      so it can be examined by a verification operator.  Likewise, a validation check can be done for numeric formats or totals
+      of several numeric fields.<br/><br/>
+
+      Upon failure of a tested condition, most of the actions in this action library will also store the
+      reason for the message in a standard variable called Message.  This DCO variable is used by client
+      verification panels to display messages to verify operators so they can understand why a page
+      has failed a verification ruleset. If there are multiple reasons for a failure, these messages are only
+      displayed to the user one at a time, so the operator must fix the displayed error, rerun the validation
+      test and see if additional verification errors still remain.  If errors still remain, the operator will
+      need to repeat the process until they have rectified all of the issues that are causing a page
+      to fail validation.  Typically a the rule for a validation action is attached to the
+      DCO object that needs to pass the validation so the message is associated with the failed object
+      and typically the status of the object will be set to "1" to indicate the failure in a verification panel.<br/><br/>
+
+      For example, one common validation is that a particular field is required to have a particular length. Perhaps
+      it has a minimum length, or a maximum length, or both.  The validation action that checks a field's
+      length can be added to a validation ruleset to confirm that the length is correct.  If the length is incorrect
+      after a recognition step, it can flag the failed field to the operator in the verify panel. Likewise, it
+      can revalidate a field after it has been reviewed by an operator to help confirm the field is now at
+      the required length before moving on to the next page. The more validations that can be placed on the
+      field data for an application will provide a greater assurance that the data on the page was accurately
+      recognized or correctly entered by an operator.<br/><br/>
+
+      <b>Locale Sensitive Operations</b><br/><br/>
+
+      The validation actions are sensitive to the locale where it is applicable.  For example, date validation and currency
+      validation are performed based on the current locale.  If not set within the application, the locale used is the
+      machine's default Windows locale.  The locale for the entire application can be set within the Application Manager,
+      which will override the windows locale, and instead use the locale configured for the entire application.<br/><br/>
+
+      Datacap clients and actions support multiple locales within a single application and multiple locales within a single
+      batch. The hierarchical DCO variable hr_locale, can be specified to control the locale of the DCO object being
+      processed.<br/><br/>
+
+      rrSet("en-GB", "@X.hr_locale)<br/>
+      This example sets the locale for the current DCO node and it's children objects to English (United Kingdom).
+      rrSet can be used to set the value at runtime, or the value for hr_locale can be set in the setup DCO, if needed.
+      When specifying locales, use standard LCIDs, and these are case sensitive.<br/><br/>
+
+      If set at the batch level, it affects the entire application.  If set on a document DCO node, then it sets the
+      locale for all pages and fields within that document.  This can be controlled at any level. If set at the page level
+      then the locale will be set for the entire page and its fields, allowing each page within a document to have a unique locale.
+      For example, one page could have a US locale with US formatted data while the next page could have a French locale with French formatted data.
+      It is possible, although not usually required, to have unique locales configured for each field within
+      a single page.<br/><br/><br/>
+
+      <b>Smart Parameters - Brief Guide</b><br/><br/>
+
+      The top level help of the RuleRunnerLogic action library contains the complete smart parameter reference.
+      Here is a short set of examples.<br/><br/>
+      
+      If an action supports smart parameters, it is specified in the action help.  Smart parameters are very powerful
+      specifications for parameters that allow access of data to and from other DCO objects and perform
+      special pre-defined operations in one step.<br/><br/>
+
+      Smart parameters can be used to dynamically obtain or create action input parameters at runtime.  For example,
+      an action could be fed the value of a field after recognition, a parameter could pull the value from a
+      DCO variable that was set by a previous action, or a smart parameter could evaluate to the current date, the current
+      time, the current job ID, the current operator ID, the path to the current batch that is running, and more.
+      Smart parameter syntax can also be used to build expressions at runtime that concatenate dynamic data and
+      static data at runtime.  Smart parameters are
+      a flexible way to provide a wide range of input to any action that supports smart parameters.<br/><br/>
+      
+      The following are some examples of manipulation that are common for manipulating data where it may be expected
+      that a special action exists in the this action library but is not required.  This summary is intended to
+      show some manipulation that is typical for validation tasks.  This set of examples are by no means
+      the limit of how smart parameters can be used.  While many of these examples show the
+      value being passed to the handy action rrSet, the same smart parameter can be passed to any action
+      that supports smart parameters as input.<br/><br/>
+      
+      Refer to the full smart parameter guide in the top level help of the RuleRunnerLogic actions
+      for full details on all available smart parameters and how to use them.<br/><br/>
+
+      Append Text To A Field:<br/>
+      rrSet("Append This +@F","@F")<br/>
+      Assuming this is running on a field object, it appends the text "Append This " to the current text value of the field.
+      If the field originally contained "ABCD", the final value is "Append This ABCD")<br/><br/>
+      
+      rrSet("Append This +@F+ The End","@F")<br/>
+      Similarly, if the original field value is "ABCD", the final value of the field text is "Append This ABCD The End".<br/><br/>
+
+      Concatenate Text From A Different Field:<br/>
+      rrSet("@P\AnotherField+@F","@F")<br/>
+      This example will grab the text value from the sibling field "AnotherField" and append the text to the front of the
+      text in the current DCO field.<br/><br/>
+
+      Concatenate Text From A Different Field Variable:<br/>
+      rrSet("@P\AnotherField.MyVariable+@F","@F")<br/>
+      This example will grab the value from the sibling field "AnotherField" variable called "MyVariable" and append the text to the front of the
+      text in the current DCO field.<br/><br/>
+
+      Concatenate Text From A Different Field Variable Placed Into New Variable:<br/>
+      rrSet("@P\AnotherField.MyVariable+@CHR(32)+@F","@F.NewVariable")<br/>
+      This example will grab the value from the sibling field "AnotherField" variable called "MyVariable" and append the text to the front of the
+      text in the current DCO field. The current value of the field object is not updated, instead the new result is placed into a variable
+      for the current field called "NewVariable".
+      Assuming that "MyVariable" contains the text "Hello" and the current field value is "Tom", the first parameter will
+      fully resolve to "Hello Tom" and pass that value to the rrSet action, which will then place that new string
+      into the variable called "NewVariable".<br/><br/>
+
+      Assigning A Default Field Value:<br/>
+      rrSet("My Default Text","@P\MyField")<br/>
+      Assuming this action is run on a page object that contains a field called "MyField", it initialized the default value of
+      the field the "My Default Text".  If the field was already recognized, then this new text overwrites the existing text.
+      If the field is later recognized, then this default text will be replaced by the recognized text.<br/><br/>
+
+      Assigning Today's Date To A Field:<br/>
+      rrSet("@DATE(dd.mm.yyyy)","@X")<br/>
+      This example shows how to assign the current date in day, month, year format when rules are run on
+      a field object.  If a date format is not specified, the @DATE smart parameter will default to MM/DD/YYYY.<br/><br/>
+
+      Likewise, the smart parameter @TIME() can be used to put a time stamp into a field or as a parameter to an action
+      that supports smart parameters.<br/><br/>
+
+      Assigning The Current Job ID A Field:<br/>
+      rrSet("@JOBID","@X")<br/>
+      Assuming this is called on a field level object, this example shows how to assign the current job ID to the text value of a
+      field object.<br/><br/>
+
+      Is the current Job ID the expected Job ID:<br/>
+      rrCompare("@JOBID","MyJobID")<br/>
+      This compares the current Job ID with the string "MyJobID" and returns true if it matches.  If needed
+      the hard coded "MyJobID" could reference a smart parameter that contains the value. Alternatively,
+      rrCompareNot can be used to return true if the current Job ID is does not match the provided string.
+      Other comparison actions perform case insensitive comparisons.<br/><br/>
+
+      Clear a field's value:<br/>
+      rrSet("@EMPTY","@F\MyField")<br/>
+      This example shows how to empty the recognized value of the field "MyField" using a rule called on a page that
+      contains the "MyField" child.<br/><br/>
+
+      To continue if a field is empty:<br/>
+      rrCompare("@EMPTY","@X)<br/>
+      This action would be called on the field object.
+      The smart parameters can reference hard coded values or obtain
+      values from other objects or other DCO variables.<br/><br/>
+
+      To continue if a field is empty from page level:<br/>
+      rrCompare("@EMPTY","@X\MyField")<br/>
+      This tests to see if the page's field called "MyField" is empty. If so, the rule continues.<br/><br/>
+
+      To continue if a field is not empty:<br/>
+      rrCompareNot("@EMPTY","@X")<br/>
+      This action would be called on the field object to check the text value of the field.
+      If the current field is empty, the function will continue to the next action
+      in the rule.  If the field contains
+      text, then control will branch to the next function in the ruleset.<br/><br/>
+
+      To test if a field value is greater than a specific number:<br/>
+      rrCompareNumeric("1234", "˂", "@X")<br/>
+      This action tests to see if the numeric value of the current field text is
+      greater than 1234.  Parameters can be changed as needed.  For example, if "@X" was
+      replaced with "@D.MyVar", the value 1234 will be compared against the
+      value of the parent document level variable called "MyVar".<br/><br/>
+
+      Test if a field is hidden:<br/>
+      rrCompare("-1","@X.STATUS")<br/>
+      If a field has a STATUS of "-1", it is considered to be a hidden field or ignored and is not displayed
+      in a client verification panel.  If rules logic needs to determine if a field is hidden,
+      it can be tested by checking the STATUS variable of the field to see if it is "-1".
+      This example assumes the action is running on the current field object whose status will
+      be checked.  Of course, smart parameters can be used to navigate and check the status
+      of other DCO objects.<br/><br/>
+    </h>
+
+      <method name="AddAllLineitemTaxesToTaxField" qi="Adds all tax values from detail structure into Tax field.">
+          <ap>
+              None<br/>
+          </ap>
+          <h>
+              Adds all tax values from detail structure into Tax field.<br/><br/>
+
+              This action is not for general use. It is intended for an application, like APT,
+              where the application has a tax detail field that contains a field lineitems of taxes
+              called "TaxLineitem".
+              The application must also have another field called "Tax", which will be updated
+              with the result of this action. <br/><br/>
+
+              This action will set the position of the tax field to "0,0,0,0".<br/><br/>
+              
+              <e>
+                  <b>AddAllLineitemTaxesToTaxField()</b>
+              </e>
+          </h>
+          <lvl>
+              The close event of TaxLineitem detail field in APT.
+          </lvl>
+          <ret>
+              Always <b>True.</b> <br/>
+          </ret>
+      </method>
+  
+      
+    <method name="AddPaddingCharacterToStart" qi="Extends a field or variable to a specified length using a specific padding character.">
+      <p name="Target" type="string" />
+      <p name="PadCharacter" type="string" />
+      <p name="MaximumLength" type="string" />
+      <ap>
+        Target : A smart parameter that resolves to the target DCO object or variable to pad with characters to the start of the string.<br/>
+        PadCharacter : The character to pad in front of the text to extend it to the maximum length.<br/>
+        MaximumLength : The target path and filename.<br/><br/>
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        Accepts a specification for a DCO field or DCO variable and extends the length of the text by placing
+        the specified character in front of the existing text until the length is at the specified maximum.<br/><br/>
+        
+        If the current text length is at, or beyond, the specified maximum length then the existing text
+        will not be changed.<br/><br/>
+        <e>
+          <b>AddPaddingCharacterToStart("@F", "0", "10")</b><br/>
+          Assuming this action is called on a feild object that contains the recognized value "2240.00", 
+          it will be adjusted to "0002240.00"<br/><br/>
+
+          <b>AddPaddingCharacterToStart("@P\Total", " ", "10")</b><br/>
+          Assuming this action is called on a page object that has a child field called "Total",
+          this action will pad the recognized value of "Total" with leading spaces until
+          the length reaches 10 characters. If the field "Total" has a text
+          value of "Hello", it will add 5 spaces to the start of the text in
+          the field.<br/><br/>
+
+          <b>AddPaddingCharacterToStart("@X.MyVariable", "@STRING("@")", "15")</b><br/>
+          This action will pad the text stored in the object's variable called "MyVariable".
+          The text will pad the beginning of the text with an @ symbol until it is 
+          15 characters in length.  Because the @ symbol is a special smart parameter
+          it must be specified using the @STRING or @CHR smart parameter notation
+          to prevent it from being interpreted as a smart parameter.
+          If the variable "MyVariable" has the text "Jack and Jill", the final value
+          of "MyVariable" will be "@@Jack and Jill".<br/><br/>
+        </e>
+      </h>
+      <lvl>Any Level.</lvl>
+      <ret>
+        <b>False</b> if one of the parameters is invalid or if the target string specified is invalid; otherwise, <b>True.</b>
+      </ret>
+      <see>
+        The top level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="AddPaddingCharacterToEnd" qi="Extends a field or variable to a specified length using a specific padding character.">
+      <p name="Target" type="string" />
+      <p name="PadCharacter" type="string" />
+      <p name="MaximumLength" type="string" />
+      <ap>
+        Target : A smart parameter that resolves to the target DCO object or variable to pad with a character.<br/>
+        PadCharacter : The character to pad in front of the text to extend it to the maximum length.<br/>
+        MaximumLength : The target path and filename.  Smart parameters are supported.<br/><br/>
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        Accepts a specification for a DCO field or variable and extends the length of the text by placing
+        the specified character at the end of the existing text until the length is at the specified maximum.<br/><br/>
+
+        If the current text length is at, or beyond, the specified maximum length then the existing text
+        will not be changed.<br/><br/>
+        <e>
+          <b>AddPaddingCharacterToEnd("@F", "0", "10")</b><br/>
+          Assuming this action is called on a feild object that contains the recognized value "2240.00",
+          it will be adjusted to "2240.00000"<br/><br/>
+
+          <b>AddPaddingCharacterToEnd("@P\Total", " ", "10")</b><br/>
+          Assuming this action is called on a page object that has a child field called "Total",
+          this action will pad the recognized value of "Total" with trailing spaces until
+          the length reaches 10 characters. If the field "Total" has a text
+          value of "Hello", it will add 5 spaces to the end of the text in
+          the field.<br/><br/>
+
+          <b>AddPaddingCharacterToEnd("@X.MyVariable", "@STRING("@")", "15")</b><br/>
+          This action will pad the text stored in the object's variable called "MyVariable".
+          The text will pad the end of the text with an @ symbol until it is
+          15 characters in length.  Because the @ symbol is a special smart parameter
+          it must be specified using the @STRING or @CHR smart parameter notation
+          to prevent it from being interpreted as a smart parameter.
+          If the variable "MyVariable" has the text "Jack and Jill", the final value
+          of "MyVariable" will be "Jack and Jill@@".<br/><br/>
+        </e>
+      </h>
+      <lvl>Any Level.</lvl>
+      <ret>
+        <b>False</b> if one of the parameters is invalid or if the target string specified is invalid; otherwise, <b>True.</b>
+      </ret>
+      <see>
+        The top level help topic for general information about this action library.
+      </see>
+    </method>
+
+
+      <method name="AddToErrorMessage">
+          <p name="p1" type="string" qi="Error message text."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>              
+              This action allows for custom messages to be displayed to the verify operator when a validation fails.
+              The provided message is appended to any existing error message.
+              How the message is displayed back to user depends on the verify client used.
+              <e>
+                  <b>AddToErrorMsg("Vendor Number cannot be blank.")</b>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              Always <b>False.</b>
+          </ret>
+          <see>
+              ClearErrorMessage
+          </see>
+      </method>
+
+      <method name="AddToLineItemDetailErrorMessage">
+          <p name="p1" type="string" qi="Error message text."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              This action allows for custom messages to be displayed to the verify operator when a validation fails for line items.
+              The provided message is appended to any existing error message.
+              How the message is displayed back to user depends on the verify client used.
+              <e>
+                  <b>AddToLineItemDetailErrorMessage("Description cannot be blank.")</b>
+              </e>
+          </h>
+          <lvl>Field level. Specifically, it must be a line item detail field.</lvl>
+          <ret>
+              Always <b>False.</b>
+          </ret>
+          <see>
+              ClearErrorMessage
+          </see>
+      </method>
+    
+    <method name="AllowOnlyCharacters" qi="Filters out characters not contained in the allowed set.">
+      <p name="Target" type="string" />
+      <p name="AllowedCharacters" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+        <b>AllowedCharacters</b> A value that specifies permitted characters in the current word. 
+        An empty parameter removes all characters. Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        This action removes all characters NOT in the parameter from the a Field's recognized value
+        or from a DCO variable.  If the target is a field's recognized text, the confidence of the
+        remaining characters will not be changed by this operation.<br/><br/>
+
+        An empty argument will remove ALL characters. The specified characters are case sensitive so
+        if characters should be removed regardless of case, add the upper and lower case characters to be removed.<br/><br/>
+        <e>
+            <b>AllowOnlyCharacters("@F", "ABCDEFG.")</b><br/>
+            Calling this action on a field DCO object, if the field value is "HELLO DOLLY." it becomes "ED."
+            The order of the characters in the input parameter have no affect on the result.<br/><br/>
+
+            <b>AllowOnlyCharacters("@X.MyVariable", "ABCDEFG.")</b><br/>
+            The action AllowOnlyCharacters" will filter the text within the DCO variable "MyVariable"
+            on the current DCO object.<br/><br/>
+
+            <b>AllowOnlyCharacters("@F", "AaBbCc+@STRING(@+)")</b><br/>
+            There are times when characters need to be passed to an action that are also special smart parameter symbols.
+            Because the characters + and @ are special smart parameter symbols, they must be specified
+            using syntax which allows them to be added without interpretation.  
+            The @STRING specification allows the text within it to be passed to the action without smart parameter processing.
+            The final result from
+            the example is that the characters "AaBcCc@+" will be the only characters allowed in the final value.<br/><br/>
+
+            <b>AllowOnlyCharacters("@F", "@STRING(AaBbCc@+)")</b><br/>
+            Smart parameters are processed as tokens that can often be specified multiple ways,
+            producing the same final result.  This example is an alternate specification of the above
+            example.  Instead of separating parts of the character input, because the entire input
+            string is static, the entire input string can also be specified as a single value within
+            the @STRING token.  This example produces the same resolved input parameter of "AaBcCc@+".
+            <br/><br/>
+
+            <b>AllowOnlyCharacters("@F", "@P\Field1+@STRING(AaBbCc@+)")</b><br/>
+            Sometimes input to an action needs to come from another location, or data that is captured
+            at runtime. This example shows another use of smart parameters to combine dynamic text from a field
+            and hard coded text. The example would be called on a field object who has a sibling
+            field called "Field1". Assuming the text value of Field1 is "XYZ", the final parameter
+            passed to the action evaluates to "XYZAaBbCc@+".
+            <br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False,</b> if called on the wrong level.  Otherwise <b>True.</b>
+      </ret>
+      <see>
+          The top level help topic for general information about this action library.<br/><br/>
+          The top level help of the RuleRunnerLogic action library contains the complete smart parameter reference.
+      </see>
+    </method>
+
+
+      <method name="AlterDateByDay" qi="Adds or subtracts days from a date text.">
+          <p name="target" type="string" qi ="A smart parameter that specifies the target field or variable to update."/>
+          <p name="days" type="string" qi="The number of days to add to the date."/>
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              The action will add or subtract the specified number of days to the date text. The target text to update can be in a field
+              or a variable.<br/><br/>
+              
+              The action requires that the date format match that of the current locale.  The hr_locale variable is respected, if set.
+              The action will output the
+              updated date in the default format for the current locale. The output date may or may not have leading zeros
+              for single digit dates.<br/><br/>
+              
+              The original character confidence is not changed.<br/>
+              <e>
+                  rrSet("04/01/2025", "@F")<br/>
+                  <b>AlterDatebyDay("@F", "7")</b><br/><br/>
+
+                  This example adds one week to the date contained in the field.  If the date crosses
+                  over a month or year boundary, they will be adjusted appropriately.
+                  The value 04/01/2025 is changed to 4/8/2025.
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              Always, <b>True.</b>
+          </ret>
+      </method>
+      
+
+    <method name="CalculateDateDifference" qi="Calculates a date difference in days, months, quarters or years.">
+      <p name="StartDate" type="string" />
+      <p name="EndDate" type="string" />
+      <p name="TargetVariable" type="string" />
+      <p name="DateProperty" type="string" />
+      <ap>
+        <b>startDate</b> : The starting date.<br/>
+        <b>endDate</b> : The ending date.<br/>
+        <b>targetVariable</b> : The variable to hold the calculated result value.<br/>
+        <b>dateProperty</b> : The value to calculate.  0 = days, 1 = months, 2 = quarters, 3 = years.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Calculates the number of days, months, quarters or years between two dates.
+        Only whole numbers are returned.  Any fractional parts of the value are dropped.
+        Quarters are calculated simply by dividing the number of months by 3.
+        The order of the dates does not matter.<br/><br/>
+
+        Note this action only supports Gregorian short dates as input and the date format must match the 
+        default format of the current locale.<br/><br/>
+
+        If the date requirements are met, the action returns true.  If the date requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action, so it is typically useful to call this action on the DCO object
+        that is being checked so the message is associated with the same object.   Typically this would be
+        called on a field object which needs to pass this validation test.<br/><br/>
+        
+        <e>
+          <b>CalculateDateDifference("4/20/2012", "5/19/2012", "@P.Months", 1)</b><br/>
+          This example will create the page variable "Months" with a value of "0".<br/><br/>
+
+          <b>CalculateDateDifference("4/20/2012", "5/20/2012", "@P.Months", 1)</b><br/>
+          This example will create the page variable "Months" with a value of "1".<br/><br/>
+
+          <b>CalculateDateDifference("4/20/2012", "4/19/2013", "@P.Years", 3)</b><br/>
+          This example will create the page variable "Years" with a value of "0".<br/><br/>
+
+          <b>CalculateDateDifference("4/20/2012", "4/20/2013", "@P.Years", 3)</b><br/>
+          This example will create the page variable "Years" with a value of "1".<br/><br/>
+
+          <b>CalculateDateDifference(@P\MyDate1, @P\MyDate2, "@P.Days", 0)</b><br/>
+          This example will create the page variable "Days" with the number of days between the dates specified by the values in field MyDate1 and field MyDate2.<br/><br/>
+
+          <b>CalculateDateDifference(@P.MyDate1, @P.MyDate2, "@P.Days", 0)</b><br/>
+          This example will create the page variable "Days" with the number of days between the dates specified by page variables MyDate1 and MyDate2.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False,</b> If the format of either date is invalid.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters and the use of the current locale.<br/>
+      </see>
+    </method>
+    
+
+    <method name="CalculateFields" qi="Performs numeric calculations on fields and evaluates the result.">
+      <p name="Equation" type="string" />
+      <p name="DecimalDigits" type="string" />
+      <p name="PreserveStatus" type="string" />
+      <ap>        
+        <b>Equation:</b> The equation that is the basis for the calculation.<br/>
+        You can use a Field object's name or numeric values with any arithmetic operator (+,-,*,/,^).
+        To use a Field object's name, or numeric value, surround it with single quotation marks (').
+        An empty value is treated as a "0".<br/><br/>
+        
+        <b>DecimalDigits:</b> The number of decimal places to limit the logical comparison. If left blank, or invalid, the
+        number will default to the value for the current locale.<br/><br/>
+
+        <b>PreserveStatus:</b> Can be "True" or "False" to indicate if he status of all associated fields if the calculation fails should
+        be updated based on success or failure of the operation. If not provided, or invalid, the value will default to False.<br/><br/>
+        
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        Calculates the equation entered as a parameter.  The equation can contain field names which will
+        use the field's value at runtime.  The equation can contain mathematical operations +, -, *, and /.
+        A single equality can also be performed such as =, ˂, =˂, =>, >, and ˂>.<br/><br/>
+
+        If the equation contains a boolean equality, the action will determine if the equation evaluates to true or false.
+        If the result is false, then status of the fields specified within the equation
+        will be set to "1", allowing them to be reviewed by a following task
+        such as a verification operator.  The equation should be specified so that two sides of
+        the equation can be evaluated to determine if the entire equation is correct.<br/><br/>
+
+        <b>Note:</b> If the result does not match the equation's result, dependent fields (fields involved in the
+        equation) will receive a Failed status and will appear pink in the applicable field of the Client's Verification panel.<br/><br/>
+
+        If the results of a previously failed CalculateFields call are corrected by a user, such that the calculation no longer returns false, dependent fields that
+        were set to status Failed by the CalculateFields action will be updated to status Pass.<br/><br/>
+
+        It is likely that dependent fields could have their statuses updated via other rules and actions, 
+        so it is important when configuring your application to properly stage,
+        and sequence your validations action logic to work in tandem with the CalculateFields action.<br/><br/>
+
+        It is important to be aware that smart parameters are supported for all parameters.  Smart parameters use special
+        characters such as "+".  To use a "+" in an equation, it is necessary to specify the text so it is not
+        interpreted as a special character.  This can be achieved using the @STRING or @CHR smart parameters
+        as shown in the example.<br/><br/>
+
+        If the equality calculation equation is successful, the action returns true.  If the equation is not satisfied, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action, so it is typically useful to call this action on the DCO object
+        that is being checked so the message is associated with the same object.   Typically this would be
+        called on a field object which needs to pass this validation test.<br/><br/>
+        
+        If the specified equation does not contain an equality operation, then the resulting
+        value will be calculated and stored in the text value of the current field object.
+        If called on a page level object, then the calculated value will be stored in
+        a DCO variable called "CalculateField" and the action will return true.<br/><br/>
+        <e>
+          <b>CalculateFields("@STRING('SubTotal' + 'Shipping' + 'Tax' = 'Total')", "2", "False")</b><br/>
+          This example sums the "SubTotal", "Shipping" and "Tax" fields and checks to see if the total
+          of the three fields equals the value in the "Total" field.  If they are not the same,
+          then the status will be changed to "1" for each of the fields.<br/><br/>
+          
+          The above example places the entire expression into the "@STRING" smart parameter keyword to
+          prevent any pre-processing of the expression, particularly the + signs within the expression, which
+          would otherwise be first interpretated as smart parameter operators, changing the evaluated expression.<br/><br/>
+
+          <b>CalculateFields("('SubTotal' +@CHR(43)+ 'Shipping' +@CHR(43)+ 'Tax') - '0.05' = 'Total'", "2", "False")</b><br/>
+          This example is similar to the above example, but also includes a hard coded value
+          within the equation. The smart parameter @CHR(43) evaluates to a plus sign.  Because the parameter is
+          supports smart parameters, the + will be interpreted as a smart parameter and change the input string.
+          This technique will resolve to a + in the final equation like this:<br/>
+          ('SubTotal' + 'Shipping' + 'Tax') - '0.05' = 'Total'<br/><br/>
+
+          The above example takes an alternate approach by using @CHR(43) to insert the + sign into the expression.<br/><br/>
+
+          To check for a 'tolerance' use two actions in sequence like this:<br/>
+          <b>CalculateFields("@STRING(('Wages' + 'Interest' + 'Unemployment')&gt;=('Gross'- '.05'))", "2", "False")</b><br/>
+          <b>CalculateFields("@STRING(('Wages' + 'Interest' + 'Unemployment')&lt;=('Gross'+ '.05'))", "2", "False")</b><br/>
+          The example will calculate fields twice and allow the range of values.  If both tests pass, then they will both return
+          True.  If either test fails, the action will return false and set the status of the field to "1" indicating there is
+          a problem with the field.<br/><br/>
+
+          <b>CalculateFields("'SubTotal' +@CHR(43)+ 'Shipping' +@CHR(43)+ 'Tax')", "0", "False")</b><br/>
+          This example will sum the values of the "SubTotal", "Shipping" and "Tax" fields and stores the result
+          in the text value of the current field, or if called on a page object, the value will be stored
+          in a variable called "CalculateFields". This calculated value can be accessed by subsequent actions.<br/><br/>
+
+          <b>CalculateFields("'SubTotal' * '2')", "0", "False")</b><br/>
+          This example finds the value of the SubTotal field and multiplies it by 2 and stores the result.<br/><br/>
+
+          Some numeric operators used for field calculations are also used as smart parameter tokens. When a parameter
+          allows smart parameters, the parameter will always be processed for smart parameter tokens first. The
+          @STRING() token is a common way to pass these values without interpretation.  If an action is not processing
+          correctly, it is likely due to a numeric symbol being processed as a smart parameter.  Check the action log
+          to see if the evaluation statement is built as expected and adjust the action parameters as required.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page or Field level.</lvl>
+      <ret>
+        <b>True</b> if the expression evaluates to True. <br/>
+        <b>False</b> if the expression evaluates to False or the expression is not valid (eg. a field's value is not numeric).
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding the use of the current locale.<br/>
+        The top level help of the RuleRunnerLogic action library contains the complete smart parameter reference.<br/>
+      </see>
+    </method>
+
+
+      <method name="CalculateInvoiceTotal" qi="Determines if the Total field is within the tolerance for the data on the page.">
+          <p name="Tolerance"/>
+          <ap>
+              The floating point tolerance value that will be used to determine if the Tax, Shipping and Detail values equal the Total within the tolerance.<br/><br/>              
+          </ap>
+          <h>
+              Uses the Details, Tax and Shipping fields to calculate the total value and checks to see if it matches the Total field within
+              the specified tolerance.<br/><br/>
+
+              This action is not for general use. It is intended for an application, like APT,
+              where the application has a "Tax", "Shipping" and "Details" field.
+              <e>
+                  IsFieldCurrency()<br/>
+                  <b>CalculateInvoiceTotal("0.02")</b><br/><br/>
+
+                  In this example, the combined total of the Tax, Shipping and Details fields must be within .02 of the total field.<br/>
+              </e>
+          </h>
+          <lvl>
+              Must be called on the invoice total field.
+          </lvl>
+          <ret>
+              <b>True</b> if the Details, Tax and Shipping fields add up to the Total field value within the specified tolerance value.  Otherwise, <b>False.</b>
+          </ret>
+      </method>
+
+      <method name="CalculateLineItemQuantityAndPrice" qi="Determines if the LineTotal field is correct.">
+          <p name="Tolerance"/>
+          <ap>
+              The floating point tolerance value that will be used to determine if the LineTotal matches the Qty * Price within the tolerance.<br/>
+          </ap>
+          <h>
+              Determines if the fields "Qty * Price = LineTotal" within
+              the specified tolerance value.<br/><br/>
+
+              This action is not for general use. It is intended for an application, like APT,
+              where the application has a lineitems field with a qty and price.<br/><br/>
+              <e>
+                  IsFieldCurrency()<br/>
+                  <b>CalculateLineItemQuantityAndPrice("0.02")</b><br/>
+              </e>
+          </h>
+          <lvl>
+              Must be called on the Invoice_Total field.
+          </lvl>
+          <ret>
+              <b>False</b> if the Qty, Price or LineTotal fields do not contain a numeric value.<br/>
+              <b>True</b> if the Qty * Price matches the LineTotal value within the specified tolerance.  Otherwise, <b>False.</b>
+          </ret>
+      </method>
+
+      <method name="ChangeTextToMixedCase" qi="Changes the text so the first letter of every word is upper-case.">
+          <p name="Target" type="string" qi="A smart parameter that specifies a variable or field." />
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              This action changes text to be Title case where the first letter of
+              each word will be capitalized.<br/><br/>
+              <e>
+                  <b>ChangeTextToMixedCase("@P\Field1")</b><br/><br/>
+
+                  If the field in this example is "hello, i MUST be going.", the text will be changed to "Hello, I Must Be Going."
+              </e>
+          </h>
+          <lvl>Any level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>
+              Refer to the top level help of the RuleRunnerLogic action library for the smart parameters reference guide.<br/>
+          </see>
+      </method>
+
+
+      <method name="CheckAndSetCurrencyDecimalToPeriod" qi="Changes currency values to have a period decimal separator.">
+          <p name="target" type="string" qi="A smart parameter that references a field or variable."/>
+          <ap>
+              The target location identifies the location of the text to check and update.
+              <br/>
+          </ap>
+          <h>
+              The action updates the decimal separator on text that is expected to be a currency value, meaning
+              that the value has two decimal places, such as "xxx.xx". The action will check the location where
+              the decimal separator is expected.  If the character is a space, or a comma, the character
+              will be replaced with a period. This action is not locale aware and will operate the same
+              regardless of the currently selected locale.<br/><br/>
+              
+              This action can be used to fix errors where the decimal is not recognized and leaves a blank in that area,
+              also this can be used for conversion for European numbers that use a comma to separate the whole amount from decimal
+              portion. For example: "$100,00" becomes "$100.00" and "$100 00" becomes "$100.00".<br/><br/>
+              <e>
+                  CheckAndSetCurrencyDecimalToPeriod("@F")<br/>                  
+                  AllowOnlyCharacters("0123456789.-")<br/>
+                  IsFieldCurrency()<br/><br/>
+                  
+                  This example assumes it is called on a field object.
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              False, if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+      
+    <method name="CheckSubFields" qi="Checks values in a lineitem.">
+      <p name="Expression" type="string" />
+      <ap>
+        An "expression" that specifies which LINEITEM child fields are to be checked for the presence or absence
+        of captured values. Within the expression, each child Field object's name needs to be surrounded
+        with single quotation marks ('). You can also use parentheses () in your expression. Action is placed on the
+        parent of the LINEITEM field. Smart parameters are supported.
+      </ap>
+      <h>        
+        In an application that uses lineitems, this action validates an instance of a 
+        parent Field object by confirming the presence (or absence) of
+        captured values for one or more of its child fields. (In the APT application, as an example,
+        child fields of the LINEITEM parent include: ItemID, ItemDesc, Quantity, Price and LineTotal.)        
+        <br/><br/>
+        
+        Invalid parent Field objects are deleted from the DCO if they do not meet this criteria.<br/><br/>
+        This action should be configured to run in its own RuleSet (for example, in a Filter RuleSet) 
+        because it can delete the DCO objects as rules are running and would be applied
+        to the DETAILS Field object (parent object to the LINEITEM field) in an application that uses LINEITEMs such as APT.
+        <e>
+          <b>Example 1:</b> The captured values for a LINEITEM field are:<br/>
+          ItemID = 12345<br/>
+          ItemDesc =<br/>
+          Price = 12.00<br/>
+          LineTotal = <br/><br/>
+
+          The action's parameter contains this expression:<br/>
+          <b>CheckSubFields("('ItemID' OR 'ItemDesc') AND ('Price' OR 'LineTotal')")</b><br/><br/>
+
+          In this example the action returns <b>True</b> and the current 	LINEITEM object is Valid.<br/><br/>
+
+          <b>Example 2:</b> The captured values for the LINEITEM field are:<br/>
+          ItemID = 12345<br/>
+          ItemDesc = Thank you for your order<br/>
+          Price =<br/>
+          LineTotal = <br/><br/>
+
+          The action's parameter contains this expression:<br/>
+          <b>CheckSubFields("('ItemID' OR 'ItemDesc') AND ('Price' OR 'LineTotal')")</b><br/><br/>
+
+          In this example the action's equation returns is <b>False</b> and the current LINEITEM
+          object is Invalid. The field and the values of its child fields are deleted from the Data file.<br/><br/>
+
+          <b>Example 3:</b>  The captured values for the LINEITEM field are:<br/>
+          ItemID = 12345<br/>
+          LineTotal = gonetolunch<br/><br/>
+
+          The action's parameter contains this expression:<br/>
+          <b>CheckSubFields("('ItemID') AND ('LineTotal')")</b><br/><br/>
+
+          In this case, the action returns <b>True</b> and validates the LINEITEM field - despite the
+          presence of a nonsense entry in the LineTotal child field!
+        </e>
+      </h>
+      <lvl>Field level. The parent of the LINEITEM field.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+
+      <method name="ClearErrorMessage" qi="Removes any previous error messages.">
+          <ap>None.</ap>
+          <h>
+              This action clears the current error message. Notice that the paradigm is that the error message is cleared at the start
+              of the function. After clearing the message, then the work will be performed, such as a validation. If the validation
+              passes, then the message would remain empty. If an error occurs, then the message would be set with the new message.<br/>
+              <e>
+                  Status_Preserve_OFF()<br/>
+                  <b>ClearErrorMsg()</b><br/>
+                  CaptureOpInfo()<br/>
+                  rrCompare("@P\Routing_Instructions","None")
+              </e>
+          </h>
+          <lvl>Any level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+
+
+
+      <method name="ConvertFieldToCurrency" qi="Formats a numeric field as currency without a currency symbol.">
+      <ap>None.</ap>
+      <h>
+        Formats the current field's text value as a currency value without a currency symbol.  
+        If the value does not have a decimal separator, the decimal separator will be added.
+        The following steps are performed on the field:<br/><br/>
+        
+        1. Removes existing currency symbols.<br/>
+        2. Replaces negative value characters such as parenthesis, 'NEG', 'CR' and trailing hyphen
+        with a leading hyphen.<br/>
+        3. If a decimal exists, its position is not changed.<br/>
+        4. If a decimal does not exist and the field contains 2 or more characters, a decimal is inserted
+        before the last two characters in the field.<br/>
+        5. If a decimal does not exist and the field contains less than 2 characters, no decimal is inserted.<br/><br/>
+
+        This action works on the recognized text value of a field.
+        To convert a numeric value that is in a DCO variable, first use rrSet to copy the value into a field, then
+        this action can be run on the field. Once complete, the value could be copied back to the original
+        DCO variable.
+        <e>
+          <b>ConvertFieldToCurrency()</b><br/>
+          A value of <b>1</b> remains <b>1</b><br/>
+          A value of <b>12</b> becomes <b>.12</b><br/>
+          A value of <b>105</b> becomes <b>1.05</b><br/>
+          A value of <b>104.009</b> remains <b>104.009</b><br/>
+          A value of <b>$104.009</b> becomes <b>104.009</b><br/>
+          A value of <b>$12345</b> becomes <b>123.45</b><br/>
+          A value of <b>($123.45)</b> becomes <b>-123.45</b><br/>
+          A value of <b>$123.45 NEG</b> becomes <b>-123.45</b><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the text value is numeric and greater than one character. Otherwise, <b>False</b>.
+      </ret>
+      <see>
+        Refer to the top level help item in this action library for more information about the use of the current locale.<br/>
+      </see>
+    </method>
+
+    <method name="ConvertToLowerCase" qi="Converts text in a field or variable to lower case.">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+      </ap>
+      <h>
+        Converts any upper case characters in a field's recognized text value, or in a DCO variable, to lower case characters.
+        If the target is a field's recognized text, the confidence of the characters will not be changed by this operation.<br/><br/>
+        
+        <e>
+          <b>ConvertToLowerCase("@X")</b><br/>
+          Assuming this action is called on a field object, it will update the field's text value so it is all lower case.<br/><br/>
+
+          <b>ConvertToLowerCase("@P\MyField")</b><br/>
+          Assuming this action is called on a page object, it will update the text value for the DCO child field "MyField" 
+          so it is all lower case.<br/><br/>
+
+          <b>ConvertToLowerCase("@X.MyVariable")</b><br/>
+          This example will update the DCO variable called "MyVariable" on the current DCO node so it is
+          all lower case.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        ConvertToUpperCase<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="ConvertToUpperCase" qi="Converts text in a field or variable to upper case.">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+      </ap>
+      <h>
+        Converts any lower case characters in a field's recognized text value, or a DCO variable, to upper case characters.
+        If the target is a field's recognized text, the confidence of the characters will not be changed by this operation.<br/><br/>
+        
+        <e>
+          <b>ConvertToUpperCase("@X")</b><br/>
+          Assuming this action is called on a field, it will update the field's text value so it is all upper case.<br/><br/>
+
+          <b>ConvertToUpperCase("@P\MyField")</b><br/>
+          Assuming this action is called on a page, it will update the text value for the DCO child field "MyField"
+          so it is all upper case.<br/><br/>
+
+          <b>ConvertToUpperCase("@X.MyVariable")</b><br/>
+          This example will update the DCO variable called "MyVariable" on the current DCO node so it is
+          all upper case.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        ConvertToUpperCase<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+
+    <method name="CreateGUID" qi="Creates a globally unique identifier">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+      </ap>
+      <h>
+        Generates a new GUID value string and stores it in the target location.<br/><br/>
+
+        <e>
+          <b>CreateGUID("@X")</b><br/>
+          Assuming this action is called on a field, it will update the field's text value with a new GUID.<br/><br/>
+
+          <b>CreateGUID("@P\MyField")</b><br/>
+          Assuming this action is called on a page, it will update the text value for the DCO child field "MyField"
+          with a new GUID.<br/><br/>
+
+          <b>CreateGUID("@B.MyVariable")</b><br/>
+          This example will create a batch level variable called "MyVariable" and set it with a new GUID value.
+          If the variable does not exist, it will be created.<br/><br/>
+          
+          <b>CreateGUID("@X.MyVariable")</b><br/>
+          This example will update the DCO variable called "MyVariable" on the current DCO node 
+          with a new GUID value. If the variable does not exist, it will be created.<br/><br/>
+
+          <b>CreateGUID("@X.MyVariable")</b><br/>
+          rrSet("This is the GUID:+@X.MyVariable", "@X.myVariable")<br/>
+          This example will update the DCO variable called "MyVariable" on the current DCO node
+          with a new GUID value. The following rrSet then makes an additional update to the variable to pre-append the string
+          "This is the GUID:" to the generated GUID.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True,</b> if successful, otherwise <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters and the 
+        RuleRunnerLogic action library top level help for the complete smart parameter reference.<br/>
+      </see>
+    </method>
+    
+
+    <method name="DeleteAllCharactersAlphabetic" qi="Deletes alphabetic characters from a field or variable.">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+      </ap>
+      <h>
+        Deletes all alphabetic characters from the current Field object's recognized text value or a DCO variable.
+        Other characters such as numbers, punctuation and symbols will remain.
+        If the target is a field's recognized text, the confidence of the
+        remaining characters will not be changed by this operation.<br/><br/>
+        <e>
+          <b>DeleteAllCharactersAlphabetic("@F")</b><br/>
+          Assuming this action is called on a field level object, the recognized text value
+          "JAN2003" becomes "2003".<br/><br/>
+
+          <b>DeleteAllCharactersAlphabetic("@X.MyVariable")</b><br/>
+          This action will delete all alphabetic characters from the variable on the current 
+          DCO object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        DeleteAllCharactersNumeric, DeleteSelectedCharacters, DeleteAllCharactersMiscellaneous, DeleteAllCharactersPunctuation, DeleteAllCharactersMatchingExpression<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="DeleteAllCharactersMatchingExpression" qi="Deletes all characters in a field or variable that match a regular expression.">
+      <p name="Target" type="string" />
+      <p name="RegularExpression" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+        <b>RegularExpression:</b> A regular expression that equates to a matching string pattern.  Any characters
+          that match the expression will be deleted from the text. Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Removes all characters with the target field text or target DCO variable that 
+        match the provided expression.  Other characters will remain.
+        If the target is a field's recognized text, the confidence of the
+        remaining characters will not be changed by this operation.<br/><br/>
+        <e>
+          <b>DeleteAllCharactersMatchingExpression("@F", "@STRING(\p{N}+)")</b><br/>
+          Assuming this action is called on a field level object, it will remove
+          all numeric characters from the text. Because the action supports smart
+          parameters and because the input expression has a + symbol, which is
+          a special smart parameter symbol, the input string needs to be specified
+          using a smart parameter to prevent interpretation of the +. One possible
+          way to do this is by using the @STRING() as shown.<br/><br/>
+
+          <b>DeleteAllCharactersMatchingExpression("@P\MyField", "@STRING(\p{N}+)")</b><br/>
+          Assuming this action is called on a page object, it will update the text value for the child field "MyField"
+          by removing all numeric characters.<br/><br/>
+
+          <b>DeleteAllCharactersMatchingExpression("@X.MyVariable", "STRING(\p{N}+)")</b><br/>
+          This action will delete all numeric characters from the variable "MyVariable" on the current
+          DCO object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        DeleteAllCharactersAlphabetic, DeleteSelectedCharacters, DeleteAllCharactersMiscellaneous, DeleteAllCharactersPunctuation<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+    
+    <method name="DeleteAllCharactersMiscellaneous" qi="Removes a range of ASCII values from a field or variable.">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+      </ap>
+      <h>
+        Removes all characters with ASCII values 123 through 191, math symbols, currency signs, dingbats, box-drawing characters, etc.
+        from the current Field object's recognized value or from a DCO variable.  Other characters will remain.
+        If the target is a field's recognized text, the confidence of the
+        remaining characters will not be changed by this operation.<br/><br/>
+        <e>
+          <b>DeleteAllMiscellaneousCharacters("@F")</b><br/>
+          Assuming this action is called on a field level object, the recognized text value
+          "100¢ = $1" becomes "100  1".<br/><br/>
+
+          <b>DeleteAllMiscellaneousCharacters("@X.MyVariable")</b><br/>
+          This action will delete all miscellaneous characters from the variable "MyVariable" on the current
+          DCO object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        DeleteAllCharactersAlphabetic, DeleteSelectedCharacters, DeleteAllCharactersNumeric, DeleteAllCharactersPunctuation, DeleteAllCharactersMatchingExpression<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+
+    <method name="DeleteAllCharactersNumeric" qi="Removes all numeric characters from a field.">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+      </ap>
+      <h>
+        Removes all Numeric characters from 
+        from the current Field object's recognized value or from a DCO variable.  Other characters will remain.
+        If the target is a field's recognized text, the confidence of the
+        remaining characters will not be changed by this operation.<br/><br/>
+        <e>
+          <b>DeleteAllCharactersNumeric("@F")</b><br/>
+          Assuming this action is called on a field level object, the recognized text value
+          "JAN2003" becomes "JAN".<br/><br/>
+
+          <b>DeleteAllCharactersNumeric("@P\MyField")</b><br/>
+          Assuming this action is called on a page object, it will update the text value for the child field "MyField"
+          by removing all numeric characters.<br/><br/>
+
+          <b>DeleteAllCharactersNumeric("@X.MyVariable")</b><br/>
+          This action will delete all numeric characters from the variable "MyVariable" on the current
+          DCO object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        DeleteAllCharactersAlphabetic, DeleteSelectedCharacters, DeleteAllCharactersMiscellaneous, DeleteAllCharactersPunctuation, DeleteAllCharactersMatchingExpression<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="DeleteAllCharactersPunctuation" qi="Removes punctuation characters from a field or variable.">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+      </ap>
+      <h>
+        Removes all characters with ASCII values 33-47,58-64,91-96, and 123-191 from the
+        current Field object's recognized value or from a DCO variable.  Other characters will remain.
+        If the target is a field's recognized text, the confidence of the
+        remaining characters will not be changed by this operation.<br/><br/>
+        <e>
+          <b>DeleteAllPunctuationCharacters("@F")</b><br/>
+          Assuming this action is called on a field level object, the recognized text value
+          "!JAN." becomes "JAN".<br/><br/>
+
+          <b>DeleteAllPunctuationCharacters("@X.MyVariable")</b><br/>
+          This action will delete all punctuation characters from the variable "MyVariable" on the current
+          DCO object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        DeleteAllCharactersAlphabetic, DeleteSelectedCharacters, DeleteAllCharactersMiscellaneous, DeleteAllCharactersNumeric, DeleteAllCharactersMatchingExpression<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="DeleteAllCharactersSelected" qi="Deletes specific characters from a field text value.">
+      <p name="CharactersToDelete" type="string" />
+      <p name="StartIndex" type="string" />
+      <p name="Count" type="string" />
+      <ap>
+        <b>CharactersToDelete</b> The character or string of characters to be deleted.<br/>
+        <b>StartIndex</b> A number indicating the starting index within the string to start deletion.  If this parameter
+        is blank or is not a number, the starting index value will default to the first position in the string.<br/>
+        <b>Count</b> The number of times the character or character string is to be deleted from the
+        value. The default is "1" and  "*" deletes all instances.<br/>
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        Deletes specific characters from the current Field object's recognized value.
+        Other characters will remain.
+        The confidence of the remaining characters will not be changed by this operation.<br/><br/>
+
+        If a single character is provided as the pattern, then every occurrence of that character will
+        be deleted up to the amount specified by the count.  If multiple characters are provided,
+        then that pattern must match exactly for the pattern to be deleted.<br/><br/>
+        
+        This action works on a field text value. To perform this operation on a DCO variable,
+        a temporary field could be used by calling rrSet to populate a field with the desired text,
+        run the action, then use rrSet to copy the data back to where it is needed.<br/><br/>
+        
+        As with any action that supports smart parameters, if the characters to delete include
+        smart parameter symbols, they must be specified as a smart parameter so they are properly processed.<br/><br/>
+        <e>
+          <b>DeleteAllCharactersSelected("-", "","*")</b><br/>
+          223-56-7669 becomes 223567669<br/><br/>
+
+          <b>DeleteAllCharactersSelected("-","5,"*")</b><br/>
+          223-86-7669 becomes 223-867669<br/><br/>
+
+          <b>DeleteAllCharactersSelected(",","","2")</b><br/>
+          "Hello, Roger, Tom, and Jan" becomes "Hello Roger Tom, and Jan"<br/><br/>
+
+          <b>DeleteSelectedChars("@STRING(@)","","*")</b><br/>
+          "Hello, @Roger, @Tom, and @Jan" becomes "Hello, Roger, Tom, and Jan"<br/><br/>
+
+          <b>DeleteSelectedChars("@STRING(@)+Tom,","","*")</b><br/>
+          "Hello, @Roger, @Tom, and @Jan" becomes "Hello, @Roger, , and @Jan"<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        DeleteAllCharactersAlphabetic, DeleteSelectedCharacters, DeleteAllCharactersMiscellaneous, DeleteAllCharactersPunctuation, DeleteAllCharactersMatchingExpression<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="DeleteAllCharactersSystem" qi="Removes control characters from a field or variable.">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to be updated.<br/>
+      </ap>
+      <h>
+        The action removes all invisible control characters and unused code points from the 
+        current Field object's recognized value or from a DCO variable.  Other characters will remain.
+        If the target is a field's recognized text, the confidence of the
+        remaining characters will not be changed by this operation.<br/><br/>                
+        
+        <e>
+          <b>DeleteAllSystemCharacters("@F")</b><br/>
+          Assuming this action is called on a field level object, the recognized text value
+          containing will be filtered to remove non-printable characters.<br/><br/>
+
+          <b>DeleteAllSystemCharacters("@X.MyVariable")</b><br/>
+          This action will delete all system characters from the variable "MyVariable" on the current
+          DCO object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>True.</ret>
+      <see>
+        DeleteAllCharactersAlphabetic, DeleteSelectedCharacters, DeleteAllCharactersMiscellaneous, DeleteAllCharactersPunctuation, DeleteAllCharactersMatchingExpression<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="DeleteLowConfidenceSpaces" qi="Removes spaces from a text field value based on their confidence.">                  
+      <ap>None.</ap>
+      <h>        
+        Deletes all low confidence spaces from the current field's recognized text value. By default, any spaces with a confidence of less than 9
+        is removed from the fields text value.  The default value can be changed by configuring the Setup DCO variable "ReqConf".
+        This variable must be configured in the setup DCO of the object, not the runtime DCO.
+        <e>
+          <b>DeleteLowConfidenceSpaces()</b>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+         Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for general information regarding this action library.<br/>
+      </see>
+    </method>
+
+    <method name="FormatNumberToLocale" qi="Guesses at the current numeric format to change a numeric value to match the current locale formatting.">
+      <ap>None.</ap>
+      <h>
+        This action evaluates the current field value for known number patterns and if a known pattern is detected,
+        updates the decimal and digit separators characters (if present) to match that of the current locale,
+        for use when processing fields with number types formatted incorrectly for the current locale. i.e. USA vs European.<br/><br/>
+
+        Known patterns are industry standard digits with or without 3 digit group separators, and 1-2 digits following a decimal separator.<br/><br/>
+
+        Distinct Analyzed groups:<br/><br/>
+
+        1) Numerals with decimal point<br/>
+        Group Separators using comma, apostrophe or space characters.<br/>
+        Decimal Separator using decimal character.<br/><br/>
+
+        2) Numerals with decimal comma<br/>
+        Group Separator using decimal, apostrophe or space characters.<br/>
+        Decimal Separator using comma character.<br/><br/>
+
+        3) Numerals with Arabic/Persian characters<br/>
+        Group Separator using Arabic/Persian character.<br/>
+        Decimal Separator using Arabic/Persian character.<br/><br/>
+
+        Note: Numerals with lakhs layout and decimal mark (pattern of n,nn,nn,nnn.dd) are not supported.<br/><br/>
+        
+        The target numeric format is determined by the default number format for the locale in affect for the current DCO node.
+        For example, the default United States format uses a period as a decimal separator. 
+        The standard default numeric format for the current locale is always used as the target numeric format.
+        A Datacap application can operate in
+        a single local or multiple locales, depending upon the setup and rules of an application.
+        See the section "Locale Sensitive Operations" in the top level help of this action library.<br/><br/>
+
+        <e>
+          a) Given a US number 1,234.56 to be formatted to Germany.<br/>
+          <b>FormatNumberToLocale()</b><br/>
+          New format will be 1.234,56<br/><br/>
+
+          b) Given a US number 1234.5 to be formatted to Germany.<br/>
+          <b>FormatNumberToLocale()</b><br/>
+          New format will be 1234,5<br/><br/>
+
+          c) Given a US number 1,234.567 to be formatted to Germany.<br/>
+          <b>FormatNumberToLocale()</b><br/>
+          Format will remain 1,234.567 since 3 digits following the decimal are not supported.<br/><br/>
+
+          d) Given a US number 12345678.90 to be formatted to Germany.<br/>
+          <b>FormatNumberToLocale()</b><br/>
+          New format will be 12345678.90<br/><br/>
+
+          e) Given a German number 1.234.567,89 to be formatted to US.<br/>
+          <b>FormatNumberToLocale()</b><br/>
+          New format will be 1,234,567.89<br/><br/>
+
+          f) Given a German number 0,5 to be formatted to US.<br/>
+          <b>FormatNumberToLocale()</b><br/>
+          New format will be 0.5<br/><br/>
+
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if no errors are encountered. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the library top level help topic "Locale Sensitive Operations" for information regarding the use of different locales in an application.
+      </see>
+    </method>
+
+    <method name="GetSubstringOccurrenceCount" qi="Counts the number of times a character, or substring, occurs within the text.">
+	  <p name="TextToSearch" type="string" />
+      <p name="Substring" type="string" />
+      <p name="StorageVariable" type="string" />
+	  <p name="CaseSensitive" type="string" />
+      <ap>
+        <b>TextToSearch:</b> The string to search for the character or string of characters.<br/><br/>
+		  
+		<b>Substring:</b> The character, or character string, to search for in the TextToSearch.<br/><br/>
+		  
+        <b>StorageVariable:</b> A smart parameter that resolves to the target DCO object or variable that will be used
+		  to store the occurrence count.<br/><br/>		  
+		  
+		<b>CaseSensitive:</b> False, search is case insensitive. True, search is case sensitive. Defaults to True, if the value is blank or invalid.<br/><br/>
+		  
+		  Smart parameters are supported for all parameters.<br/><br/>
+	  </ap>
+      <h>		  
+        The action counts the number of times the Substring is found within the TextToSearch.
+		The Substring can be a single character or a string of characters.
+		Typically, the TextToSearch will be a smart parameter that references a variable or field.<br/><br/>
+		  
+        The Substring count is stored in the specified StorageVariable location. Subsequent actions can access the variable
+        and use it as required.<br/><br/>
+
+		The StorageVariable smart parameter can reference a variable or the text value of an existing field.
+		StorageVariable specifies a DCO variable that does not exist, it will be created.  If the target
+		specified by StorageVariable already contains a value when this action is called, it will be overwritten by the new value.<br/><br/>
+        <e>
+			<b>GetSubstringOccurrenceCount("This is the test string", "t", "@X.Count", "")</b><br/>
+			The example will count the number of lower case "t" characters in the string and store the value in
+			a variable called "Count" on the current object.<br/><br/>
+
+			<b>GetSubstringOccurrenceCount("AAAaA aaAAAA", "aa", "@P\Field1", "False")</b><br/>
+			This example will perform a case insensitive compare looking for the word "aa" in "AAAAa aaAAAA"
+			and the count will be stored in a field attached to the current page called "Field1".
+			The total count will be 5, because overlaps are not counted.  The matches are
+			"AA", "Aa", "aa", "AA" and "AA".<br/><br/>
+
+			<b>GetSubstringOccurrenceCount("@P\Field1", "Total", "@P\Field1.MyCount", "False")</b><br/>
+			rrCompareNumeric("@P\Field1.MyCount",">", "10")<br/>
+			Here the action will search the text value in the child field object called "Field1".
+			It will perform a case insensitive count for the word "Total" in the field.  The count
+			total will be stored in a variable called "MyCount" on "Field1".  Then rrCompareNumeric
+			will check the value of the count.  If the occurrences are more than 10, then the action will return
+			True and the next action in the function will run.  If there value is 10 or less, then
+			rrCompareNumeric will return False and skip to the next function in the rule.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False,</b> if an error occurs, otherwise, <b>True.</b>
+      </ret>
+      <see>
+        rrCompareNumeric in the RuleRunnerLogic action library.<br/>
+        Refer to the top level help for more information regarding smart parameters and the
+        RuleRunnerLogic action library top level help for the complete smart parameter reference.<br/>
+      </see>
+    </method>
+
+	  <method name="GetTextLength" qi="Places the numeric length of a text string into a variable.">
+		  <p name="TestString" type="string" />
+		  <p name="StorageVariable" type="string" />
+		  <ap>
+			  <b>TestString:</b> The string to calculate the length.  Smart parameters are supported.<br/><br/>
+			  <b>StorageVariable:</b> A smart parameter that resolves to the target DCO object or variable that will be used
+			  to store the length of the TestString.<br/><br/>
+		  </ap>
+		  <h>
+			  Determines the length of a the provided string, or of the value of the DCO variable specified by a smart parameter.
+			  The length value is stored in the specified StorageVariable location. Subsequent actions can access the variable
+			  and use it as required.<br/><br/>
+			  If the target DCO variable specified in StorageVariable does not exist, it will be created.  If the target
+			  specified by StorageVariable already contains a value when this action is called, it will be overwritten by the new value.<br/><br/>
+			  <e>
+				  <b>GetStringLength("Hello","@X.MyLength")</b><br/>
+				  The example will calculate the length of the word "Hello" and store "5" in a DCO
+				  variable on the current object called "MyLength".  If this example is called on a Page DCO object,
+				  then the Page object will have the variable called "MyLength".  Likewise, if this example is called
+				  on a Field object, then the variable "MyLength" will be created on the Field object.<br/><br/>
+
+				  <b>GetStringLength("@X.FirstName","@X.FirstNameLength")</b><br/>
+				  It is not usually useful to hard code the test string for this action, as shown in the example "Hello" above.
+				  A typical use of this action will be to provide a "smart parameter" for the TestString parameter, allowing the input
+				  to be a runtime variable or field.  This example assumes that the application has created a variable called "FirstName"
+				  on the current DCO node prior to calling this action. The length is then stored in a variable called "FirstNameLength"
+				  on the same node.<br/><br/>
+
+				  <b>GetStringLength("@P\FirstName","@X.FirstNameLength")</b><br/>
+				  This example assumes that the action is called at the page level and there is a field called "FirstName"
+				  on the current DCO page. The length of the text in the field's text value is then stored in a variable called "FirstNameLength"
+				  on the current page node.<br/><br/>
+
+				  <b>GetStringLength("@P\FirstName","@P\FirstName.FirstNameLength")</b><br/>
+				  This example assumes that the action is called at the page level and there is a field called "FirstName"
+				  on the current DCO page. The length of the text in the field's text value is then stored in a variable called "FirstNameLength"
+				  on the "FirstName" field node.<br/><br/>
+
+				  <b>GetStringLength("@X","@X.MyLength")</b><br/>
+				  rrCompareNumeric("@X.MyLength",">", "10")<br/>
+				  This example assumes that the action is called on a field node and obtains the length of the text within the field and
+				  stores it in a field variable called "MyLength".
+				  If the length is greater than 10 characters, the next action in the current function will be called.  If this is an expected
+				  condition, the following actions may do some work.  If it is an unexpected condition, the following actions may set an error.
+				  If the length is less than 10, rrCompareNumeric will return false and the next function in the ruleset will run.
+				  <br/><br/>
+			  </e>
+		  </h>
+		  <lvl>Any level.</lvl>
+		  <ret>
+			  <b>False,</b> if an error occurs, otherwise, <b>True.</b>
+		  </ret>
+		  <see>
+			  rrCompareNumeric in the RuleRunnerLogic action library.<br/>
+			  Refer to the top level help for more information regarding smart parameters and the
+			  RuleRunnerLogic action library top level help for the complete smart parameter reference.<br/>
+		  </see>
+	  </method>
+
+
+      <method name="GetWorkstationLocale" qi="">
+          <p name="StorageVariable" type="string" />
+          <ap>
+              <b>StorageVariable:</b> A smart parameter that resolves to the target DCO object or variable that will be used
+              to store the length of the TestString.<br/><br/>
+          </ap>
+          <h>
+              This action determines the current locale that is in effect and writes it to a field or variable specified
+              in the parameter.<br/><br/>
+              
+              If the locale has been set via the locale setting in the application service, or by the application
+              setting the hr_locale variable, then that locale is in effect.  If the locale has not been set by either
+              of these features, then the locale set in the machine's OS is in effect.<br/><br/>
+              
+              This action can be useful, should the application need to keep a track of the locale that is enabled.
+              For example, it the locale could be obtained and then could be acted upon by the application, should
+              the application need to perform different operations based on the current locale.<br/><br/>
+              
+              If the application has specifically set the hr_locale variable, that variable can be checked directly.
+              If they hr_locale variable may not be set, then this action will check both hr_locale and the
+              current machine locale and return the one that is in effect.<br/><br/>
+
+              It is important to remember that if hr_locale is not set, actions will use the locale of the machine
+              that is running the rules. For example, if the rules are being run by rulerunner, then it will use
+              the locale of the machine used by rulerunner.  If a web interface is used, then it will be the configuration
+              of the machine running the web service.  If DCDesktop is used, then it will be the machine running DCDesktop.
+              If hr_locale is not set, then configure all of the machines to have the same base locale setting or
+              rules may run with different locales, depending on the machine running the rules.<br/><br/>
+              <e>
+                  GetWorkstationLocale("@X.CurrentLocale");<br/>
+                  rrCompareNotCase("@X.CurrentLocale", "en-US", "False")<br/>
+                  SwitchMMDD("/")<br/>
+                  <br/><br/>
+                  
+                  This example gets the current locale and stores it in a DCO variable called "CurrentLocale".
+                  If the current locale is not US English, it swaps the month and day.<br/><br/>                  
+              </e>
+          </h>
+          <lvl>Any level.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs, otherwise, <b>True.</b>
+          </ret>
+          <see>
+              Refer to the top level help for more information about Locale Sensitive Operations.<br/>
+          </see>
+      </method>
+
+
+      <method name="InsertCharacters" qi="Inserts one or more characters into a field text value at a specific position.">
+      <p name="InsertString" type="string" />
+      <p name="StartIndex" type="string" />
+      <p name="Count" type="string" />
+      <ap>
+        <b>InsertString:</b> The character or character string to be inserted; defaults to a space.<br/><br/>
+        <b>StartIndex:</b> A number indicating the target position within the captured value;
+        defaults to the end of the value.<br/><br/>
+        <b>Count:</b> The number of insertions.<br/><br/>
+        
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        Inserts a character or string of characters into the field's recognized value. The string can be
+        inserted one or more times.  The confidence of the existing characters will not be changed.<br/><br/>
+        <e>
+          <b>InsertCharacters("=$","1","1")</b><br/>
+          345.67 becomes  =$345.67<br/><br/>
+
+          <b>InsertCharacters("=$","1","2")</b><br/>
+          345.67 becomes  =$=$345.67<br/><br/>
+
+          <b>InsertCharacters("@STRING(+$),1,1")</b><br/>
+          Because smart parameters are supported, if the characters to insert
+          contain a smart parameter symbol, such as '+' or '@' and it should not be interpreted as a smart parameter,
+          then it needs to be specified with a smart parameter to prevent interpretation as shown.<br/>
+          345.67 becomes  +$345.67<br/><br/>
+
+          rrSet("A","@X.MyVariable")<br/>
+          <b>InsertCharacters("@X.MyVariable","3","4")</b><br/>
+          The value of "MyVariable" is inserted 4 times at position 3.<br/>
+          abcde becomes abAAAAcde<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="InsertDecimalPoint" qi="Inserts the current locale's decimal separator at a specified position in a field text value.">
+      <p name="Position" type="string" />
+      <ap>
+        <b>Position:</b> A number indicating the character position at which to place the decimal with respect
+        to the end of the string. Smart parameters are supported.
+      </ap>
+      <h>
+        Places a decimal character in the captured value, at the character position specified as a parameter.
+        The parameter indicates the position of the decimal point, moving from right to left.<br/><br/>
+        
+        The decimal point inserted is the character designated for the current locale.<br/><br/>
+        <e>
+          <b>InsertDecimalPoint("2")</b><br/>
+          324556 becomes 3245.56<br/><br/>
+
+          <b>InsertDecimalPoint("2")</b><br/>
+          355 becomes 3.55<br/><br/>
+
+          rrSet("de-DE", "@X.hr_locale")
+          <b>InsertDecimalPoint("2")</b><br/>
+          This action first explicitly configures the locale for the current DCO node for Germany, then InsertDecimalPoint
+          inserts the correct decimal separator based on the locale, which is a comma for this locale.
+          355 becomes 3,55<br/><br/>          
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level action help topic for more information regarding the use of locale in this action library.
+      </see>
+    </method>
+
+      <method name="IsDocumentUsingCommaDecimalSeparators" qi="Returns true if the current document has numbers using commas as decimal separators.">      
+          <ap>
+              None.<br/>
+          </ap>
+          <h>
+              Determines if the numeric fields in the document mostly use a comma as a decimal separator or a period as a decimal separator.
+              It is required that FormatNumberToLocale has been previously called on all of the numeric fields.
+              <br/>
+              <e>
+                  <b>IsDocumentUsingCommaDecimalSeparators()</b><br/>
+                  rrSet("en-GB", "@F.hr_locale")<br/>
+                  IsFieldDate()<br/><br/>
+                  
+                  In this example, because most numbers are using a comma as decimal separator, it assumes that the
+                  date format should match the UK format.<br/><br/>
+              </e>
+          </h>
+          <lvl>
+              Any level.
+          </lvl>
+          <ret>
+              Returns <b>True</b> if most numerics use a comma as a decimal separator, otherwise <b>False</b> is returned.
+          </ret>
+      </method>  
+      
+    <method name="IsFieldCurrency" qi="Returns true if the current field's text value is a valid currency for the current locale.">
+      <ap>None.</ap>
+      <h>
+        Determines if the Field's captured value meets the current locale's currency format,
+        including the number of decimal places, decimal and digit separator characters and
+        any present currency indicators.  The locale formats are the standard currency symbol,
+        digit grouping symbol and decimal symbols as defined in windows for a specific locale.<br/><br/>
+
+        A currency symbol is not required for the validation to pass.  If a currency symbol is present,
+        then the currency symbol provided must be correct for the current locale or the
+        validation will fail.  Similarly, digit
+        grouping symbols are not required, but if they are present, they must also be the correct symbol
+        for the current locale.<br/><br/>
+
+        If the currency has a decimal value, then the decimal symbol must be the correct symbol.  For example,
+        if validating U.S. currency, and the currency has a decimal value such as 123.56, then the decimal
+        separator must be the correct separator for the country.  Some countries do not allow decimal
+        values in their currency, and if a decimal value is present, it will fail validation.<br/><br/>
+
+        If the field appears to have a valid currency but it is not passing the validation, confirm
+        that the locale used by the field is correct for the currency type. For example, if
+        the field has a Japanese currency, then the locale must be set to Japan.  This can either be
+        in effect for the whole application, such as the machine's locale, or it can be in effect
+        based on the setting of the hr_locale DCO variable.<br/><br/>
+
+        When validating Japanese currency, in addition to using the defined locale's currency
+        format, it is also allowed to specify negative values using the △ symbol instead of a
+        minus symbol.  Additionally, in place of a Yen symbol ¥ at the start of a currency,
+        the word 円 is allowed at the end of the currency value.<br/><br/>
+
+        If the field matches the currency format, the action returns true.  If the requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.    Typically this would be
+        called on a field object which needs to pass this validation test.<br/><br/>
+        <e>
+          Example 1:<br/>
+          <b>IsFieldCurrency()</b><br/><br/>
+
+          $1,200 returns <b>False</b><br/>
+          $1,200.00 returns <b>True</b><br/><br/><br/>
+
+
+          Example 2:<br/>
+          rrSet("ja-JP","@X.hr_locale")<br/>
+          <b>IsFieldCurrency()</b><br/><br/>
+
+          This example first sets the locale for the field to Japan prior to
+          validating the currency.  If hr_locale was already set at a higher DCO node level,
+          such as page, document or batch, then it is not necessary to set it again
+          at the field level.
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the current locale's format criteria are met. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level action help topic for more information regarding the use of locale in this action library.
+      </see>
+    </method>
+
+    <method name="IsFieldDate" qi="Determines if the current field's text value matches the current locale's default date format.">
+      <ap>None.</ap>
+      <h>
+        Checks that the value of the field has an acceptable Date format. Uses the current locale setting to determine
+        the valid date pattern.<br/><br/>
+
+        This action will accept any valid date from January 1st year 1 through December 31st 9999.<br/><br/>
+
+        If the date requirements are met, the action returns true.  If the date requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>
+          <b>IsFieldDate()</b><br/><br/>
+
+          In locale en-US (United States):<br/>
+
+          April 6, 1944   returns <b>True</b><br/>
+          04/06/44   returns <b>True</b><br/>
+          30.6.44   returns <b>False</b><br/>
+          Feb 31,2003   returns <b>False</b><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the field value matches the date format for the locale. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level action help topic for more information regarding the use of locale in this action library.
+      </see>
+    </method>
+
+    <method name="IsFieldDateEqualOrAfter" qi="Returns true if the current field is equal to or after the specified date.">
+      <p name="Date" type="string" />
+      <ap>
+        The parameter is the date that will be compared to the date of the current field.
+        The source date can be a hard coded date or it can be obtained from another field value
+        or a DCO variable referenced with a smart parameter.<br/><br/>
+      </ap>
+      <h>
+        Checks that the Date value in the current DCO field recognized text value
+        is greater than or equal to the Date value in the
+        DCO field or value specified as the parameter.<br/><br/>
+        
+        The two dates must both conform to the date format for the current locale.
+        See the top level help in this action library for more information about the locale.<br/><br/>
+
+        If the date requirements are met, the action returns true.  If the date requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>
+          <b>IsFieldDateEqualOrAfter("2/14/1964")</b><br/>
+          This action compares the date in the current field's text value with the hard coded date "2/14/1964".
+          If the date in the field is the same or after 2/14/1964, the action will return true.<br/><br/>
+
+          <b>IsFieldDateEqualOrAfter("@DATE")</b><br/>
+          This example compares the current field's value with the current date.<br/><br/>
+
+          <b>IsFieldDateEqualOrAfter("@P\MyCompareField")</b><br/>
+          Assuming the parent page object contains a sibling field called "MyCompareField", 
+          this example compares the current field's value with the text value in the field
+          called "MyCompareField".<br/><br/>
+
+          <b>IsFieldDateEqualOrAfter("@X.MyVariable")</b><br/>
+          This example compares the current field's value with the value of the DCO variable
+          "MyVariable" in the current field object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False</b> if the date condition is not met, if the action is not applied at the Field level, or either field
+        does not contain a valid date. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        IsFieldDateEqualOrBefore, IsFieldDateWithinRange<br/>
+        Refer to the top level action help topic for more information regarding the use of locale in this action library.
+      </see>
+    </method>
+
+    <method name="IsFieldDateEqualOrBefore" qi="Returns true if the current field is equal to or before the specified date.">
+      <p name="Date" type="string" />
+      <ap>
+        The parameter is the date that will be compared to the date of the current field.
+        The source date can be a hard coded date or it can be obtained from another field value
+        or a DCO variable referenced with a smart parameter.<br/><br/>
+      </ap>
+      <h>
+        Checks that the Date value in the current DCO field recognized text value
+        is less than or equal to the Date value in the
+        DCO field or value specified as the parameter.<br/><br/>
+
+        The two dates must both conform to the date format for the current locale.<br/><br/>
+
+        If the date requirements are met, the action returns true.  If the date requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>
+          <b>IsFieldDateEqualOrBefore("2/14/1964")</b><br/>
+          This action compares the date in the current field's text value with the hard coded date "2/14/1964".
+          If the date in the field is the same or before 2/14/1964, the action will return true.<br/><br/>
+
+          <b>IsFieldDateEqualOrAfter("@DATE")</b><br/>
+          This example compares the current field's value with the current date.<br/><br/>
+
+          <b>IsFieldDateEqualOrAfter("@P\MyCompareField")</b><br/>
+          Assuming the parent page object contains a sibling field called "MyCompareField",
+          this example compares the current field's value with the text value in the field
+          called "MyCompareField".<br/><br/>
+
+          <b>IsFieldDateEqualOrAfter("@X.MyVariable")</b><br/>
+          This example compares the current field's value with the value of the DCO variable
+          "MyVariable" in the current field object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False</b> if the date condition is not met, if the action is not applied at the Field level, or either field
+        does not contain a valid date. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        IsFieldDateEqualOrAfter, IsFieldDateWithinRange<br/>
+        Refer to the top level action help topic for more information regarding the use of locale in this action library.
+      </see>
+    </method>
+
+    <method name="IsFieldDateWithinRange" qi="Returns true if the current field text value is between the specified dates.">
+      <p name="StartDate" type="string" />
+      <p name="EndDate" type="string" />
+      <ap>        
+        <b>StartDate: </b> The current field must be a validate that is the same or after this date.<br/>
+        <b>EndDate:</b> The current field must be a validate that is the same or before this date.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>        
+        Checks that the value assigned to the Text property of the current field is within the range specified by the parameters.<br/><br/>
+        
+        All of the provided dates must be in the correct format, for the current locale.<br/><br/>
+        <e>
+          <b>IsFieldDateWithinRange("1/1/2020", "1/31/2020")</b><br/>
+          This example tests that the current field's text value is between the 1/1/2020 and 1/31/2020.<br/><br/>
+
+          <b>IsFieldDateWithinRange("February 9, 1964", "January 30, 1969")</b><br/>
+          This example tests that the current field's text value is between the 2/9/1964 and 1/30/1969.<br/><br/>
+          
+          <b>IsFieldDateWithinRange("9/12/1966", "@DATE")</b><br/>
+          This example uses the smart parameter @DATE to set the end date to the current date.  If the current
+          field's text value is between 9/12/1966 and the current date, then the action will return true.<br/><br/>
+
+          <b>IsFieldDateWithinRange("@P\MyField1", "@P\MyField2")</b><br/>
+          This example assumes that the current field has two sibling fields on the same page
+          called "MyField1" and "MyField2".  If the current field value is greater than or equal to the
+          date value in MyField1 and less than or equal to the field value in MyField2, the action will return true.<br/><br/>
+
+          <b>IsFieldDateWithinRange("@X.MyVariable1", "@P\MyField1")</b><br/>
+          This example assumes that the current field has a sibling field on the same page
+          called "MyField1".  If the current field value is greater than or equal to the
+          date value in DCO variable "MyVariable" on the current field and less than or equal to the 
+          field value in MyField1, the action will return true.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field Level.</lvl>
+      <ret>
+        <b>False</b> if the current field text is not a valid date;
+        if either parameters are not validate dates; or the Text property's Date value is not within the range
+        specified by the parameters.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        IsFieldDateEqualOrAfter, IsFieldDateEqualOrBefore<br/>
+        Refer to the top level action help topic for more information regarding the use of locale in this action library.
+      </see>
+    </method>
+
+    <method name="IsFieldDateWithinXDays" qi="Returns true if the current field text value is near the specified date within the day count limit.">
+      <p name="Days" type="string" />
+      <ap>
+        A number that specifies how many days make up the review period from the current date.<br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Checks that current Field object's text value is a date that is within the number of days 
+        of the current date as indicated 
+        by the input parameter.  The field's text value must be a date that matches the date
+        format for the current locale.<br/><br/>
+
+        If the date requirements are met, the action returns true.  If the date requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>          
+          <b>IsFieldDateWithinXDays("30")</b><br/>
+          This sequence checks that a value is a date within 30 days of today's date.
+          The field date can be up to 30 days earlier or 30 days later.<br/><br/>
+
+          <b>IsFieldDateWithinXDays("@P.Days")</b><br/>
+          This example obtains the number of days from a DCO variable called "Days" on the
+          parent page object and then compares it to the date in the current field's text
+          value to confirm that it is with the number of days of today's date.  If the variable
+          "Days" contained the value "45", then the action will return true if the field's value
+          is a date that is within 45 days of today's date.<br/><br/>
+
+          rrSet("@P\MyField.MyVariable", "@X")<br/> 
+          <b>IsFieldDateWithinXDays("30")</b><br/>
+          To use this action on a variable instead of a field, rrSet can be used to first
+          populate a field with a date from a DCO variable and then the action can be run
+          on the field with the date to test.  This example shows that the field
+          is filled with the value of the variable "MyVariable" from the sibling
+          field on the same page called "MyField". The current field text is
+          populated with the value of the variable then IsFieldDateWithinXDays
+          runs to perform the test.  This approach can be used with virtually
+          any similar action that only operates on field text values.
+          These actions must be run on a rule attached to a DCO field object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False</b>if the field's value is not a valid date or if the date is
+        out side of the number of days in the parameter; otherwise, <b>True.</b>
+      </ret>
+      <see>
+        IsFieldDate, IsFieldDateEqualOrAfter, IsFieldDateEqualOrBefore<br/>
+        Refer to the top level action help topic for more information regarding the use of locale in this action library.
+      </see>
+    </method>
+
+    <method name="IsFieldDateWithReformat" qi="Returns true if the field is a valid date that matches the current locale date format and reformats it to a new date pattern.">
+      <p name="NewDateFormat" type="string" />
+      <ap>
+        The new date format that will be applied to the date in the current field.<br/><br/>
+
+        mm/dd/yyyy<br/>
+        mm/dd/yy<br/>
+        dd/mm/yy<br/>
+        mm.dd.yy, etc.<br/><br/>
+
+        Defaults to system short date format if no format or single '*' is used.<br/>
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Reformats the date in the current field to the month, day and year format specified by the
+        parameter.  The parameter can use the values "d", "m" and "y" to indicate the respective
+        portions of the date and "." or "/" can be used to separate the values.
+        Dates are reformatted into a short date format only.<br/><br/>
+
+        The field's source date must be in a format that is correct for the current locale.  Once the operation
+        is complete, the date may no longer conform to the format specified for the current locale.<br/><br/>
+
+        d or m evaluates to the number without a leading zero, such as 1 to 31.<br/>
+        dd or mm evaluates to the number with a leading zero, such as 01 to 31.<br/>
+        ddd or mmm evaluates to the abbreviated name, such as Mon or Dec.<br/>
+        dddd or mmmm evaluates to the full name such as Monday or December.<br/>        
+        yy evaluates to a two digit year with a leading zero.<br/>        
+        yyyy evaluates to a four digit year.<br/><br/>
+
+        If the length requirements are met, the action returns true.  If the length requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>
+          <b>IsFieldDateWithReformat("*")</b><br/>          
+          June 3, 2002 becomes 06/03/2002<br/><br/>
+
+          <b>IsFieldDateWithReformat("yyyy/mm/dd")</b><br/>
+          May 26, 1967 becomes 1967/05/26<br/><br/>
+
+          <b>IsFieldDateWithReformat("yyyy/mm/dd")</b><br/>
+          06/25/67 becomes 1967/05/26<br/><br/>
+          
+          <b>IsFieldDateWithReformat("mm.dd.yy")</b><br/>
+          June 3, 2002 becomes 06.03.02
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False</b> if the parameter is invalid, or the current field value is not a valid date given the specified format.  Otherwise <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="IsFieldPercentAlphabetic" qi="Returns true if a field's text value has the specified percentage of alphabetic characters">
+      <p name="Percentage" type="string" />
+      <ap>
+        <b>Percentage: </b> An integer from 0 to 100 indicating the percentage of characters in the field's text value that must be
+        alphabetic. The value is the minimum percentage required for the action to return true.
+        The parameter must be numeric, without the percent sign. If the percentage is invalid, it will default to 100.<br/><br/>
+        
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        Determines if the characters in the current field's text value are n% alphabetic.<br/><br/>
+
+        If the percentage requirements are met, the action returns true.  If the percentage requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>
+          <b>IsFieldPercentAlpha("50")</b>   #RPR-1421 returns <b>False</b><br/>
+          <b>IsFieldPercentAlpha("30")</b>   #RPR1421 returns <b>True</b>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the parameter's minimum requirement is met. Otherwise <b>False.</b>
+      </ret>
+      <see>
+        IsFieldPercentNumeric, IsValueExactMatch<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="IsFieldPercentNonNumeric" qi="Returns true if a field's text value has the specified percentage of non-numeric characters">
+      <p name="Percentage" type="string" />
+      <ap>
+        <b>Percentage: </b> An integer from 0 to 100 indicating the percentage of characters in the field's text value that must be
+        non-numeric characters. The value is the minimum percentage required for the action to return true.
+        The parameter must be numeric, without the percent sign. If the percentage is invalid, it will default to 100.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Determines if the characters in the current field's text value are n% not numeric
+        characters, this includes and is not limited to valid decimal and numeric separator characters.  The
+        action will compare the actual percentage and confirm that it is less than or equal to the percentage
+        provided by the parameter.<br/><br/>
+        <e>
+          Given the current value is "1,234.56US"<br/><br/>
+          (Percentage of non-numeric characters is 40%)
+          <b>IsFieldPercentNonNumeric("0")</b> returns <b>True</b><br/><br/>
+          <b>IsFieldPercentNonNumeric("30")</b> returns <b>True</b><br/><br/>
+          <b>IsFieldPercentNonNumeric("40")</b> returns <b>True</b><br/><br/>
+          <b>IsFieldPercentNonNumeric("70")</b> returns <b>False</b><br/><br/>
+          <b>IsFieldPercentNonNumeric("100")</b> returns <b>False</b>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the parameter's minimum requirement is met. Otherwise <b>False.</b>
+      </ret>
+      <see>
+        IsFieldPercentAlphalphabetic, IsValueExactMatch<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="IsFieldPercentNumeric" qi="Returns true if a field's text value has the specified percentage of numeric characters">
+      <p name="Percentage" type="string" />
+      <ap>
+        <b>Percentage: </b> An integer from 0 to 100 indicating the percentage of characters in the field's text value that must be
+        numeric. The value is the minimum percentage required for the action to return true.
+        The parameter must be numeric, without the percent sign. If the percentage is invalid, it will default to 100.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        Determines if the characters in the current field's text value are n% numeric
+        characters. Does not include, and is not limited to, valid decimal and numeric separator characters.
+        <e>
+          Given the current field text value is "1,234.56US"<br/><br/>
+          (Percentage of numeric characters is 60%)
+          <b>IsFieldPercentNumeric("0")</b> returns <b>True</b><br/><br/>
+          <b>IsFieldPercentNumeric("50")</b> returns <b>True</b><br/><br/>
+          <b>IsFieldPercentNumeric("60")</b> returns <b>True</b><br/><br/>
+          <b>IsFieldPercentNumeric("70")</b> returns <b>False</b><br/><br/>
+          <b>IsFieldPercentNumeric("100")</b> returns <b>False</b>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the parameter's minimum requirement is met. Otherwise <b>False.</b>
+      </ret>
+      <see>
+        IsFieldPercentAlpha, IsValueExactMatch<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+
+      <method name="IsInCharacterSet" qi="Tests that the text only contains characters within the specified list.">
+          <p name="CharacterSet" type="string" />
+          <p name="TextToTest" type="string" />
+          <ap>
+              <b>CharacterSet:</b> A list of characters.<br/><br/>
+              
+              <b>TextToText</b> The text to test to confirm it only contains characters from the character set.<br/><br/>
+              
+              Smart parameters are supported for all parameters.<br/>
+          </ap>
+          <h>
+              Validates that text in a field or in a DCO variable contains only characters from within the provided character set.
+              Characters are case sensitive.<br/><br/>
+              <e>                  
+                  IsInCharacterSet("@X", "0123456789.,-$")<br/><br/>
+                  
+                  Assuming this action is called on a field object, it will return true if the text within the field is only contains
+                  characters from within the provided set. If the field contains text that is not within the provided character set,
+                  then the action will return false.
+              </e>
+          </h>
+          <lvl>
+              Any level.
+          </lvl>
+          <ret>
+              <b>True</b> if the referenced text contains only characters from the listed character set or if the field is empty.  Otherwise, <b>False.</b>
+          </ret>
+      </method>
+      
+
+      <method name="IsLocalDecimalSeparator" qi="Tests the current decimal separator.">
+          <p name="TestChar" type="string" />
+          <ap>
+              A single character to test as the decimal separator.  Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Tests the input decimal separator to see if it matches the default separator of the locale
+              of the current DCO object.  Be aware that the locale for the current DCO object
+              can be different from the locale of other objects in the hierarchy and different from
+              the locale of the machine running the rules if hr_locale has been set.<br/>
+              <e>
+                  <b>IsLocalDecimalSeparator(",")</b><br/>
+                  IsInCharacterSet("0123456789.,-$", "@X")<br/>
+                  ConvertToLocalDecimal()<br/>
+              </e>
+          </h>
+          <lvl>
+              Any level.
+          </lvl>
+          <ret>
+              <b>True</b> if the specified character is the current decimal separator.  Otherwise, <b>False.</b>
+          </ret>
+      </method>
+
+    <method name="IsOMRCheckedMaximum" qi="Returns true if the current OMR field has detected selections up to the specified maximum.">
+      <p name="OMRLimit" type="string" />
+      <ap>
+        <b>OMRLimit:</b> Integer value specifying the maximum number of OMR selections that are allowed.<br/><br/>
+        
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>        
+        This action confirms that the number of OMR (Optical Mark Recognition) selections
+        is less than or equal to the number passed as a parameter.  An OMR is typically a circle or box shape
+        that is either filled in or not filled in.  The number of selections that are filled in cannot
+        exceed the value provided as a parameter. If the number of filled in selections is less than
+        or equal to the parameter, then this action will return true.  If the selected count it
+        greater than the parameter, this action will return false.<br/><br/>
+
+        This action must be set on a field that is configured as an OMR field.  An OMR field must have
+        the DCO variable "RecogType" set to "4".  An OMR field must also be setup properly to be correctly
+        recognized and processed as an OMR field.<br/><br/>
+
+        The OMR field has a sub-field for each OMR selection.  When the OMR is recognized,
+        the parent OMR field will have a text value of 0's and 1's, each corresponding to the sub-fields.
+        A "0" indicates the OMR was not considered as filled in and a "1" considers the OMR was filled in.
+        This action will check the text value of the OMR field to determine if the number of 1's meets
+        the parameter's requirements.<br/><br/>
+
+        If the maximum requirement is exceeded, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>
+          <b>IsOMRCheckedMaximum("1")</b><br/>
+          This action confirms that only 1 of the available OMR selections has been filled in.  One
+          example would be a selection of the type of credit card, only one credit card should be
+          selected.  If multiple credit cards are selected, then this can be used to flag the OMR field as an
+          error so a verify operator can review the selection.<br/><br/>
+
+          <b>IsOMRCheckedMaximum("1")</b><br/>
+          IsOMRCheckedMinimum("1")<br/>
+          This set of actions combines two requirements to ensure that 1 and only 1 OMR has been selected.  If these
+          both pass, then the selection count is valid.  If one of the tests fails, then it can be flagged
+          for a verify operator to review the problem in a verify panel.<br/><br/>
+
+          <b>IsOMRCheckedMaximum("@X.MaxAllowed")</b><br/>
+          This example uses a smart parameter to obtain the required maximum from a DCO variable called "MaxAllowed"
+          on the same DCO object that is running the action.<br/>
+        </e>
+      </h>
+      <lvl>An OMR Field.</lvl>
+      <ret>
+        <b>False</b> if the parameter you enter is not numeric, or the field is not an OMR field.<br/><br/>
+
+        <b>True</b> if the number of OMR boxes checked is less than or equal to the parameter you entered.
+      </ret>
+      <see>
+        IsOMRCheckedMinimum<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+
+    <method name="IsOMRCheckedMinimum" qi="Returns true if the current OMR field has detected selections of the specified minimum value.">
+      <p name="OMRLimit" type="string" />
+      <ap>
+        <b>OMRLimit:</b> Integer value specifying the minimum number of OMR selections that are allowed.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        This action confirms that the number of OMR (Optical Mark Recognition) selections
+        is greater than or equal to the number passed as a parameter.  An OMR is typically a circle or box shape
+        that is either filled in or not filled in.  The number of selections that are filled in cannot
+        exceed the value provided as a parameter. If the number of filled in selections is greater than
+        or equal to the parameter, then this action will return true.  If the selected count it
+        less than the parameter, this action will return false.<br/><br/>
+
+        This action must be set on a field that is configured as an OMR field.  An OMR field must have
+        the DCO variable "RecogType" set to "4".  An OMR field must also be setup properly to be correctly
+        recognized and processed as an OMR field.<br/><br/>
+
+        The OMR field has a sub-field for each OMR selection.  When the OMR is recognized,
+        the parent OMR field will have a text value of 0's and 1's, each corresponding to the sub-fields.
+        A "0" indicates the OMR was not considered as filled in and a "1" considers the OMR was filled in.
+        This action will check the text value of the OMR field to determine if the number of 1's meets
+        the parameter's requirements.<br/><br/>
+
+        If the minimum requirement is not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>
+          <b>IsOMRCheckedMinimum("1")</b><br/>
+          This action confirms that only 1 of the available OMR selections has been filled in.  One
+          example would a form that has multiple selections and one or more selections can be chosen, but at least
+          one of them must be selected.  This action will confirm that there is at least one OMR selected
+          out of the available selections.<br/><br/>
+
+          <b>IsOMRCheckedMinimum("1")</b><br/>
+          IsOMRCheckedMaximum("1")<br/>
+          This set of actions combinds two requirements to ensure that 1 and only 1 OMR has been selected.  If these
+          both pass, then the selection count is valid.  If one of the tests fails, then it can be flagged
+          for a verify operator to review the problem in a verify panel.<br/><br/>
+
+          <b>IsOMRCheckedMinimum("@X.MinAllowed")</b><br/>
+          This example uses a smart parameter to obtain the required maximum from a DCO variable called "MinAllowed"
+          on the same DCO object that is running the action.<br/>
+        </e>
+      </h>
+      <lvl>An OMR Field.</lvl>
+      <ret>
+        <b>False</b> if the parameter you enter is not numeric, or the field is not an OMR field.<br/><br/>
+
+        <b>True</b> if the number of OMR boxes checked is less than or equal to the parameter you entered.
+      </ret>
+      <see>
+        IsOMRCheckedMaximum<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    
+    <method name="IsRegularExpressionPatternInValue" qi="Returns true if a field or variable has a pattern that matches the regular expression.">
+      <p name="Target" type="string" />
+      <p name="RegularExpression" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field, DCO variable or string to validate.<br/><br/>
+        
+        <b>RegularExpression:</b> The expression can include any Regular Expression characters.<br/><br/>
+        
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        This action validates the value Target parameter to see if it meets the requirements
+        of the provided regular expression.<br/><br/>
+        
+        If you are using an input boundary, ^, it must be followed by a space and then the remainder
+        of the search string.<br/><br/>
+
+        If the regular expression is matched, the action returns true.  If the regular expression is not matched, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action, so it is typically useful to call this action on the DCO object
+        that is being checked so the message is associated with the same object.  Typically this would be
+        called on a field object which needs to pass this validation test.<br/><br/>
+        <e>
+          <b>IsRegularExpressionPatternInValue("@F", "[\^\b\s\n\r]*Inv[oO0][iItl1]ce[\b\s]*")</b><br/>                    
+          Assuming this action is attached to a field object, 
+          this example searches for the word “Invoice” in the text value of the current field.
+          To allow for recognition errors, the search allows for common recognition
+          substitutions in “o” and “i” by matching “Invoice”, “InvOice”, “Inv0ice”,
+          “Inv01ce”, “Involce”, etc.  The search will also ignore any text placed before or after the word.<br/><br/>          
+
+          <b>IsRegularExpressionPatternInValue("@F", "@STRING([\^\b\s\n\r]*Inv[oO0][iItl1]ce[\b\s]*)")</b><br/>
+          Because the action supports smart parameters, if the regular expression contains
+          smart parameter identifiers like @ or +, then those parameters will need to be passed in
+          a way to prevent interpretation as smart parameter identifiers.
+          Typically the easiest way to achieve this is by encapsulating the parameter
+          with the smart parameter @STRING() or @CHR().<br/><br/>
+
+          <b>IsRegularExpressionPatternInValue("@F", "@X.MyExpression")</b><br/>
+          This example is similar to the previous examples but obtains the regular expression
+          pattern from a DCO variable called "MyExpression" on the current object.<br/><br/>
+        </e>
+      </h>
+      <lvl>All, but generally at the Field level.</lvl>
+      <ret>
+        <b>True</b> if the pattern is found within the field.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+      <method name="IsUSZipCode" qi="Checks to see if the postal code follows a US format.">
+          <p name="PostalCode" type="string" qi="Smart parameters are supported."/>
+          <ap>
+              The zip code to test for a US zip code pattern.
+          </ap>
+          <h>
+              Checks to see if the postal code follows a US format.  If the format of the ZIP
+              fits a US format, then it assumes the document is of US origin.<br/><br/>
+
+              Allowed formats:<br/>
+              nnnnn<br/>
+              nnnnnnnnn<br/>
+              nnnnn-nnnn<br/><br/>
+              
+              <e>
+                  <b>IsUSZipCode(@P\Remittance_Zip)</b><br/>
+                  rrSet("en-US", "@F.hr_locale")<br/>
+                  IsFieldDate()<br/>
+                  IsFieldDateWithReformat("yyyy/mm/dd")<br/>
+              </e>
+          </h>
+          <lvl>
+              Any level.
+          </lvl>
+          <ret>
+              Returns <b>True</b> if the test for a US ZIP code format passes, otherwise <b>False.</b><br/>
+          </ret>
+      </method>
+        
+      
+
+
+    <method name="IsValuePercentFuzzy" qi="Returns true if the current field text value matches a pattern using common substitution characters.">
+      <p name="Source" type="string" />
+      <p name="CompareTo" type="string" />
+      <p name="PerformFuzzyCompare" type="string" />
+      <p name="MinimumPercentage" type="string" />
+      <p name="MatchByWord" type="string" />      
+      <ap>
+        <b>Source:</b> The source field, DCO variable or string that will be tested.  This is the field with a value to be compared
+        to see if it meets the required minimum percentage.<br/><br/>
+
+        <b>CompareTo:</b> The source field, DCO variable or string that will be used to compare against the source value.<br/><br/>
+
+        <b>PerformFuzzyCompare</b> A boolean flag determines if the comparison to the source string will be a
+        "fuzzy" comparison.  A "fuzzy" comparison will compare text using common substitution characters
+        that can occur from recognition mistakes.  The value "True" will enable fuzzy comparison.<br/><br/>
+
+        <b>MinimumPercentage</b> Numeric value of the percentage of required precision when matching
+        by word. Numbers less than
+        "100" permit the comparison to pass by requiring a smaller percentage of words to match.  This value
+        must be an integer between 0 and 100.  If the value is invalid, it will default to 100.
+        When MatchByWord is false, then the entire target string is considered a single word
+        and must match the compare string 100%, but still respecting the fuzzy compare setting.<br/><br/>
+
+        <b>MatchByWord</b> A boolean value of True or False which indicates if the comparison should be
+        a word-by-word comparison vs. a character comparison. True will enable a word by word
+        comparison, False compares a character comparison.<br/><br/>
+        
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        Compares an entire line of text or each word within the line, to a provided pattern.  The pattern can be matched
+        "fuzzy" meaning that the patter can match if specific characters are interchanged with commonly substituted
+        recognition characters.<br/><br/>
+
+        When ByWord is false, the entire line of text from the source field text or DCO variable will be compared to the
+        comparison pattern.  The entire string of characters must match the comparison string.  If PerformFuzzyCompare
+        is true, then the pattern does not need to match exactly if common substitution characters are within the source string.
+        The percentage parameter is not relevant when ByWord is False.<br/><br/>
+
+        When MatchByWord is true, then the provided comparison text will be checked against each word within the source string.
+        A word is considered as a string of characters separated by a space.  Each of these words will be compared to the
+        comparison parameter and must match exactly.  If the PerformFuzzyCompare parameter is True, then the comparison will
+        allow commonly substituted characters to match, so the text does not need to be an exact match.  The percentage value determines
+        the percentage of the words that must match the comparison string.  If the source string has 10 words and 2 of the words
+        match the comparison pattern, then it is considered to be a 20% match.<br/><br/>
+
+        When performing a "fuzzy" compare, the action will use common recognition substitutions to determine if the text matches the required
+        text.  For example, when fuzzy comparisons are enabled a word like "Sam" will match "5am", or "He110" will match "Hello".
+        The following are common substitutions that will match when fuzzy comparisons are enabled: B8, Z2, S5, o0O and ilt1I.
+        Enabling the fuzzy comparison will allow these commonly substituted characters to match the provided pattern and still
+        be evaluated as an exact match.<br/><br/>
+
+        If the comparison requirements are met, the action returns true.  If the comparison requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action.<br/><br/>
+        <e>
+          <b>IsValuePercentFuzzy("@F", "Hello", "True", "100", "False")</b><br/>
+          Assuming this is attached to a DCO field, it will compare the text value
+          of the field with the pattern "Hello".  Fuzzy matching is enabled. The following field
+          values will have these return values:<br/>
+          "Hello" = True<br/>
+          "He11o" = True<br/>
+          "He110" = True<br/>
+          "Hel1O" = True<br/>
+          "HELLO" = False<br/><br/>
+          
+          <b>IsValuePercentFuzzy("@F", "@P\OtherField", "True", "100", "False")</b><br/>
+          Similar to the above example, however the comparison pattern will be obtained from the
+          text value of the sibling field "OtherField".  A fuzzy comparison will be performed
+          using OtherField as the pattern.<br/><br/>
+          
+          <b>IsValuePercentFuzzy("@F", "@DATE(DD\MM\YYYY)", "True", "100", "False")</b><br/>
+          This example will compare the current field to the current date and use fuzzy matching.
+          Assuming the current date is 01/01/2025, the following field values will have these return values:<br/>
+          "0l/01/20Z5" = True<br/>
+          "01/01/2025" = True<br/>
+          "01/07/2025" = False<br/>
+          "0l/0l/20ZS" = True<br/><br/>
+
+          <b>IsValuePercentFuzzy("@F", "@P.MyVariable", "True", "25", "True")</b><br/>
+          This example will compare the text value of the current field with the comparison value
+          that is in the parent page object variable called "MyVariable".  Assuming the text
+          value of the current field has the text "He110 Tom and Sally" and the value of "MyVariable" is
+          "Hello", then the 1 of 4 words will match the pattern with the result of 25% of the
+          words matching and the action will return true.<br/><br/>
+        </e>
+      </h>
+      <lvl>All but usually field level.</lvl>
+      <ret>
+        <b>True,</b> if the pattern matches the source based on the matching requirements, otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    
+    
+    <method name="IsTextLength" qi="Returns true if the text in a field or variable satisfies a length condition.">
+      <p name="Target" type="string" />
+      <p name="Length" type="string" />
+      <p name="ComparisonOperator" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field or DCO variable to validate.<br/><br/>
+        
+        <b>Length:</b> A numeric value to use for the length comparison. If not provided, defaults to 1.<br/><br/>
+        
+        <b>ComparisonOperator:</b> The comparison operator. It must be one of the following operators: ˂, ˂=, =, ˃=, ˃<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        This action checks the text length to confirm if it meets a minimum or maximum length requirement.
+        It will determine if the text length of the "Target", typically a field value, is less than, less than or equal to,
+        equal to, greater than or equal to, or greater than the length specified in the length parameter.<br/><br/>
+        
+        This action is useful for validation of recognized data to confirm it meets requirements. It also
+        will confirm if data entered by a verify operator has entered data that meets the length requirements.<br/><br/>        
+        
+        If the length requirements are met, the action returns true.  If the length requirements are not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action, so it is typically useful to call this action on the DCO object
+        that is being checked so the message is associated with the same object.<br/><br/>
+
+        The action will also store the actual length of the tested text in a DCO variable called "TextLength".
+        If needed, this variable can be optionally used to obtain the length of the text that was tested and used
+        in other actions. The variable is created regardless of the comparison test passing or failing.
+        It is not required to use this variable, it is provided should an application need to determine
+        the actual length of the text for use in a subsequent task.<br/><br/>
+
+        Because the target specification supports smart parameters, the target can be a field's text value, a DCO variable
+        or hard coded text.<br/><br/>
+        <e>
+          <b>IsTextLength("@F", "10", "˂=")</b><br/>
+          Assuming this action is called on a rule attached to a field object, it will test the field's
+          text value to confirm the length of the text is less than or equal to 10 characters.  The action will
+          return true if the test passes, otherwise the action will return false and control will pass to the next function
+          in the ruleset. The actual length of the string will also be stored in the current DCO variable "TextLength"
+          for optional use.<br/><br/>
+
+          <b>IsTextLength("@F", "0", "=")</b><br/>
+          Assuming this action is called on a rule attached to a field object, it will test the field's
+          text value to confirm the field is empty. The action will return false if the field is
+          not empty and set a user message.<br/><br/>
+
+          <b>IsTextLength("@F", "0", ">")</b><br/>
+          Assuming this action is called on a rule attached to a field object, it will test the field's
+          text value to confirm the field is not empty. The action will return false and set
+          a message if it is empty.<br/><br/>
+
+          <b>IsTextLength("@X.MyVariable", @X.LengthToTest, "=")</b><br/>
+          This example uses a smart parameter to test the text contained in the DCO variable "MyVariable"
+          on the same DCO object that is attached to the ruleset.  It also uses a smart parameter
+          to obtain the expected length from another variable called "LengthToTest".  If the
+          text contained in MyVariable is equal to the number of characters indicated
+          by the numeric value of the variable LengthToTest, then the action will return true.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level but typically at the field level.</lvl>
+      <ret>
+        <b>True</b> if the comparison meets the length requirement; Otherwise <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="IsValueLessOrEqual" qi="Returns true if a numeric comparison on a field or variable is less than or equal to the comparison value.">
+      <p name="Target" type="string" />
+      <p name="ComparisonValue" type="string" />      
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field, DCO variable or string to validate.<br/><br/>
+
+        <b>ComparisonValue:</b> A numeric value to use for the comparison to the value of the "Target" parameter.
+        The target and the comparison value numbers must be properly formatted for the current locale.<br/><br/>        
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        This action performs a numeric compare of the value of the "Target" parameter to the "ComparisonValue".
+        It will determine if the "Target", typically a field value, is less than, less than or equal to,
+        equal to, greater than or equal to, or greater than the comparison value.<br/><br/>
+
+        This action is very similar to IsValueLessOrGreater.  The action IsValueLessOrGreater has
+        greater flexibility.<br/><br/>
+
+        This action is useful for validation of recognized data to confirm it meets requirements. It also
+        will confirm if data entered by a verify operator has entered data that meets the numeric requirements.<br/><br/>
+
+        If the comparison requirement is met, the action returns true.  If the comparison requirement is not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action, so it is typically useful to call this action on the DCO object
+        that is being checked so the message is associated with the same object.<br/><br/>
+        <e>
+          <b>IsValueLessOrEqual("@F", "10.50")</b><br/>
+          Assuming this action is called on a rule attached to a field object, it will test the field's
+          text value to confirm the numeric value of the text is less than or equal to 10.5.  The action will
+          return true if the test passes, otherwise the action will return false and control will pass to the next function
+          in the ruleset.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level but typically at the field level.</lvl>
+      <ret>
+        <b>True</b> if the two values meet the comparison requirement; Otherwise <b>False.</b>
+      </ret>
+      <see>
+        IsValueLessOrGreater<br/>
+        rrCompareNumeric in the RuleRunnerLogic action library<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+    
+    <method name="IsValueLessOrGreater" qi="Returns true if a numeric comparison on a field or variable meets the condition for the comparison value.">
+      <p name="Target" type="string" />
+      <p name="ComparisonValue" type="string" />
+      <p name="ComparisonOperator" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a target DCO field, DCO variable or string to validate.<br/><br/>
+
+        <b>ComparisonValue:</b> A numeric value to use for the comparison to the value of the "Target" parameter. 
+        The target and the comparison value numbers must be properly formatted for the current locale.<br/><br/>
+
+        <b>ComparisonOperator:</b> The comparison operator. It must be one of the following operators: ˂, ˂=, =, ˃=, ˃
+        The comparison is applied in this format "Target" "Comparison" "Value" such as "is Target ˂= 5".<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        This action performs a numeric compare of the value of the "Target" parameter to the "ComparisonValue".
+        It will determine if the "Target", typically a field value, is less than, less than or equal to,
+        equal to, greater than or equal to, or greater than the comparison value.<br/><br/>
+        
+        This action is useful for validation of recognized data to confirm it meets requirements. It also
+        will confirm if data entered by a verify operator has entered data that meets the numeric requirements.<br/><br/>
+
+        If the comparison requirement is met, the action returns true.  If the comparison requirement is not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action, so it is typically useful to call this action on the DCO object
+        that is being checked so the message is associated with the same object.<br/><br/>
+        
+        If the goal is to perform a numeric comparison to control logic flow but the message variable
+        does not need to be set if the comparison fails, then consider using the rrCompareNumeric action
+        in the RuleRunnerLocic action library.
+        <e>
+          <b>IsValueLessOrGreater("@F", "10.50", "˂=")</b><br/>
+          Assuming this action is called on a rule attached to a field object, it will test the field's
+          text value to confirm the numeric value of the text is less than or equal to 10.5.  The action will
+          return true if the test passes, otherwise the action will return false and control will pass to the next function
+          in the ruleset.<br/><br/>
+
+          <b>IsValueLessOrGreater("@F", "0", "=")</b><br/>
+          Assuming this action is called on a rule attached to a field object, it will test the field's
+          text value to confirm the numeric value is zero.<br/><br/>
+
+          <b>IsValueLessOrGreater("@F", "0", ">")</b><br/>
+          Assuming this action is called on a rule attached to a field object, it will test the field's
+          text value to confirm the value is greater than zero.<br/><br/>
+
+          <b>IsValueLessOrGreater("@X.MyVariable", @X.ExpectedValue, "=")</b><br/>
+          This example uses a smart parameter to test the text contained in the DCO variable "MyVariable"
+          on the same DCO object that is attached to the ruleset.  It also uses a smart parameter
+          to obtain the test value from another variable called "ExpectedValue".  If the
+          numeric value of text contained in ExpectedValue is equal to the numeric value 
+          the variable MyVariable, then the action will return true.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level but typically at the field level.</lvl>
+      <ret>
+        <b>True</b> if the two values meet the comparison requirement; Otherwise <b>False.</b>
+      </ret>
+      <see>
+        rrCompareNumeric in the RuleRunnerLogic action library<br/><br/>
+        
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="IsValueExactMatch" qi="Returns true if the field or value matches the comparison value with our without case sensitivity.">
+      <p name="Target" type="string" />
+      <p name="Value" type="string" />
+      <p name="CaseSensitive" type="string" />
+      <ap>
+        <b>Target: </b> A smart parameter that resolves to a target DCO field, DCO variable or string to validate.<br/><br/>
+        <b>Value:</b> Text that the action is looking for in the current field.<br/><br/>
+        <b>CaseSensitive:</b> Determines if the comparison should be case sensitive. Use values "True" or "False".
+        If the parameter is left blank, it defaults to "True".<br/><br/>
+        
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        The action will check the text referenced by the Target parameter to validate if the text in the
+        Value parameter is identical to the Target's text.  The Value must exactly match
+        the input text.  If the case sensitive parameter
+        is true then the sub-string must also exactly match the case of the comparison text.<br/><br/>
+        
+        If the comparison requirement is met, the action returns true.  If the comparison requirement is not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action, so it is typically useful to call this action on the DCO object
+        that is being checked so the message is associated with the same object.<br/><br/>
+        <e>
+          <b>IsValueExactMatch("@F", "NEW", "")</b><br/>
+          Assuming this action is called on a ruleset attached to a field object, it will compare the
+          text value of the current field with the word "NEW" to confirm if the word "NEW"
+          is contained in the source field.<br/>
+          The following are return values based on the field's text value:<br/>
+          Field contains: "NEW" = TRUE<br/>
+          Field contains: "I Love NEW YORK" = FALSE<br/>
+          Field contains: "Project" = FALSE<br/>
+          Field contains: "NEW Project" = FALSE<br/>
+          Field contains: "New Project" = FALSE<br/>
+          Field contains: "Development" = FALSE<br/><br/>
+
+          <b>IsValueExactMatch("@F", "@P.MyVariable", "False")</b><br/>
+          This example will compare the text value of the current DCO field with
+          the value of the variable "MyVariable" which is on the parent page
+          object.  The comparison will be case insensitive.<br/><br/>
+        </e>
+      </h>
+      <lvl>All, but generally at the Field level.</lvl>
+      <ret>
+        <b>False</b> if the object's target does not contain the parameter's value. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        IsFieldPercentAlpha, IsFieldPercentNumeric<br/><br/>
+        
+        rrCompare, rrCompareNot, rrCompareCase, rrCompareCaseLength, rrCompareNotCase and rrCompareNotCaseLength in the RuleRunnerLogic action library.<br/><br/>        
+        
+        Refer to the top level help for more information regarding smart parameters and in the top level help of the RuleRunnerLogic action library.<br/>
+      </see>
+    </method>
+
+    <method name="IsValueInText" qi="Returns true if the specified text is a substring text in a field or variable">
+      <p name="Target" type="string" />
+      <p name="Value" type="string" />
+      <p name="CaseSensitive" type="string" />
+      <ap>
+        <b>Target: </b> A smart parameter that resolves to a target DCO field, DCO variable or string to validate.<br/><br/>
+        <b>Value:</b> Text that the action is looking for in the current field.<br/><br/>
+        <b>CaseSensitive:</b> Determines if the comparison should be case sensitive. Use values "True" or "False".
+        If the parameter is left blank, it defaults to "True".<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        The action will check the text referenced by the Target parameter to validate if the text in the
+        Value parameter is a subset of text contained within the Target's text.  The Value can exactly match
+        the length the input text or can be a portion of the input text.  If the case sensitive parameter
+        is true then the substring must exactly match the case of the comparison text.<br/><br/>
+
+        If the comparison requirement is met, the action returns true.  If the comparison requirement is not met, the
+        action returns false and also sets a corresponding error message in the standard Message variable that
+        is used by clients to display in verification panels when a rule check fails. The message is set on
+        the DCO that is calling this action, so it is typically useful to call this action on the DCO object
+        that is being checked so the message is associated with the same object.<br/><br/>
+        <e>
+          <b>IsValueInText("@F", "NEW", "")</b><br/>
+          Assuming this action is called on a ruleset attached to a field object, it will compare the
+          text value of the current field with the word "NEW" to confirm if the word "NEW"
+          is contained in the source field.<br/>
+          The following are return values based on the field's text value:<br/>
+          Field contains: "NEW" = TRUE<br/>
+          Field contains: "I Love NEW YORK" = TRUE<br/>
+          Field contains: "Project" = FALSE<br/>
+          Field contains: "NEW Project" = TRUE<br/>
+          Field contains: "New Project" = FALSE<br/>
+          Field contains: "Development" = FALSE<br/><br/>
+
+          <b>IsValueInText("@F", "@P.MyVariable", "False")</b><br/>
+          This example will compare the text value of the current DCO field with
+          the value of the variable "MyVariable" which is on the parent page
+          object.  The comparison will be case insensitive.<br/><br/>
+        </e>
+      </h>
+      <lvl>All, but generally at the Field level.</lvl>
+      <ret>
+        <b>False</b> if the object's target does not contain the parameter's value. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        IsFieldPercentAlpha, IsFieldPercentNumeric<br/><br/>
+
+        rrContains, rrCompare, rrCompareNot, rrCompareCase, rrCompareCaseLength, rrCompareNotCase and rrCompareNotCaseLength in the RuleRunnerLogic action library.<br/><br/>
+
+        Refer to the top level help for more information regarding smart parameters and in the top level help of the RuleRunnerLogic action library.<br/>
+      </see>
+    </method>
+
+
+    <method name="ReplaceBlankFieldWithCharacter" qi="If the current field is blank, the specified character will be placed into the field.">
+      <p name="Replacement"/>
+      <ap>
+        <b>Replacement:</b> A character or string that will be placed into the field if it is blank.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        If a field is empty or only contains spaces, it is replaced with the character or string that is passed in as a parameter.
+        If the field is replaced with the input parameter, the confidence of the new replacement text is set to a low confidence of 1.<br/><br/>
+        <e>
+          <b>ReplaceBlankFieldWithCharacter("~")</b><br/>
+          This example will replace the current field with the character "~", only if the field is empty or only
+          contains spaces.<br/><br/>
+
+          <b>ReplaceBlankFieldWithCharacter("@B.MyVariable")</b><br/>
+          If the field is empty or only contains spaces, it will be replaced with the text in 
+          the batch level variable "MyVariable".<br/><br/>
+        </e>
+      </h>
+      <lvl>
+        Field level.
+      </lvl>
+      <ret>
+        <b>False</b> if it is called at the wrong level or if the parameter is missing, otherwise <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+    
+    <method name="ReplaceCharacters" qi="Replaces specific characters in a field to a replacement character.">
+      <p name="Find" type="string" />
+      <p name="Replacement" type="string" />
+      <p name="Count" type="string" />
+      <ap>
+        <b>Find:</b> The character or string of characters to be replaced; defaults to a space.<br/><br/>
+
+        <b>Replacement:</b> The character(s) of the replacement String.<br/><br/>
+
+        <b>Count:</b> The number of times replacement is to occur. The default is "1"	and  "*" replaces all instances.<br/><br/>
+        
+        Smart parameters supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        This action will update the text of the current field object by replacing the matched character
+        or string of characters with the replacement string.  The number of
+        replacement occurrences is controlled by the Count parameter.<br/><br/>
+        
+        The confidence values of the characters that are not replaced will not be changed, keeping
+        their original confidence values.  Replacement characters will be added with the default
+        passing confidence value.<br/><br/>
+        <e>
+          <b>ReplaceCharacters(".","/","*")</b><br/>
+          If the text value of the field has a starting value of
+          "02.09.1964", it will become "02/09/1964".<br/><br/>
+          
+          <b>ReplaceCharacters("", "@EMPTY", "*")</b><br/>
+          If the source field contains "Remove The Spaces Here", the final result will be "RemoveTheSpacesHere".<br/><br/>
+
+          <b>ReplaceCharacters("@X.FindThis", "@X.Replacement", "1")</b><br/>
+          This example will look for the text indicated by the DCO variable "FindThis" and replace
+          the first occurrence with the value of the variable "Replacement" on the same DCO object.
+          If "FindThis" is set to "oo", "Replacement" is set to "a" and the starting
+          field value is "Moon to Moose", the final field value will be "Man to Moose".<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+      <method name="ReplaceSubstringFirst" qi="Replaces the First occurance of a substring in a text string with a new substring.">
+          <p name="TextToSearch" type="string" />
+          <p name="Substring" type="string" />
+          <p name="Replacement" type="string" />
+          <p name="CaseSensitive" type="string" />
+          <ap>
+              <b>TextToSearch:</b> A smart parameter syntax that references a DCO field or variable to search and update.<br/><br/>
+
+              <b>Substring:</b> The character, or character string, to search for in the resolved value of TextToSearch.<br/><br/>
+
+              <b>Replacement:</b> The character, or character string, to replace the Substring.<br/><br/>
+
+              <b>CaseSensitive:</b> False, search is case insensitive. True, search is case sensitive. Defaults to True, if the value is blank or invalid.<br/><br/>
+
+              Smart parameters are supported for all parameters.<br/><br/>
+          </ap>
+          <h>
+              This action will search the text of the field or variable referenced in the TextToSearch parameter.
+              The first occurrence of the specified Substring will be replaced with Replacement parameter and
+              the location referenced by TextToSearch will be updated.
+              <br/><br/>
+
+              If the smart parameter specified in TextToSearch resolves to a field's "text" value, this action
+              will maintain the existing confidence values of the characters that are not replaced.
+              The replacement characters will be set to a high confidence value.  If TextToSearch
+              resolves to a DCO variable, then the confidence value does not apply.
+              <br/><br/>
+              The Replacement parameter is not required to be the same length as the substring.
+              <br/><br/>
+              <e>
+                  <b>ReplaceSubstringFirst(@F, "TOO", "Three", "True")</b><br/>
+                  Because the specification is @F, this action would be run on a field to update the captured text in the field.
+                  If the text value of the field has a value of "This Too is TOO Much Text Too", then the final value
+                  of the field will be "This Too is Three Much Text Too", because this is a case sensitive search.
+                  if the confidence of the field was "55555555555555555555555555555", after updating the text value
+                  the field confidence would become "5555555555559999955555555555555".<br/><br/>
+
+                  rrSet("This Too is TOO Much Text Too", "@X.MyVariable")<br/>
+                  <b>ReplaceSubstringFirst(@X.MyVariable, "TOO", "Three", "false")</b><br/>
+                  The example first sets a DCO variable on the current DCO object to the value "This Too is TOO Much Text Too".
+                  This is performed as an illustration. Typically the variable would have been set earlier.
+                  The action ReplaceSubstringFirst will update the variable "MyVariable" to
+                  "This Three is TOO Much Text Too".<br/><br/>
+
+                  <b>ReplaceSubstringFirst(@P\Field1, ".", ",", "False)</b><br/>
+                  It is assumed that this action is running on a page object that has an existing child field called "Field1".
+                  The action will update the text value of Field1.
+                  If the text value of the field has a value of "1.234.56", then the final value
+                  of the field will be "1,234.56".
+                  if the confidence of the field was "72387279", after updating the text value
+                  the field confidence would become "79387279".<br/><br/>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>
+              Refer to the top level help for more information regarding smart parameters.<br/>
+          </see>
+      </method>
+
+	  <method name="ReplaceSubstringLast" qi="Replaces the last occurance of a substring in a text string with a new substring.">
+		  <p name="TextToSearch" type="string" />
+		  <p name="Substring" type="string" />
+		  <p name="Replacement" type="string" />
+		  <p name="CaseSensitive" type="string" />
+		  <ap>
+			  <b>TextToSearch:</b> A smart parameter syntax that references a DCO field or variable to search and update.<br/><br/>
+			  
+			  <b>Substring:</b> The character, or character string, to search for in the resolved value of TextToSearch.<br/><br/>
+
+			  <b>Replacement:</b> The character, or character string, to replace the Substring.<br/><br/>
+
+			  <b>CaseSensitive:</b> False, search is case insensitive. True, search is case sensitive. Defaults to True, if the value is blank or invalid.<br/><br/>
+			  
+			  Smart parameters are supported for all parameters.<br/><br/>
+		  </ap>
+		  <h>
+              This action will search the text of the field or variable referenced in the TextToSearch parameter.
+              The last occurrence of the specified Substring will be replaced with Replacement parameter and
+              the location referenced by TextToSearch will be updated.
+              <br/><br/>
+
+              If the smart parameter specified in TextToSearch resolves to a field's "text" value, this action
+              will maintain the existing confidence values of the characters that are not replaced.
+              The replacement characters will be set to a high confidence value.  If TextToSearch
+              resolves to a DCO variable, then the confidence value does not apply.
+              <br/><br/>
+              The Replacement parameter is not required to be the same length as the substring.
+              <br/><br/>
+			  <e>                  
+				  <b>ReplaceSubstringLast(@F, "TOO", "Three", "True")</b><br/>
+                  Because the specification is @F, this action would be run on a field to update the captured text in the field.
+                  If the text value of the field has a value of "This Too is TOO Much Text Too", then the final value
+                  of the field will be "This Too is Three Much Text Too", because this is a case sensitive search.
+                  if the confidence of the field was "55555555555555555555555555555", after updating the text value
+                  the field confidence would become "5555555555559999955555555555555".<br/><br/>
+
+                  rrSet("This Too is TOO Much Text Too", "@X.MyVariable")<br/>
+                  <b>ReplaceSubstringLast(@X.MyVariable, "TOO", "Three", "false")</b><br/>
+                  The example first sets a DCO variable on the current DCO object to the value "This Too is TOO Much Text Too".
+                  This is performed as an illustration. Typically the variable would have been set earlier.
+                  The action ReplaceSubstringLast will update the variable "MyVariable" to
+                  "This Too is TOO Much Text Three".<br/><br/>           
+
+				  <b>ReplaceSubstringLast(@P\Field1, ",", ".", "False)</b><br/>
+                  It is assumed that this action is running on a page object that has an existing child field called "Field1".
+                  The action will update the text value of Field1.
+                  If the text value of the field has a value of "1,234,56", then the final value
+                  of the field will be "1,234.56".
+                  if the confidence of the field was "72387279", after updating the text value
+                  the field confidence would become "72387979".<br/><br/>				  
+			  </e>
+		  </h>
+		  <lvl>All levels.</lvl>
+		  <ret>
+			  Always <b>True.</b>
+		  </ret>
+		  <see>
+			  Refer to the top level help for more information regarding smart parameters.<br/>
+		  </see>
+	  </method>
+
+    <method name="ReplaceValueAtPosition" qi="Replaces a character in a field at a specific position with a replacement character.">
+      <p name="Position" type="string" />
+      <p name="Replacement" type="string" />
+      <ap>
+        <b>Position:</b> An integer identifying the position within the text that contains the value to be replaced.<br/><br/>
+        <b>Replacement:</b> The replacement string; if blank this parameter defaults to "" indicating a deletion.<br/><br/>
+        
+        Smart parameters are supported for all parameters<br/><br/>
+      </ap>
+      <h>
+        This action replaces a single character at the indicated position within the string
+        with a replacement value.  The replacement value can be 0 or more characters.  If the value is empty,
+        then the replacement acts as a deletion. The single character that is replaced can be replaced
+        with multiple characters. Only the character at the specified index is replaced.<br/><br/>
+
+        The confidence values of the remaining characters is not changed by this action.  The
+        added characters will be given a default passing confidence.<br/><br/>
+        <e>
+          <b>ReplaceValueAtPosition("3","/")</b><br/>
+          The field value "10.05.1962" becomes "10/05.1962".<br/><br/>
+
+          <b>ReplceValueAtPosition("5","Hello")</b><br/>
+          The field value "1234567890" becomes "1234Hello67890".<br/><br/>
+
+          <b>ReplceValueAtPosition("5","")</b><br/>
+          The field value "1234567890" becomes "123467890".<br/><br/>
+
+          <b>ReplceValueAtPosition("@X.Index","@P.MyText")</b><br/>
+          This example will obtain the start position from the DCO variable called "Index"
+          on the current DCO field object. The replacement string will be obtained
+          from the variable "MyText" which would exist on the parent page object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the character replacement is successful. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+
+      <method name="SetAllFieldLabels" access="public" qi="Sets the label display variables from an INI file.">
+          <p name="INIFileName" type="string" qi="The full path to the INI file containing the field labels." />
+          <p name="AddMissingEntries" type="string" qi="True adds the missing entries into the INI file, False will not." />
+          <ap>
+              Smart parameters are supported for all parameters.<br/>
+          </ap>
+          <h>
+              This action is an automated way of updating fields with a user friendly display label at runtime.
+              To perform the update, it is required that the fields and their display labels are listed in an INI file.
+              Once set, the user label is displayed on verification panels instead of the field name.
+              The label is supported by Navigator, Datacap Desktop and Taskmaster Web, provided the panel in use
+              supports this feature.<br/><br/>
+
+              The action will read scan through every document, page and field within the batch to set the "label"
+              variable on each field in the batch. This action might take some time in large batches.  This is not the only
+              way that an application can set the label variable for fields. For environments that typically have
+              large batches, it would be more efficient to set the label variable
+              in the setup DCO, making it permanently set without having to use this action to read the labels over and over from a file at runtime
+              for every batch.<br/><br/>
+
+              This action is not compatible with, nor is it necessary, on applications based on Flex technology.<br/><br/>
+
+              The settings file needs to follow the following format:<br/>
+              [Verification Labels]<br/>
+              FieldName1=DisplayLabel<br/>
+              FieldName2=DisplayLabel<br/>
+              etc.<br/><br/>
+              
+              If AddMissingEntries is set to True, then any fields within the batch that do not exist in the INI file list is
+              added to the INI file. This may make it easier to go back and edit the INI file to configure these fields.
+              When the action updates the INI file, it requires that the user running the rules has full access to update
+              the specified INI file. If the user running the task is Rulerunner, then the Rulerunner user must have correct
+              permissions.  If the user is running the rule through a client like Datacap Desktop, then that user must have correct
+              access permissions for the INI file.<br/><br/>
+              <e>
+                  An example INI file configuration:<br/><br/>
+
+                  [Verification Labels]<br/>
+                  Vendor=Vendor<br/>
+                  Vendor_Number=Vendor Number<br/>
+                  Remittance_Zip=Postal code<br/>
+                  Invoice_Number=Invoice Number<br/>
+                  Invoice_Date=Invoice Date<br/>
+                  PO_Number=PO Number<br/>
+                  Shipping=Shipping<br/><br/>
+              </e>
+              <br/><br/>
+              <e>
+                  SetLabels("@APPPATH(settingsfile)")<br/>
+              </e>
+          </h>
+          <lvl>
+              Any level, but will only process fields that are descendants of the object upon which you place the action, and the object itself  (if it is a field object).
+              Typically, this action would be called at the batch level to ensure that all fields are set within the batch.
+          </lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+      
+
+      <method name="SetFieldStatusMessage" qi="A message that appears in verify clients">
+          <p name="Message" type="string" qi="The message to display." />
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Note: Some actions, such as validation actions, will automatically
+              set this variable. If this action is called, it will replace any
+              existing message with the new message. It is also recommended to
+              set the message back to @EMPTY prior to verification and then set the status only when needed.<br/><br/>
+              
+                  The manner in which the message is displayed to the user is dependent on the verify client.<br/><br/>
+              <e>
+                     SetFieldStatusMessage("The value '+@F+' is invalid")<br/>
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              Always <b>False.</b>
+          </ret>
+          <see>
+              Refer to the top level help of the RuleRunnerLogic action library for more information regarding smart parameters.<br/>
+          </see>
+      </method>      
+      
+      
+    <method name="SplitFieldValuePreserveStart" qi="Truncates a fields value starting at a specific string or character, keeping the beginning text in the field.">
+      <p name="SplitAt" type="string" />
+      <p name="CaseSensitive" type="string" />
+      <ap>
+        <b>SplitAt</b> A character or a string of characters where the truncation will start.<br/><br/>
+
+        <b>CaseSensitive: </b> "True" indicates that the comparison should be case sensitive.
+        "False" will perform a case insensitive comparison. If the parameter is missing
+        or invalid, the parameter will default to "True".<br/><br/>
+        
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Splits a Field object's text value at the first instance of the character or string
+        specified as a parameter. The result is that the final string is truncated at
+        the location where the SplitAt parameter matches the field's text.<br/><br/>
+
+        The action deletes all characters to the end of the string starting from the separating
+        character, as well as the separation character.
+        All text prior to the separating character remains.<br/><br/>
+
+        The confidence values of the remaining characters is not changed by this action.<br/><br/>
+        <e>
+          <b>SplitFieldValuePreserveStart("c", "True")</b><br/>
+          If the current field object's value is "Description," this action truncates it to "Des".<br/><br/>
+
+          <b>SplitFieldValuePreserveStart("a", "False")</b><br/>
+          If the current field object's value is "ABCDEFG," the final result is "".<br/><br/>
+
+          <b>SplitFieldValuePreserveStart("g", "False")</b><br/>
+          If the current field object's value is "ABCDEFG," the final result is "ABCDEF".<br/><br/>
+
+          <b>SplitFieldValuePreserveStart("Dog", "False")</b><br/>
+          If the current field object's value is "I love cats and doggies." this action truncates it to "I love cats and ".<br/><br/>
+
+          <b>SplitFieldValuePreserveStart("@X.MyVariable", "True")</b><br/>
+          This works similar to the other examples however the text for the parameter is obtained
+          from the value of the DCO variable called "MyVariable" on the current object
+          that is attached to the rule.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the separator character is found. Otherwise <b>False.</b>
+      </ret>
+      <see>
+        SplitFieldValuePreserveEnd, TruncateFromStart, TruncateFromEnd.<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="SplitFieldValuePreserveEnd" qi="Truncates a fields value starting at a specific string or character, keeping the ending text in the field.">
+      <p name="SplitAt" type="string" />
+      <p name="CaseSensitive" type="string" />
+      <ap>
+        <b>SplitAt</b> A character or a string of characters where the truncation will stop.<br/><br/>
+        
+        <b>CaseSensitive: </b> "True" indicates that the comparison should be case sensitive.
+        "False" will perform a case insensitive comparison. If the parameter is missing
+        or invalid, the parameter will default to "True".<br/><br/>
+        
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Splits a Field object's text value at the first instance of the character or string
+        specified as a parameter. The result is that the final string will have the text removed 
+        from the start of the value, up to and including 
+        the location where the SplitAt parameter matches the field's text.<br/><br/>
+
+        The action deletes all characters to the end of the string starting from the separating
+        character, as well as the separation character.
+        All text prior to the separating character remains.<br/><br/>
+
+        The confidence values of the remaining characters is not changed by this action.<br/><br/>
+        <e>
+          <b>SplitFieldValuePreserveEnd("c", "True")</b><br/>
+          If the current field object's value is "Description," this action truncates it to "ription,".<br/><br/>
+
+          <b>SplitFieldValuePreserveEnd("a", "False")</b><br/>
+          If the current field object's value is "ABCDEFG," the final result is "BCDEFG".<br/><br/>
+
+          <b>SplitFieldValuePreserveEnd("g", "False")</b><br/>
+          If the current field object's value is "ABCDEFG," the final result is "".<br/><br/>
+
+          <b>SplitFieldValuePreserveEnd("Dog", "False")</b><br/>
+          If the current field object's value is "I love cats and doggies." this action truncates it to "gies.".<br/><br/>
+
+          <b>SplitFieldValuePreserveEnd("@X.MyVariable", "True")</b><br/>
+          This works similar to the other examples however the text for the parameter is obtained
+          from the value of the DCO variable called "MyVariable" on the current object
+          that is attached to the rule.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>True</b> if the separator character is found. Otherwise <b>False.</b>
+      </ret>
+      <see>
+        SplitFieldValuePreserveStart, TruncateFromStart, TruncateFromEnd.<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="SplitTextIntoVariables" qi="Breaks a field or variable, using a specified character, into multiple DCO variables with each split segment.">
+      <p name="TextToSplit" type="string" />
+      <p name="NewVariableName" type="string" />
+      <p name="SplitCharacter" type="string" />
+      <ap>
+        <b>TextToSplit:</b> Text that will be split into multiple DCO variables based on a specified split character.<br/><br/>
+
+        <b>NewVariableName:</b> The text will be split into new variables in the current DCO object
+        using this as the base variable name.<br/><br/>
+
+        <b>SplitCharacter:</b> The character that will be used as the splitting value in the source text.
+        This character will be removed from the final split text.
+
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        Splits text into multiple variables based on a split character.  For each separate sequence of text,
+        a new variable will be created in the current DCO object, based on the root name provided
+        in the parameter "NewVariableName".  Each new variable will be indexed by the suffix "_N", where
+        N is an integer starting at 0 up to the number of created variables minus 1.<br/><br/>
+        
+        The number of created variables is in the same variable with the suffix "_count".<br/><br/>
+        <e>
+          <b>SplitTextIntoVariables("Here Is;Some Text;To Split", "MySplitVar", ";")</b><br/>
+          This example will split the input text into 3 separate variables based on the semicolon
+          character.<br/><br/>
+          
+          These will be the variables created on the current DCO object:<br/>
+          MySplitVar_count = 3<br/>
+          MySplitVar_0 = "Here Is"<br/>
+          MySplitVar_1 = "Some Text"<br/>
+          MySplitVar_2 = "To Split"<br/><br/>
+
+          <b>SplitTextIntoVariables("@F", "MySplitVar", ":")</b><br/>
+          Assuming this is called on a field that contains the text "12345:678:9ABCD:EFG",
+          the field text will be split into 3 separate variables based on the colon
+          character.<br/><br/>
+
+          These will be the variables created on the current DCO field object:<br/>
+          MySplitVar_count = 4<br/>
+          MySplitVar_0 = "12345"<br/>
+          MySplitVar_1 = "678"<br/>
+          MySplitVar_2 = "9ABCD"<br/>
+          MySplitVar_3 = "EFG"<br/><br/>
+
+          <b>SplitTextIntoVariables("@P.MySourceText", "MySplitVar", ":")</b><br/>
+          Similar to the previous example, this example will obtain the source
+          text from the page level DCO variable called "MySourceText", splitting
+          the value of that variable based on the colon
+          character.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False</b> if there is an error or if one of the parameters is invalid. Returns <b>true</b>
+        if the text is successfully split.  If the field is empty, the action still returns <b>true</b>
+        and the count of variables created will be 0. No additional variables will be created.
+        If the split character is not found in the source string, only one variable will be created
+        which will contain the entire source string and the action will still return <b>true.</b><br/>
+      </ret>
+      <see>        
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="SumFields" qi="Sums children of a DCO object that match the specified name.">
+      <p name="TypeOrVariable" type="string" />
+      <ap>
+        <b>TypeOrVariable:</b> The type of the field or the name of a variable that will be summed.<br/><br/>
+        
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        The action locates child fields that match the specified type or child objects that 
+        contain variables of the same name as specified in the parameter. 
+        If the name refers to a field, then the text value of the field
+        will be summed. If the parameter specifies a variable name, then every object that has a variable of that name
+        will be summed will have the value of that variable summed.<br/><br/>
+
+        The sum of the values will be stored in a variable on the current DCO node.  The variable name will be
+        "SumFields_" followed by the parameter type.  If the parameter provided was "Lineitem", then all of the
+        items that matched "Lineitem" would be summed and stored in a variable named "SumFields_Lineitem".
+        The result of the sum can then be used by subsequent actions as needed.<br/><br/>
+        
+        The format of the numbers being added must be in the correct numeric format based on the current locale.
+        If there are decimal separators, the number must use the correct decimal separator for the locale.
+        If the value is plain text or is not in a number format that is valid for the current
+        locale, the value will not be added to the total.<br/><br/>
+        <e>
+          <b>SumFields("Detail")</b><br/>
+          This example will look for any fields called "Detail" that are children of the current object
+          and look to see if the children contain a variable called Detail.  If the name refers to a type
+          for a field, then the text value of the field will be added to the total.  If the name refers
+          to a variable of a child object, then the value of that variable will be added to the total sum.<br/><br/>
+          
+          Assuming the above action was called on a page and the page has 10 fields and 3 of those fields have a variable
+          called "Detail", then the values from the variable on each of the 3 fields will be added together. If the value
+          of the variable "Detail" is "10" on one field, and the variable "Detail" contains "4.50" on another field and 
+          contains "6.25" on another field, they will be added for a total of "20.75". That total will be stored
+          on the current page object in a DCO variable called "SumFields_Detail".<br/><br/>                 
+          
+          rrSet("10", "@X\Field1.AddMe")<br/>
+          rrSet("4.50", "@X\Field4.AddMe")<br/>
+          rrSet("6.25", "@X\Field7.AddMe")<br/>
+          <b>SumFields("AddMe")</b><br/>
+          This example further illustrates the above example.  While it is not typical that
+          an application would hard code variable values simply to sum them as shown, the intent is to
+          illustrate how the SumFields actions works. This example assumes there are at least
+          these three child fields on the current object: "Field1", "Field4", "Field7".
+          The exact field names could of course be changed to something meaningful for
+          the application. This simply shows there are three fields with a variable, although
+          there could be more without the variable set. If the variable is not set, then
+          the field is simply ignored.<br/><br/>
+          
+          The SumFields action then looks for all child types called "AddMe" and looks for children
+          that have a variable called "AddMe".  Again, the name could be changed to something
+          appropriate for the application.  SumFields will add these three values and store
+          the result in a variable called "SumFields_AddMe".<br/><br/>
+        </e>
+      </h>
+      <lvl>The parent object that contains the child fields or variables that will be summed.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for information regarding the use of locale in actions.<br/><br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+
+      <method name="SwitchMMDD" qi="Removes leading or trailing spaces from a field or variable.">
+          <p name="Target" type="string" qi="A smart parameter that references a variable or field." />
+          <p name="Separator" type="string" qi="The date separator." />
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              This action operates on a short date that has a format that starts MM/DD or DD/MM and swaps
+              the position of the month and day values.<br/><br/>
+
+              The action operates on the string regardless of the date format of the current locale.
+              It does not perform any analysis on the date to determine if the two values should be
+              swapped, it simply swaps them.<br/><br/>              
+              <e>
+                  <b>SwitchMMDD("/")</b><br/><br/>
+
+                  In this example, the value "03/09/10" becomes "09/03/10".
+              </e>
+          </h>
+          <lvl>Field level.</lvl>
+          <ret>
+              <b>True,</b> if two separators are found and the values are swapped.  Otherwise, <b>False.</b>
+          </ret>
+      </method>
+      
+      
+    <method name="TrimSpaces" qi="Removes leading or trailing spaces from a field or variable.">
+      <p name="Target" type="string" />
+      <ap>
+        <b>Target: </b> A smart parameter that resolves to a target DCO field or DCO variable to trim.<br/><br/>
+      </ap>
+      <h>
+        Deletes extra spaces at the beginning and end of the current Field object's captured text value.
+        Spaces that are not at the beginning or end of the field's text value will not be removed.
+        If acting on a field text value, the confidence of the remaining characters is not changed by this action.<br/><br/>
+        <e>
+          <b>TrimSpaces("@F")</b><br/>
+          Assuming this action is called on a field level object, the current text value
+          of the field will be trimmed.  If the value is "456.11_ _ _ _" it will be
+          updated to "456.11".<br/><br/>
+
+          <b>TrimSpaces("@X.MyVariable")</b><br/>
+          This example will trim the spaces of the value for the
+          DCO variable called "MyVariable" on the current DCO object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False</b> if the parameter target does not resolve to field text or to a DCO variable. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        DeleteSelectedCharacters<br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+    <method name="TruncateFromEnd" qi="Truncates a field or variable to the length specified, removing the text on the end.">
+      <p name="Target" type="string" />
+      <p name="Length" type="string" />
+      <ap>
+        <b>Target: </b> A smart parameter that resolves to a target DCO field or DCO variable to truncate.<br/><br/>
+        
+        <b>Length:</b> The maximum length for the value. If the text is longer than this length, it will be shortened to the
+        specified length by removing the characters at the end of the text.  If the starting length of the value
+        is equal to or less than the specified length, 
+        the text will not be changed. The length must be a positive integer.<br/><br/>
+        
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        This action adjusts a text string to a maximum size.  If the value is larger than the maximum length,
+        the string will be adjusted to the specified maximum length by removing extra characters from
+        the end of the string.  If the string is less than or equal to the maximum size, the text
+        will not be changed.<br/><br/>
+
+        If acting on a field text value, the confidence of the remaining characters is not changed by this action.<br/><br/>
+        <e>
+          <b>TruncateFromEnd("@F","6")</b><br/>
+          Assuming this action is called on a field object, it will truncate the text value
+          of the field to a maximum length of 6 by removing extra characters from the end.
+          The value "EU0002240" would become "EU0002"<br/><br/>
+
+          <b>TruncateFromEnd("@F","1")</b><br/>
+          In this example the value "ABCDEFG" would become "A"<br/><br/>
+
+          <b>TruncateFromEnd("@P.MyVariable","10")</b><br/>
+          Assuming this action is called on a field object, it obtain the value from the
+          variable called "MyVariable" that exists on the parent page object. The string
+          will be truncated to a maximum length of 10.  If "MyVariable" contains
+          the text "123456789012345", it will be truncated to "1234567890".<br/><br/>
+
+          <b>TruncateFromEnd("@P\Field2","10")</b><br/>
+          Assuming this action is called on a field object, 
+          this action will adjust the length of the text value
+          of a sibling field called "Field2".<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False</b> if the length parameter is not Numeric or if the target does not resolve to field text or to a DCO variable. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        SplitFieldValuePreserveStart, SplitFieldValuePreserveEnd, TruncateFromStart, IsTextLength.<br/><br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+
+    <method name="TruncateFromStart" qi="Truncates a field or variable to the length specified, removing the text on at the start.">
+      <p name="Target" type="string" />
+      <p name="Length" type="string" />
+      <ap>
+        <b>Target: </b> A smart parameter that resolves to a target DCO field or DCO variable to truncate.<br/><br/>
+
+        <b>Length:</b> The maximum length for the value. If the text is longer than this length, it will be shortened to the
+        specified length by removing the characters at the beginning of the text.  If the starting length of the value
+        is equal to or less than the specified length,
+        the text will not be changed. The length must be a positive integer.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        This action adjusts a text string to a maximum size.  If the value is larger than the maximum length,
+        the string will be adjusted to the specified maximum length by removing extra characters from
+        the start of the string.  If the string is less than or equal to the maximum size, the text
+        will not be changed.<br/><br/>
+
+        If acting on a field text value, the confidence of the remaining characters is not changed by this action.<br/><br/>
+        <e>
+          <b>TruncateFromStart("@F","6")</b><br/>
+          Assuming this action is called on a field object, it will truncate the text value
+          of the field to a maximum length of 6 by removing extra characters from the end.
+          The value "EU0002240" would become "002240"<br/><br/>
+
+          <b>TruncateFromStart("@F","1")</b><br/>
+          In this example the value "ABCDEFG" would become "G"<br/><br/>
+
+          <b>TruncateFromStart("@P.MyVariable","10")</b><br/>
+          Assuming this action is called on a field object, it obtain the value from the
+          variable called "MyVariable" that exists on the parent page object. The string
+          will be truncated to a maximum length of 10.  If "MyVariable" contains
+          the text "123456789012345", it will be truncated to "6789012345".<br/><br/>
+
+          <b>TruncateFromStart("@P\Field2","10")</b><br/>
+          Assuming this action is called on a field object,
+          this action will adjust the length of the text value
+          of a sibling field called "Field2".<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False</b> if the length parameter is not Numeric or if the target does not resolve to field text or to a DCO variable. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        SplitFieldValuePreserveStart, SplitFieldValuePreserveEnd, TruncateFromEnd, IsTextLength.<br/><br/>
+        Refer to the top level help for more information regarding smart parameters.<br/>
+      </see>
+    </method>
+
+  </com>
+</rrx>

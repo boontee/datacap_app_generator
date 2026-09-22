@@ -1,0 +1,1742 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="ImageUtilities" v="9.1.10.11">
+  <com ref="Datacap.Libraries.ImageUtilities.Actions"  qi=" : Actions that adjust and convert images.">
+
+    <h>
+      The ImageUtilities action library provides actions that can be used at any stage of
+      a Datacap application to adjust images. If needed, the these actions can be used
+      at multiple stages in the workflow.<br/><br/>
+
+      Images can be adjusted for downstream actions or external processes.  Adjusting an image
+      can be useful or necessary for best results. Many work flows have a requirement to archive the
+      original version of the image.  This kind of requirement does not need to limit what can be
+      done to an image within an application.  When an image is altered, the original version the image is
+      always maintained.  The original version can always be retrieved, allowing the original,
+      and if desired the altered version, to be sent on to final archiving of the batch results.<br/><br/>
+
+      In some use cases, it may be best to adjust an image to get better recognition, but show the user the original
+      image or something more presentable. This is possible as well.  For example, some image adjustments are
+      always recommended for recognition and presenting to the user, such as automatic rotation, image deskew
+      and image equalization.  These adjustments create a correctly aligned image for recognition, viewing and click-n-key in a verification panel.
+      If performing recognition on the image, it may be useful to perform other adjustments, such as conversion
+      to black and white, or other changes that could improve recognition but make it less pleasing to
+      a Verify operator.  These types of changes can be performed in stages as desired or required.  Meaning
+      that an image could be deskewed and then converted to black and white in separate steps, recognition then processes the deskewed
+      black and white image, but it is the deskewed color image is presented to the user for verification.
+      Because the deskew was performed in both versions of the image, it allows recognize text to correctly
+      align in the Verify panel, allowing click-n-key functionality.  After this, the original, unchanged,
+      image still exists within the batch and can be accessed for archiving or wherever it may be needed.<br/><br/>
+
+      If the application can ingest fax images, or other non-isotropic images, then it is always a best
+      first step to use the EqualizeUnbalancedImage action to first correct the image DPI immediately after virtual scan.  A non-isotropic
+      image will have an X dpi that is different from the Y dpi. This difference can cause zones to be incorrect,
+      it can cause incorrect click-n-key operation in a Verify panel and can prevent correct fingerprint matching.
+      Using the EqualizeUnbalancedImage will alter only the images that need adjustment, assuring that all
+      images are isotropic in the rest of the workflow.  The action would typically be used
+      immediately after virtual scanning and before Page Identification or fingerprinting.
+      If the image is already isotropic, then EqualizeUnbalanceImage will simply leave the original image as-is,
+      allowing an application to process all images after ingestion to ensure they are correct.<br/><br/>
+
+      If images are going to under go adjustments such as equalization, rotation, deskew or any other
+      kind of operation that would require the image to be saved, it is recommended to first
+      use the SaveAsImage action to save any JPEG images or TIFF images with JPEG compression
+      to a lossless format.  This is strongly recommended if recognition will be performed after
+      processing because JPEG compression softens character lines, reducing the quality of
+      recognition.  LZW compression is a good general compression that is lossless and works on
+      any color depth.  This compression is recommended if the application will be processing
+      color images.  Fax compression is an excellent compression but it only supports black and white
+      images which will convert any color image to black and white.<br/><br/>
+
+      The action SaveImageInformation can be called on each image to determine the compression
+      within the image, and if it is lossless, then the rules can be configured to save the
+      image in a lossless format to prevent further quality loss by subsequent actions.<br/><br/>
+
+      Similarly image rotation and deskew would be performed before Page Identification, while this action
+      library does not directly perform these actions, there are several actions within Datacap that
+      perform this image adjustment such as the Image Enhancement ruleset and recognition actions.
+      Also note that by default, recognition actions can rotate and deskew an image.  If an image
+      has already been deskewed and rotated, then it is recommended to turn off these adjustments
+      when performing recognition to avoid unnecessary work. See the action help for the recognition
+      action for instructions on how to disable default image adjustments.<br/><br/>
+
+      This action library can adjust the dpi and physical size of the image.  If the source image
+      is a photograph, adjusting the dpi can be key to getting recognition results.  Recognition engines
+      will typically perform better if a photo, which typically has a 72 or 96 dpi, is converted to a 200 or 300
+      dpi. An image that has a designated dpi of 72 or 96 dpi may not recognize even if the X and Y
+      pixel size is large enough to allow for good quality recognition. Photographs can have enough x and y pixels
+      for successful recognition but the image dpi is too low and should be adjusted to a higher dpi
+      to obtain the best recognition results.<br/><br/>
+
+      <b>Action Overview</b><br/><br/>
+
+      A brief overview of each action within this action library:<br/><br/>
+
+      <b>AppendAllDocumentImages:</b> Appends all images in the current document into a single, long image.<br/><br/>
+
+      <b>AppendAllDocumentImagesByType:</b> Similar to AppendAllDocumentImages but limits the append to only include images with a specific page type.<br/><br/>
+
+      <b>AppendImageSetAsFirst:</b> Allows appending of specific images as defined by custom rules within the application.  This action
+      identifies a new first page that will be used the base to which all other pages will be appended.<br/><br/>
+
+      <b>AppendImageToFirst:</b> Appends the current image to the image identified by the action ApppendImageSetAsFirst.<br/><br/>
+
+      <b>ClipFieldToNewImage:</b> Creates a new page. The image for the new page is determined by the zone coordinates
+      of the current field, which identify the area of the parent page object image to use as the new image.
+      The result is a new DCO page object that has a portion of the original page image.<br/><br/>
+
+      <b>EqualizeUnbalancedImage:</b> Used to convert a non-isotropic image into an isotropic image.
+      An isotropic image has identical values for the X and Y DPI.  Some actions and
+      Datacap features will not correctly find the area of an image if the image is non-isotropic.
+      Typically, fax images are non-isotropic.  If the image is already correct, this action
+      will leave the image unchanged.<br/><br/>
+
+      <b>IsSupportedImageFile:</b> Determines if the image associated with the current page file
+      is a supported type.  It can determine this using a simple check of the image type
+      or attempt to load the image to confirm it will load, uses supported types and compressions
+      and is not damaged. While all action libraries do not necessarily support every image type
+      validated by this action, if this action can load it, then the SaveImageAs action
+      can be used to convert the image to a different format that can then be
+      processed by an action with a more limited image type support.<br/><br/>
+
+      <b>RescaleImage:</b> Can change or correct the DPI of an image and conditionally
+      scale the image at the same time.  When performing recognition on an image
+      the results may be poor or no recognition may occur if the DPI is less than 150.<br/><br/>
+
+      <b>SaveImageAs:</b> Converts and image from one type to another,
+      changes the color depth of an image, or changes the compression
+      of an image to a different compression. Useful to change an image
+      with a format that has limited to client and action support, to
+      a format that is supported by actions, change an image from a
+      lossy compression to a loss-less compression to help retain
+      image quality, etc.<br/><br/>
+
+      <b>SaveImageAsSettingsJPEG:</b> Changes the default values used when SaveImageAs
+      saves an image to JPEG format.<br/><br/>
+
+      <b>SaveAsSettingsTIFF:</b> Changes the default values used when SaveImageAs
+      saves an image to TIFF.<br/><br/>
+
+      <b>SaveImageInformation:</b> Obtains one or more image attributes and saves them
+      in a DCO variable.  These include x/y pixels, x/y dpi, x/y physical size,
+      color depth and compression type. This action is useful to allow application
+      rules to make decisions based on image attributes.  For example, if the
+      dpi of an image is too low, rules can decide to call an action to adjust the image;
+      if the image has lossy compression, then the rules can call SaveImageAs to convert
+      the image to a loss-less compression to prevent further quality loss; if the
+      image has a particular color depth, the rules could decide to change the color depth
+      or different sets of image enhancements or adjustments on an image based on the color depth.<br/><br/>
+
+      <b>SetImageDPIByWidth:</b> Useful to ensure an image dpi and physical size is correct by adjusting the
+      image based on the expected width of the image.  In some cases, recognition will be poor
+      or will not recognize at all if the image dpi is too low or if the physical size is incorrect.<br/><br/>
+
+      <b>Correcting Image DPI and Physical Size</b><br/><br/>
+
+      The physical size of an image is determined by the number of pixels in the image multiplied by the
+      dots per inch (DPI).  Some processes rely on accurate image information to perform correctly.
+      For example, when creating a PDF, the PDF page size is dependent on the calculated physical
+      size of the image.  Recognition quality is also dependent on a correct physical size.<br/><br/>
+
+      If the correct physical size of the image is known, then it can be corrected, and should be corrected,
+      if the image information is invalid.
+      If image sizes vary and the image information is incorrect, a "best guess" will often
+      be enough to produce good results when creating a PDF or performing recognition.<br/><br/>
+
+      Correcting Information When The Page Size Is Known:<br/><br/>
+
+      If all images within a batch or at least all images of a specific page type, 
+      have an expected size, such as a 8.5"x11" page, then the image can be corrected 
+      using the SetImageDPIByWidth action.  This action will adjust the images so 
+      that the dimensions are as per the expected size.
+      For example, all pages that are expected to be of the size 8.5"x11",  
+      can call the action SetImageDPIByWidth by passing a page width of "8.5". 
+      The action will correct the physical size to 8.5", while proportionally correcting the physical height.
+      For example consider a bank check, if pages are expected to be a 5" long, 
+      then this action can be used to correct the physical width of the check to be 5". 
+      And the height will be adjusted proportionally.  Application specific logic 
+      can be used to call the action on specific page types or use other conditions 
+      that determine when the action is to be called to adjust a page size.<br/><br/>
+      
+      If the image is believed to have the correct
+      size but only the DPI is incorrect, then just the DPI information can be adjusted.  The action
+      also allows the image to be rescaled to the correct size, fixing the image information
+      at the same time.<br/><br/>
+
+      This example could be run on every image to adjust it to a page that is 8.5" wide at 300 dpi.<br/><br/>
+
+      <b>SetImageDPIByWidth("8.5", "300", "True")</b><br/><br/>
+
+      This example will adjust an image to 8.5" wide and retain the original DPI value. First
+      it obtains the original DPI of the image and then passes it to the SetImageDPIByWidth
+      to adjust the image to the correct physical width while maintaining the original DPI.<br/><br/>
+
+      <b>SaveImageInformation("", "", "@X.ImgDPI", "", "", "", "", "")</b><br/>
+      <b>SetImageDPIByWidth("8.5", "@X.ImgDPI", "True")</b><br/><br/>
+
+      Another similar example, but only adjusts the image if the DPI is very low.
+      Adjusting images only when it is determined they are out of a "good" range, is often
+      a best approach. An application could use multiple tests to determine when
+      to adjust an image.<br/><br/>
+
+      <b>SaveImageInformation("", "", "@X.ImgDPI", "", "", "", "", "")</b><br/>
+      <b>rrCompareNumeric("@.ImgDPI", "˂", 150)</b><br/>
+      <b>SetImageDPIByWidth("8.5", "@X.ImgDPI", "True")</b><br/><br/>
+
+      Other conditions could be performed if there is a chance of other problems with
+      ingested images.  For example, if the pixel dimensions are very large or very small,
+      the image can be scaled to a typical size.  Scaling up a small image to have more pixels
+      doesn't necessarily make the image sharper, but it can improve recognition and it can
+      help subsequent image enhancement functionality work better.<br/><br/>
+
+      Other use cases could adjust the image if the reported physical size is incorrect.<br/><br/>
+
+      The RescaleImage action will adjust image information and rescale the image.<br/><br/>
+
+      <b>SaveImageInformation("", "", "", "", "@X.PhysicalWidth", "", "", "")</b><br/>
+      <b>rrCompareNumeric("@X.PhysicalWidth", "˂", 7)</b><br/>
+      <b>SetImageDPIByWidth("8.5", "300", "True")</b><br/><br/>
+
+      Correcting Image Information When The Page Size Is Not Known:<br/><br/>
+
+      In a case where all of the pages are expected to be portrait images, as would be ingested
+      from a scanner, including landscape pages that have not yet been rotated, the following
+      would adjust an image:<br/><br/>
+
+      <b>RescaleImage("3300", "2550", "300")</b><br/><br/>
+
+      Another similar example, but only adjusts the image if the DPI is very low,
+      forcing it to rescale to a 300 DPI image.<br/><br/>
+
+      <b>SaveImageInformation("", "", "@X.ImgDPI", "", "", "", "", "")</b><br/>
+      <b>rrCompareNumeric("@.ImgDPI", "˂", "150")</b><br/>
+      <b>RescaleImage("3300", "2550", "300")</b><br/><br/>
+
+      This example would retain the same X and Y pixels of the image, while adjusting
+      the image to a fixed DPI.  This also has a test to adjust the image, only
+      if the DPI is low. Of course, the test could be changed to test other
+      image attributes, or multiple image attributes.<br/><br/>
+
+      <b>SaveImageInformation("@X.PixelX", "@X.PixelY", "@X.ImgDPI", "", "", "", "", "")</b><br/>
+      <b>rrCompareNumeric("@.ImgDPI", "˂", "150")</b><br/>
+      <b>RescaleImage("@X.PixelY", "@X.PixelX", "300")</b><br/><br/>
+
+      Other conditions could be performed if there is a chance of other problems with
+      ingested images.  For example, if the pixel dimensions are vey large or very small,
+      the image can be scaled to a typical size.  Scaling up a small image to have more pixels
+      doesn't necessarily make the image sharper, but it can improve recognition and it can
+      help subsequent image enhancement functionality work better.
+      If the X pixel dimension is wider than the y pixel dimension, then it could be assumed
+      that the image is a landscape image and could be adjusted using a different
+      set of actions.<br/><br/>
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+      
+      Refer to the top-level action help for RuleRunnerLogic for the Smart Parameter reference guide.
+      <br/><br/>
+    </h>
+
+
+      <method name="AnnotateImage" qi=": Places text onto an image, starting at a specified coordinate..">
+          <p name="DisplayText"/>
+          <p name="xCoordinate"/>
+          <p name="yCoordinate"/>
+          <p name="FontName"/>
+          <p name="FontSize"/>
+          <p name="Opaque"/>
+          <p name="WidthAdjustment"/>
+          <ap>
+              <b>DisplayText:</b> The text to place onto the current page image.<br/><br/>
+              
+              <b>xCoordinate:</b> The X coordinate for the starting position of the text on the image.<br/><br/>
+
+              <b>yCoordinate:</b> The Y coordinate for the starting position of the text on the image.<br/><br/>
+              
+              <b>FontName:</b> Optional. Allows specification of the font for the text. The default value is "Times New Roman".<br/><br/>
+              
+              <b>FontSize:</b> Optional. The font name to use for the annotation text. The default value is 12.<br/><br/>
+              
+              <b>Opaque:</b> Optional. 0 = Black text. 1 = White text. The default value is 0.<br/><br/>
+              
+              <b>WidthAdjustment:</b> Optional. Allows adjustment to the width of the text. The default value is 30.<br/><br/>
+
+              All parameters support smart parameters.<br/><br/>
+          </ap>
+          <h>
+              Imprints the text you specify onto the current page's image file with a maximum color depth of 24 bits.<br/><br/>              
+
+              By default, this action does not save a backup of the original image. If desired, it is possible to save a copy of the original image.
+              To retain a backup of the original image, on the current page DCO object set the variable "KeepOriginalImage" to a value of "1".
+              The backup file appends "_Annotate" to the file name.<br/><br/>
+              <e>                  
+                  <b>AnnotateImage("@BATCHID+ Page:+@ID","5","10", "Arial", "10", "", "100")</b><br/><br/>
+
+                  This example will place the Batch ID followed by ' Page:' and the calling object ID at the top of the image using the 'Arial' font
+                  with a point size of 10 and a width of 100.<br/><br/>
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              <b>False</b> if there is an error.  Otherwise, <b>True.</b>
+          </ret>
+          <see>
+              This action requires the source image to be 24 bits or less. Refer to the action "SaveImageAs"
+              in the ImageUtilities action library for an example set of actions that will reduce the color depth for 32 bit images.<br/><br/>
+
+              Refer to the top level help of the ApplicationObjects action help for an overview of the DCO.<br/><br/>
+              
+              Refer to the top level help of the RuleRunnerLogic action library for a reference guide for smart parameters.<br/><br/>
+          </see>
+      </method>
+
+
+      <method name="AppendAllDocumentImages" qi=": Appends all of the images in the document to the first page.">
+      <ap>None.</ap>
+      <lvl>Document level.</lvl>
+      <ret>
+        <b>True,</b> if all of the TIFF images within the document have been appended to the end of the first TIFF image.
+        Otherwise, <b>False.</b>  This action can fail if too many images are appended together.  It is recommended
+        that the number of images appended are kept to a limited number of images.<br/>
+      </ret>
+      <h>
+        This action will append (concatenate) all of the images within the document to the first image of the document, creating one long image.
+        The result of the action will modify the first image in the document to become a single continuous image like this:<br/>
+        Page 1<br/>
+        Page 2<br/>
+        Page 3<br/><br/>
+
+        If images are appended prior to recognition, the entire page area will be recognized and
+        click-n-key enabled.<br/><br/>
+
+        It is highly recommended that this action be used only documents that have a small number of pages, such as
+        two or three pages per document.  The size of the
+        final composite image can quickly become larger than can be handled by some image viewers and subsequent
+        actions or verification panels.  To keep memory usage to a minimum, it is also recommended that 1-bit Black and White images are used.<br/><br/>
+
+        <b>Note:</b> This action only operates on TIFF images.<br/><br/>
+
+        If it is desired to also concatenate the CCO, then the action MergeCCOsByType in the
+        AutomaticDocumentFingerprinting action library can be used.<br/><br/>
+        <e>
+          <b>AppendAllImages()</b><br/>
+          This action will append all images belonging to the current document DCO node.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for general information about this action library.<br/>
+      </see>
+    </method>
+
+
+    <method name="AppendAllDocumentImagesByType" qi=": Appends all of the images of a specific type within a document.">
+      <p name="TypeToMerge" type="string"/>
+      <ap>
+        The type of page to merge together. Smart parameters are supported.<br/>
+      </ap>
+      <lvl>
+        Document level.
+      </lvl>
+      <ret>
+        <b>True,</b> if all of the TIFF images that match the specified type within the document have
+        been appended to the end of the first matching TIFF image.
+        Otherwise, <b>False.</b> This action can fail if too many images are appended together.  It is recommended
+        that the number of images appended are kept to a limited number of images.<br/>
+      </ret>
+      <h>
+        This action will append (concatenate) all of the images, that are of the type
+        specified by the input parameter, that are all within the same document to the first image of that type, creating one long image.
+        Images are not appended across documents.
+        Assuming you have a document where the first three pages are all the same matching type,
+        the result of the action will modify the first image in the document to become a single continuous image like this:<br/>
+        Page 1<br/>
+        Page 2<br/>
+        Page 3<br/><br/>
+
+        If images are appended prior to recognition, the entire page area will be recognized and
+        click-n-key enabled.<br/><br/>
+
+        It is highly recommended that this action be used only documents that have a small number of pages, such as
+        two or three pages per document.  The size of the
+        final composite image can quickly become larger than can be handled by some image viewers and by subsequent
+        actions or verification panels.  To keep memory usage to a minimum, it is also recommended that 1-bit Black and White images are used.<br/><br/>
+
+        <b>Note:</b> This action only operates on TIFF images.<br/><br/>
+
+        If it is desired to also concatenate the CCO, then the action MergeCCOsByType in the
+        AutomaticDocumentFingerprinting action library can be used.<br/><br/>
+        <e>
+          <b>AppendAllDocumentImagesByType("PO")</b><br/><br/>
+          This example will append all of the images within a document that have a page type of 'PO'.
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for general information about this action library.<br/>
+      </see>
+    </method>
+
+    <method name="AppendImageSetAsFirst" qi=": Sets the current page as the first page for a concatenated file.">
+      <ap>None.</ap>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True,</b> if the image file exists for the current page and if it is a TIFF file.  Otherwise, <b>False.</b>
+      </ret>
+      <h>
+        Sets the current page as the start of a new concatenated image.  This action is used
+        in conjunction with AppendImageToFirst to create a single image created by concatenating images to
+        the bottom of the first image.     AppendImageSetAsFirst identifies the first page
+        and AppendImageToFirst identifies all subsequent pages that will be appended to this page.<br/><br/>
+        
+        The result of the action will modify the first image in the document to become a single continuous image like this:<br/>
+        Page 1<br/>
+        Page 2<br/>
+        Page 3<br/><br/>
+
+        If images are appended prior to recognition, the entire page area will be recognized and
+        click-n-key enabled.<br/><br/>
+
+        It is highly recommended that this action be used only documents that have a small number of pages, such as
+        two or three pages per document.  The size of the
+        final composite image can quickly become larger than can be handled by some image viewers and possibly subsequent
+        actions.  To keep memory usage to a minimum, it is also recommended that 1-bit Black and White images are used.<br/><br/>
+
+        <b>Note:</b> This action only operates on TIFF images.<br/>
+        <e>
+          <b>AppendImage_StartAsNew()</b><br/>
+          This action would be attached to the first DCO page object that will be
+          the start of the appended image.<br/><br/>
+
+          AppendImageToFirst()<br/>
+          This action would be in a rule attached to subsequent page objects
+          that will be appended to the first image.<br/><br/>
+        </e>
+      </h>
+      <see>
+        AppendImageToFirst<br/><br/>
+        Refer to the top-level help topic for general information about this action library.<br/>
+      </see>
+    </method>
+
+    <method name="AppendImageToFirst" qi=": Concatenates the current image to the bottom of an existing image.">
+      <ap>None.</ap>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True,</b> if the current page is successfully concatenated with the previous page.  Otherwise, <b>False.</b>
+      </ret>
+      <h>
+        This action will concatenate the image for the current page to the bottom of the previous
+        image processed by a call to AppendImageSetAsFirst or AppendImageToFirst.  If AppendImageSetAsFirst
+        has not been called, then the first image encountered will be treated as the starting image.<br/><br/>
+
+        If images are appended prior to recognition, the entire page area will be recognized and
+        click-n-key enabled.<br/><br/>
+
+        The image must be a TIFF.
+        See AppendImageSetAsFirst for details.<br/>
+        <e>
+          AppendImage_StartAsNew()<br/>
+          This action would be attached to the first DCO page object that will be
+          the start of the appended image.<br/><br/>
+
+          <b>AppendImageToFirst()</b><br/>
+          This action would be in a rule attached to subsequent page objects
+          that will be appended to the first image.<br/><br/>
+        </e>
+      </h>
+      <see>
+        AppendImageSetAsFirst<br/><br/>
+        Refer to the top-level help topic for general information about this action library.<br/>
+      </see>
+    </method>
+
+
+    <method name="ClipFieldToNewImage" qi=": Clips the field on the Image file to a separate Image file containing only the image from field's coordinates.">
+      <p name="NewImagePageType" type="string"/>
+      <p name="NewImageStatus" type="string"/>
+      <ap>
+        <b>NewImagePageType:</b> The Page Type that is to be assigned to the Image file containing the clipped field and its value.
+        This should be a page type that is meaningful within the application.<br/><br/>
+
+        <b>NewImageStatus:</b> The Page Status to be assigned to the new DCO page object that is created.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <lvl>Field level only.</lvl>
+      <h>
+        This action will create a new DCO page object. The image associated with the new page object
+        is determined by the zone coordinates of the current field object,
+        clipping the source page image to contain only the section defined by the current field's zone coordinates.
+        The new DCO page object will be added to the
+        end of the current parent document object for the page that contains the field that is clipped.<br/><br/>
+
+        This action does not make any changes to the current field; It simply uses the field zone coordinates to define the boundaries
+        for the new page.<br/><br/>
+
+        The new page object that is created from the image segment
+        will be assigned the initial page type and status that are provided as parameters to this action.<br/><br/>
+
+        The name of the new image file is based on the name of the source image file by adding a two character suffix to the file name.
+        "_01" is the suffix of the first new page. For example, if the source page image name is TM000001.tif, the
+        name of the first new page will be "TM000001_01.tif".
+        The suffix is then incremented using an alpha-numeric pattern of 0-9 and a-z as additional fields from that same
+        page are clipped.
+        The suffix will increment "_02", "_03", etc., until "_09" is reached. From that point, alphabetic characters will be added
+        such as "_0a", "_0b", with the final suffix of "_zz".  If more fields are clipped from the current page than be supported by
+        the naming pattern, the subsequent pages will not be created and this action will return false.<br/><br/>
+
+        The new page object will have these DCO property variables created:<br/><br/>
+
+        SourcePage: The ID of the source page.<br/>
+        SourceImage: The path to the parent image that was clipped for this page's image segment.<br/>
+        SourceField: The ID of the field that was used to determine the boundaries of the image.<br/>
+        SourceValue: The text value, if any, of the source field.<br/><br/>
+
+        A DCO variable will be created on the parent document object called "ClipPage", containing the ID
+        of the newly created page.  If a parent document object does not exist, then the variable will be created
+        on the parent page object. This variable will be overwritten if another child field calls this action
+        to create a new page. If required, the value can be saved before being overwritten, using an action like rrSet after the
+        call to this action has completed, to copy the value to another location.<br/><br/>
+
+        If the current field does not have valid zone coordinates, then a new page will not be created.  The field's zone
+        values must be loaded with an action like ReadZonesFPX or ReadZones prior to using this action.<br/><br/>
+
+        The source page type can be TIFF, PNG, BMP or JPEG.  If recognition will be performed on the image, it is recommended
+        to avoid using a lossy compression, such as JPEG, which can reduce the quality of text recognition.  The new image
+        that is associated with the new page, will be of the same type and compression of the source page.  Actions such as
+        "SaveImageAs" can change type of an image and the compression used within an image.<br/><br/>
+        <e>
+          The following example will create a new page that is a child of the parent document
+          object. The type of the new page will be "Trailing_Page" and will have an initial status
+          of "0", which means "OK" or "No Error".<br/>
+          <b>ClipFieldToNewImage("Trailing_Page", "0")</b><br/><br/>
+
+          The following example uses smart parameters to get the type and status for the new page.
+          In this case, the new page will have the same type and status of the parent page
+          for the current field.<br/>
+          <b>ClipFieldToNewImage("@P.TYPE", @P.STATUS)</b><br/><br/>
+        </e>
+      </h>
+      <ret>
+        <b>False</b> if either parameter is invalid or if the new page cannot be created.  Otherwise <b>True.</b><br/><br/>
+      </ret>
+      <see>
+        ClipFieldToNewImageFileOnly, SaveImageAs<br/><br/>
+
+        Refer to the top-level help topic for general information about this action library.<br/><br/>
+
+        Refer to the top-level help of the ApplicationObjects action library for information
+        on the Datacap Object Hierarchy and common object status values.<br/><br/>
+      </see>
+    </method>
+
+
+
+    <method name="ClipFieldToNewImageFileOnly" qi=": Clips the field on the Image file to a separate Image file containing only the image sized from a field's zone with a user determined file name.">
+      <p name="FieldName" type="string"/>
+      <p name="FileName" type="string"/>
+      <ap>
+        <b>FieldName:</b> If called at the page level, specify the name of the child field
+        whose zone will be used to denote the boundary of the new image, creating a snip of just the field area.
+        If the action is called on a field, the parameter is ignored.<br/><br/>
+
+        <b>FileName:</b> The name of the new clipped image. The full file path must be provided. 
+        to create a snip in the batch directory, use the @PILOT(BATCHDIR) parameter, as shown
+        in the example.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <lvl>Page or field level.  If called on a field, the field must have a parent page object.</lvl>
+      <h>
+        Creates a new file using a field to clip the current page image. Only the output file is created;
+        no other objects are created within the batch.<br/><br/>
+
+        Supported page image types are TIF, PNG, JPG and BMP with a color depth of 24 bits or less. The output file is a TIF file.<br/><br/>
+
+        The field must have zone coordinates loaded.  For example, ReadZones or ReadZonesFPX need to be
+        used to load the zone position prior to calling this action.<br/><br/>
+
+        The field must have a parent page object. For example, this action cannot be used on a batch-level field
+        that has the batch object as the parent.<br/><br/>
+      <br/><br/>
+        <e>
+          <b>ClipFieldToNewImageFileOnly("Total", "@PILOT(BATCHDIR)+\+@ID+-Total")</b><br/>
+          <br/>
+          Called on a page object for page TM000001, the above example will find the field called "Total" and create a new
+          file in the batch directory called "TM000001-Total.tif".  The image will be a snip of the page image using the 
+          zoned area of the "Total" field.<br/><br/>
+
+          <b>ClipFieldToNewImageFileOnly("", "@PILOT(BATCHDIR)+\+@P.ID+-Amount")</b><br/>
+          <br/>
+          Called on a field object for page TM000001, the above example will create a file in the batch directory called
+          "TM000001-Amount.tif".  The image will be a snip of the page image using the zoned area of the current field.<br/><br/>
+        </e>
+      </h>
+      <ret>
+        <b>True</b> if the operation is successful, else <b>False</b> if an error occurred.
+      </ret>
+      <see>
+        ClipFieldToNewImage
+      </see>
+    </method>
+
+
+      
+      <method name="ConvertLossyToLosslessImage" qi=": Converts images with lossy compression to TIFs with lossless compression.">
+          <p name="BackupIdentifier" type="string" qi="Creates a backup image with a tag identifying it as the original input image. Default: .originalInput"/>
+          <p name="MakeAllTIF" type="string" qi="If True, additionally converts any non-TIF images to TIFs with lossless compression. Default: False"/>
+          <ap>              
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              Images processed by Datacap should always use a lossless compression.  When an application may ingest images that
+              uses a lossy compression, use this action to convert the images to a lossless compression before the images are
+              damaged further by lossy compression. The original input image is retained in the batch, allowing it to be retrieved
+              or stored later, if necessary.<br/><br/>
+
+              When an image is changed to a lossless compression, black and white images are saved with Fax compression.
+              Grayscale or color images are saved with LZW compression.<br/><br/>
+
+              If the parameter "MakeAllTIF" is True, then every supported image type that is not already a TIF, will be converted
+              to a TIF with lossless compression, regardless of the compression type.
+              For example, BMP files contain no compression, which maintains the original
+              image quality but at a larger file size. When "MakeAllTIF" is true, a BMP is converted to a TIF image with lossless
+              compression.<br/><br/>
+
+              The recommended use of this action is for it to be called on all pages of type "Other", immediately after the VScan step.
+              The action can be called on any type of file. If the file is not a supported image, the action will ignore the
+              file. If the file is a supported image type, the action will convert the image to a lossless compression, if necessary.
+              Create a single ruleset that has a rule associated with the "Other" page type that contains this action to adjust
+              images prior to all other processing.<br/><br/>
+
+              Lossless compression stores the image without a loss in quality. Lossy compressions add noise and reduce the quality of an image.
+              Lossy compressions make sharp lines soft with noise added in areas that were previously clear. Each time the
+              image is saved, the problem is worsened. Lossy compression was designed for photographs, where the compression allows
+              smaller files.  Lossy compression is not intended to be used for document processing that involves optical character
+              recognition. Lossy compressions interfere with text recognition, with the problem worsening each time the image
+              is saved during normal processing.<br/><br/>
+              
+              While a lossy image already has damage caused by lossy compression, this action prevents further damage to the
+              quality of the image during normal processing.<br/><br/>
+              <e>
+                  <b>ConvertLossyToLosslessImage("", "")</b><br/><br/>
+
+                  Here the action uses default parameters. The backup identifier defaults to ".originalInput" and
+                  the MakeAllTIF parameter is False.<br/><br/>
+
+                  If the input image was TM000001.jpg, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.origialInput.jpg is created.<br/><br/>
+
+                  If the input image was TM000001.bmp, the file will not be changed.<br/><br/>
+
+                  If the input image was TM000001.png, the file will not be changed.<br/><br/>
+
+                  If the input image was TM000001.tif with lossy compression, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.origialInput.tif is created.<br/><br/>
+
+                  If the input image was TM000001.tif with lossless compression, the file is not changed.<br/><br/>
+
+                  If the input image was TM000001.pdf, the file is not changed.
+                  <br/><br/>              
+              </e>
+              <br/>
+              <e>
+                  <b>ConvertLossyToLosslessImage("", "True")</b><br/><br/>
+
+                  Here the action uses default parameters. The backup identifier defaults to ".originalInput" and
+                  the MakeAllTIF parameter is False.<br/><br/>
+
+                  If the input image was TM000001.jpg, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.origialInput.jpg is created.<br/><br/>
+
+                  If the input image was TM000001.bmp, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.origialInput.bmp is created.<br/><br/>
+
+                  If the input image was TM000001.png, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.origialInput.png is created.<br/><br/>
+
+                  If the input image was TM000001.tif with lossy compression, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.origialInput.tif is created.<br/><br/>
+
+                  If the input image was TM000001.tif with lossless compression, the file is not changed.<br/><br/>
+
+                  If the input image was TM000001.pdf, the file is not changed.<br/><br/>                  
+              </e>
+              <br/>
+              <e>
+                  <b>ConvertLossyToLosslessImage(".MyBackup", "True")</b><br/><br/>
+
+                  Here the action uses default parameters. The backup identifier defaults to ".originalInput" and
+                  the MakeAllTIF parameter is False.<br/><br/>
+
+                  If the input image was TM000001.jpg, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.MyBackup.jpg is created.<br/><br/>
+
+                  If the input image was TM000001.bmp, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.MyBackup.bmp is created.<br/><br/>
+
+                  If the input image was TM000001.png, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.MyBackup.png is created.<br/><br/>
+
+                  If the input image was TM000001.tif with lossy compression, the file is converted to TM000001.tif with lossless compression.
+                  The backup file TM000001.MyBackup.tif is created.<br/><br/>
+
+                  If the input image was TM000001.tif with lossless compression, the file is not changed.<br/><br/>
+
+                  If the input image was TM000001.pdf, the file is not changed.
+                  <br/><br/>
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  <b>True,</b> If the image is converted,
+              if the image does not need conversion, or if the file is not a supported type.<br/>
+          </ret>
+          <see>              
+              Refer to the top-level help for more information about this action library, including how to
+              correct an image with an invalid DPI.
+          </see>
+      </method>      
+
+
+
+    <method name="EqualizeUnbalancedImage" qi=": Adjusts a non-isotropic image into an isotropic image.">
+      <p name="AdjustmentCutoff" type="string"/>
+      <ap>
+        Integer value which determines the cut-off point for the resolution which should be equalized.  The
+        value must be between 0 - 99.<br/><br/>
+
+        <b>EqualizeUnbalancedImage(0)</b>, for example, specifies that there is no cut-off point:
+        all images will be subject to equalization.  Any image that already has
+        an X and Y DPI that are identical will not be adjusted.<br/><br/>
+
+        <b>EqualizeUnbalancedImage(20)</b> establishes a cut-off point of 200(x)/180(y). This
+        means that the action will equalize all images with this resolution ratio and more (200/180,
+        200/160 etc.) - but will ignore all images with balance ratios less than 200/180 (in this example.)<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not numeric or if the rule containing the action is not bound
+        to a Page object of the Document Hierarchy. Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        Resolves differences in the dpi (dots per inch) resolutions along the horizontal (X) and
+        vertical (Y) planes of the current page image so the x dpi and y dpi are identical.
+        Images processed by Datacap work best when the x dpi and y dpi of the image
+        are identical, making the image an isotropic image.
+        The image is adjusted so the smaller dpi value of the image is scaled to match the larger
+        dpi value.  For example, if an image is 200x180 dpi, and this action is used with
+        a parameter of 0 to adjust all images that are non-isotropic, the image will be adjusted to
+        200x200 dpi, scaling the image on only the smaller axis to make the image isotropic.<br/><br/>
+
+        If the x and y dpi values of an image
+        are different, then some actions and clients may not operate as
+        expected.  For example, using click-n-key in a client may not correctly
+        identify the location of the text on the page. Locations of fields
+        could also be incorrect when mapped to an image.<br/><br/>
+        
+        Images electronically ingested through fax servers are typically a non-isotropic
+        images, although the problem is not necessarily limited to images created from
+        faxing.  If a batch could potentially ingest images are non-isotropic, then
+        this action should be used to inspect and adjust each image within the batch.
+        If the image associated with the current page is isotropic, then the action
+        will not perform any adjustments to the image.<br/><br/>
+
+        Standard Mode fax resolution in Dots per Inch (DPI) is 204/98; Fine Mode fax
+        resolution is 204/196.<br/><br/>
+
+        If fingerprinting is used in the application, this action must be used
+        to correct the image dpi prior to matching fingerprints or creating
+        new fingerprints.  Images must be isotropic prior to being added as a fingerprint. Likewise, images
+        must be isotropic when searching for a matching fingerprint.
+        This action should be used prior to performing
+        recognition or other image manipulation.  A typical place this action
+        would be used is the first actions that
+        are run after a scan or virtual scan ruleset. If using rules to perform virtual scan,
+        then a second ruleset can be added to the VScan task to equalize all images of
+        page type "Other".  Alternatively, the action could be run in a first rule
+        of the next task, which is typically a "PageID" task.<br/><br/>
+        <e>
+          <b>EqualizeUnbalancedImage("0")</b><br/><br/>
+          
+          This example would be run on a rule that is attached to a page object.
+          If it was attached to the "Other" page type, then after VScan,
+          each of the newly ingested images will be examined by EqualizeUnbalancedImage
+          and if the x and y dpi do not match, the image will be adjusted.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic for general information about this action library.<br/>
+      </see>
+    </method>
+
+    <method name="IsSupportedImageFile" qi=": Checks the current page file extension to determine if it is a supported format.">
+      <p name="LoadImage" type="string"/>
+      <ap>
+        <b>LoadImage:</b> A Boolean that determines the type of test to perform.<br/><br/>
+
+        True: Tests the validity of the image by attempting to load the image.<br/>
+        False: Only a file extension check is performed to determine if it is a supported file type.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action tests a file to determine if the file format is supported.  The extension is checked to
+        determine if it denotes a supported image type.  If True is passed as a parameter, it also attempts to load
+        the image.<br/><br/>
+
+        Using False as a parameter will greatly improve the speed of this action.  A parameter of True will
+        slow down the processing, especially if the images are very large, but it will add an extra confirmation
+        that the file is not corrupted and confirm that any subformat of the file type, such as compression type,
+        is also supported.<br/><br/>
+
+        This action can help an application determine if the image is a valid image and control the subsequent
+        flow of the rules based on this action returning true or false. For example, if the image is not
+        support, the page could be marked with a "Deleted" status or other steps could be taken based
+        on the use case.<br/><br/>
+
+        Some actions support only specific file formats or color depths. If this action can load an image, it does not
+        mean every action and client support the image.  For example,
+        this action can load an image with a 32 bit color depth (BPP : Bits Per Pixel).  Most actions and clients do not support
+        32 bit color. This action will return true if it successfully loads a 32 bit color image, such as a TIFF or JPEG.
+        If the parameter is "True" and the image is successfully loaded, then the action will save the color depth in the
+        current DCO with the variable name "ImageBPP".  If desired, this variable could be tested with an action such as rrCompareNumeric
+        to determine if the color depth is 24 bits or less.  If the color depth is 32, then it is recommended to use
+        the SaveImageAs action to reduce the color depth of the image.  The Image Enhancement ruleset also has the ability
+        to reduce the color depth.<br/><br/>
+
+        If the image can be loaded by this action, then the SaveImageAs action can also be used to convert the image
+        to a type or color depth supported by subsequent actions.  Refer to the guide "Datacap supported image types"
+        in the Datacap Knowledge base documentation.<br/><br/>
+
+        The action SaveImageInformation will load an image and save a number of properties to the DCO. This
+        information can be used by an application to store the information or perform specific actions
+        based on the saved data.
+        <e>
+          <b>IsSupportedImageFile("True")</b><br/>
+          This example will load the image associated with the current page object and return
+          true if the image was loaded successfully.<br/>          
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True,</b> if parameter is valid, the action is called at the page level and the page's IMAGEFILE variable
+        (set at scan time by the scan tasks) points to a file whose format
+        is supported (can be displayed) by the Image view control.
+        Otherwise <b>False.</b>
+      </ret>
+      <see>
+        SaveImageAs, SaveImageInformation<br/><br/>
+        Refer to the top-level help topic for general information about this action library.<br/>
+      </see>
+    </method>
+
+
+      <method name="OverlayCurrentImageOnBackgroundImage" access="public" bInter="bInter" bDebug="bDebug" qi=": Combines the current image with the image file specified by the SetBackgroundImage action into a new image replacing the current image.  This action is used to reinstate a form background that was 'dropped out' during scanning.">
+          <p name="BackgroundImageFileName" type="string"/>          
+          <p name="Halo" type="string"/>
+          <ap>
+              <b>BackgroundImageFileName:</b> The full path to the file that will be used as the background image for the current page image.<br/><br/>
+              
+              <b>Halo:</b> True or false. True adds white pixels to the current image where they would otherwise touch pixels from the
+              background. This provides a white area around existing pixels.<br/><br/>
+              
+              All parameters support smart parameters.<br/>
+          </ap>
+          <h>
+              This action overlays the current image onto the background image. A typical use for this action is when
+              an application processes a form, but the current page contains only the data without the form lines.
+              For example, the form may be a dropout form where scanning has removed the form lines, leaving only the
+              text on the current page image.  This action will overlay the current image over a blank form
+              to present an image to the user that resembles the original form.<br/><br/>
+              
+              The action requires the dpi and relative pixel size of the background image and current page image
+              to be identical. The current image and the background image must be 1 bit, black and white, images.<br/><br/>
+              
+              The action requires that a field called "Image_Offset" exists on the current page and that field
+              contains two comma separated integers that represent the x and y offset of the current page
+              relative to the background form image.  For example, a value of 0,0 would overlay the page on the form
+              without any adjustment.  A value of 3,-10 would move the current page right 3 pixels and up 10 pixels.
+              The offset value must exist, even if no adjustment is required.<br/><br/>              
+              
+              The current image becomes the new merged image. If it is necessary to retain the original image,
+              the CopyFile action in the FileIO action library can be used to first save a copy of the file.<br/><br/>
+              <e>
+                  CopyFile("@X.IMAGEFILE", "@PILOT(BATCHDIR)+\+@ID+.Original.tif")<br/><br/>
+                  <b>OverlayCurrentImageOnBackgroundImage("c:\ParentDir\mclaims\process\hcfa\hcfa.tif", "False")</b><br/><br/>
+                  
+                  This example first uses CopyFile to backup the original image, then applies the overlay.
+                  It is not necessary to first backup the original image.  It is shown here as an example of how
+                  it can be done, should it be necessary in an application.<br/><br/>
+              </e>
+          </h>
+          <lvl>Page level only.</lvl>
+          <ret>
+              <b>False</b> if the action is not applied to a <b>Page</b> object, if it cannot locate
+              the Background Image file, or if the action encounters an error.
+              Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="RedactCoordinates" qi=": Redacts the current page image at specific coordinates or on a field, allowing optional text on the redacted area.">
+          <p name="FillColor"/>
+          <p name="NewText" />
+          <p name="TopLeftX" />
+          <p name="TopLeftY" />
+          <p name="BottomRightX" />
+          <p name="BottomRightY" />
+          <p name="BackupFileNameSuffix" />
+          <ap>
+              <b>FillColor:</b> The fill color to use for the redaction.  Specified values must be either "White" or "Black".<br/><br/>
+              
+              <b>NewText:</b> Optional. The text to include in the redaction area.<br/><br/>
+              
+              <b>TopLeftX:</b> The top left X coordinate in pixels.<br/><br/>
+              
+              <b>TopLeftY:</b> The top left Y coordinate in pixels.<br/><br/>
+              
+              <b>BottomRightX:</b> The bottom right X coordinate in pixels.<br/><br/>
+              
+              <b>BottomRightY:</b> The bottom right Y coordinate in pixels.<br/><br/>
+
+              <b>BackupFileNameSuffix:</b> Optional. If specified, the current image will be first copied to
+              a new file name, adding the provided text as a suffix to the file name.  For example:
+              a value of "-BeforeRedaction" will create a backup file named "TM000001-BeforeRedaction.tif".<br/><br/>
+
+              The provided coordinates are used when called on a page object.
+              When called on a field object, the coordinates are ignored, and the field’s zone coordinates are used.<br/><br/>
+
+              Smart parameters are supported for all parameters.<br/><br/>
+          </ap>
+          <h>
+              This action overlays a black, or white rectangle on the image.  A default text value may optionally be applied to the overlay.<br/><br/>
+              
+              The action does not guarantee that the text fits into the redaction area. It is up to the application developer to
+              confirm that the area is large enough to contain the specified text.
+
+              If run on the field level, the entire field will be redacted and the last four X/Y parameters will be ignored.
+              If run on the page level the last four parameters to specify the location must be provided.<br/><br/>
+              
+              The image can have a maximum bit depth of 24 bits.<br/><br/>
+              <e>
+                  <b>RedactCoordinates("black","","0","0","100","100", "-BeforeRedaction")</b><br/>
+                  Called at the page level, this will apply a black square overlay on the top left of the image.
+                  If the current page file is TM000001.tif, the original image will be copied to a 
+                  file called "TM000001-BeforeRedaction.tif".<br/><br/>
+
+                  <b>RedactCoordinates("White","Hello","","","","","")</b><br/>
+                  Called at the field level, this will apply a white square overlay on the coordinates for the current field,
+                  and imprint the word "Hello". A backup file will not be created. Because it is called on a field
+                  object, the coordinates are not used. The field must have zone coordinates set.<br/>
+              </e>
+          </h>
+          <lvl>Page and Field level.</lvl>
+          <ret>
+              <b>True</b> if the area is redacted.  Otherwise, <b>False.</b>
+          </ret>
+      </method>
+
+
+      <method name="RedactField" qi=": Redacts the area on the page based on the zone position of the current field.">
+      <p name="FieldName" type="string"/>
+      <p name="Color" type="string"/>
+      <p name="BackupPostFileName" type="string"/>
+      <ap>
+        FieldName: If called at the page level, specify the name of the child field to redact.
+        If the action is called on a field, the parameter is ignored.<br/><br/>
+        
+        Color: The color to paint the redaction area. Valid values are 'White' or 'Black'.  If not specified,
+        or if the value is invalid, white is the default.<br/><br/>
+
+        BackupPostFileName: The text to append to the file name to create a backup file before performing
+        the redaction. For example, if the value is "-BeforeRedact" and the current page file is "TM000001.tif",
+        the name of the backup file will be "TM000001-BeforeRedact.tif".  The new file will be created
+        in the batch directory. If this parameter is blank,
+        a backup file will not be created. If the file already exists, it will be overwritten.<br/><br/>
+
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        The area on the current page image will be redacted, colored over, in the zone area identified by the
+        specified field. If called on a page object, the name of the field needs to be specified.  If called
+        on a field, the current field zone will be used regardless of the name specified.        
+        The zone area can be redacted in White or Black.<br/><br/>
+        
+        The action will optionally create a backup file prior to performing the redaction.  One use could be
+        to redact the image so it can be shown to a user with a redaction, but still maintain the original image.<br/><br/>
+
+        Supported page image types are TIF, PNG, JPG and BMP with a color depth of 24 bits or less.<br/><br/>
+        
+        The field must have zone coordinates loaded.  For example, ReadZones or ReadZonesFPX need to be
+        used to load the zone position prior to calling this action.<br/><br/>
+
+        The field must have a parent page object. For example, this action cannot be used on a batch-level field
+        that has the batch object as the parent.<br/><br/>
+        
+        <e>
+          <b>RedactField("SSN", "Black", "")</b>
+          <br/><br/>
+          
+          When called on a page objet, the above example will redact the "SSN" field using the color black.  A backup file will not be created.<br/><br/>
+
+          <b>RedactField("", "White", "-BeforeRedaction")</b><br/><br/>
+          
+          When called on a field object, the area of the current field will be redacted on the page image with white.
+          A backup of the page image will be created before the redaction occurs.  If the current page is TM000001.tif,
+          then the backup file name will be "TM000001-BeforeRedaction.tif".<br/><br/>
+          
+        </e>
+      </h>
+      <lvl>Page or field level.  If called on a field, the field must have a parent page object.</lvl>
+      <ret>
+        <b>True</b> if the operation is successful, otherwise <b>False</b> if an error occurred.
+      </ret>
+      <see>
+        ReadZones, ReadZonesFPX
+      </see>
+    </method>
+
+    <method name="RescaleImage" qi=": Adjusts image for the current page to the specified size.">
+      <p name="ImageHeight" type="string"/>
+      <p name="ImageWidth" type="string"/>
+      <p name="ImageDPI" type="string"/>
+      <ap>
+        <b>ImageHeight:</b> Output Height of the page in pixels. If blank, defaults to 3300 pixels.<br/><br/>
+        <b>ImageWidth:</b> Output Width of the page in pixels. If blank, defaults to 2550 pixels.<br/><br/>
+        <b>ImageDPI:</b> The new DPI of the image.  If blank, defaults to 300 dpi.<br/><br/>
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Scales the image and sets the DPI to the specified values.<br/><br/>
+
+        This will force an image to be adjusted to a specific size and DPI, additionally
+        determining the physical size of the image, such as an 8.5" x 11" page scan.<br/><br/>
+        <e>
+          <b>RescaleImage(3300, 2550, 300)</b><br/>
+          This action scales the current page to a 300 dpi image that has a physical
+          size of 11"x8.5".<br/><br/>
+
+          SaveImageInformation("@X.CurrentWidth","@X.CurrentHeight","","","","","","")<br/>
+          <b>RescaleImage(@X.CurrentHeight, @X.CurrentWidth, 300)</b><br/>
+          If it is desired to adjust only one aspect of the image and keep the other values the same
+          as the source image, then SaveImageInformation could first be called to obtain the image
+          information and then the value can be passed as a parameter to this action.
+          This example keeps the pixel dimensions of the image the same but adjusts
+          the DPI to 300.  It doesn't scale the image, just changes the DPI.  If the image already
+          has a large pixel size but has a low resolution, as with a photograph, this can adjust the DPI.
+          If the image was a very small image, then it would likely be better to scale up the image
+          instead of just changing the DPI.  That could help improve recognition, it could also help
+          to use a sharpening enhancement on such an image.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only, and the page must refer to a valid single page image file</lvl>
+      <ret>
+        <b>True</b> if the operation is successful, else <b>False</b> if any error occurred.
+      </ret>
+      <see>
+        EqualizeUnbalancedImage, SetImageDPIByWidth, SaveImageInformation.<br/>
+        Refer to the top-level help for more information about this action library, including how to
+        correct an image with an invalid DPI.
+      </see>
+    </method>
+
+
+    <method name="SaveImageAs" qi=": Saves a new copy of the image, allowing adjustment of image type, color depth and compression.">
+      <p name="NewFileType" type="string"/>
+      <p name="NewColorDepth" type="string"/>
+      <p name="Palette" type="string"/>
+      <p name="Dither" type="string"/>
+      <p name="BackupSuffix" type="string"/>
+      <p name="DeleteOriginal" type="string"/>
+      <ap>
+        <b>NewFileType:</b> The file type of the new image. Supported types: TIF, JPG, BMP, PNG.<br/><br/>
+
+        <b>NewColorDepth:</b> The new color depth for the image. Values: 0, 1, 8, 24.<br/>
+        0: Preserve the same color depth as the source image. If blank, 0 is used as the default value.  If the source
+        image is a 32 bit color image, then the maximum bit depth of the saved image is 24 bits per pixel.<br/>
+        1, 8, 24: The new bits per pixel of the saved image.<br/><br/>
+
+        <b>Palette:</b> The color palette to use for the saved image. The following values are accepted: Optimized, Fixed and Gray.<br/><br/>
+
+        Optimized: A palette with the colors optimized for the image. If not specified, this is the default value.<br/><br/>
+
+        Fixed: A fixed color palette.<br/><br/>
+
+        Gray: A grayscale palette.<br/><br/>
+
+        <b>Dither:</b> The dot pattern used when reducing the color depth of an image.  The following values are accepted:
+        Binarize1, Binarize2, FS, None, Optimized and Ordered<br/><br/>
+
+        Binarize1: An optimized conversion to remove background information, leaving foreground information, such as dark text.
+        This is usually the best setting to convert an image or photo to black and white that will be used for text recognition.
+        No dithering is performed.  This will result in a black and white image. If dither is not provided, then this
+        is the default method for saving 1 bit images.<br/><br/>
+
+        Binarize2: Similar to Binarize1, but may be slightly faster.  No dithering is performed.  This will result in a
+        black and white image.<br/><br/>
+
+        FS: Uses the Floyd-Steinberg algorithm to dither a color image into black and white.  Do not use this setting
+        if the image will be subsequently recognized. Dither should only be used to keep a "shaded" look to the
+        image and when the image will not be subsequently used in a recognition step.<br/><br/>
+
+        None: No dithering is performed.  This is similar to the Binarize methods, but may not yeld results as good as Binarize1
+        for performing text recognition.  Unlike Binarize, this setting is not limited to black and white images.<br/><br/>
+
+        Optimized: The image engine determines how to dither the image. A dithered image will produce a black and white image
+        that simulates a grayscale picture, similar to a newspaper.  This method is recommended to convert a photo to black
+        and white with the intention to retain the photographic image while converting it to a
+        black and white image. This is the default value if the target color depth is greater than 1.
+        If performing recognition on the image, instead use
+        Binarize1 to convert the image to black and white or use "None" when down converting
+        to 24 bit or 8 bits per pixel.<br/><br/>
+
+        Ordered: An alternative method of converting a color image to a black and white dithered photo.
+        Again, it is not recommended to this setting if the image will be subsequently recognized.<br/><br/>
+
+        <b>BackupSuffix:</b> When the current image is saved, the original image will be retained.
+        If the new saved image will have the same name as the original source image, the source
+        image will be saved by adding a suffix to the name.  By default, the suffix ".original"
+        will be added to the file name.  For example, if the source image name is "TM000001.tif"
+        then the original image will be saved as "TM000001.original.tif" and the new image will
+        be saved as "TM000001.tif".  If desired, this suffix can be changed using this parameter.
+        For example, passing the value ".backup" will save the original image as "TM000001.backup.tif".
+        If the source image is a different type, such as "TM000001.jpg" and the new image is a different
+        type, such as "TM000001.TIF", then the source image will not conflict with the new saved image
+        and the source image name will not be changed.  If it is desired to change the name of
+        the source image in this case, then the FileIO actions can be used to rename
+        the original file as desired.<br/><br/>
+
+        <b>DeleteOriginal:</b> "True" or "False".  If this parameter is set to "True", then
+        the original image will not be saved in the batch.  If this parameter is set to "False",
+        then the original image will be retained, keeping it available for later use within
+        the batch, such as for archiving.  If this parameter is not provided, then it will
+        default to "False" and the original image will be saved.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        This action will update the current image associated with the page object,
+        changing any one or all of these image attributes:<br/><br/>
+
+        • Image Format<br/>
+        • Compression type<br/>
+        • Color depth / Bits per pixel<br/><br/>
+
+        Input formats: BMP, DIB, EMF, GIF, JPEG, JPEG2000, PNG, TIF, WMF.<br/><br/>
+
+        Output formats: BMP, PNG, JPEG, TIF.<br/><br/>
+
+        The current image can be saved as the same file type, changing just the compression
+        or color depth of the image. For example, a TIF with JPEG compression can be resaved as
+        a TIF with LZW compression. The current image
+        can also be changed to a new file type such as converting a JPEG image
+        to a TIFF image.<br/><br/>
+
+        The source image can have a color depth up to 32 bits per pixel. The image
+        can be saved in a color depth up to 24 bits per pixel. Some Datacap actions
+        have specific color depth requirements, this action can be used to adjust
+        the current image to different color depths as required by subsequent actions
+        and rulesets.<br/><br/>
+
+        If the final image file type is the same as the source image file type,
+        the action will first back up the original image, giving it a unique name
+        by adding the suffix ".original" to the file name.  For example, if the source
+        file name is "TM000001.tif" and the image is being saved as a TIF, then the original
+        file will be saved as "TM000001.orignal.tif" and the file "TM000001.tif" will be
+        the new updated file.<br/><br/>
+
+        The image file associated with the current page object can be convert to one
+        of these file types: BMP, PNG, TIF and JPEG.  Bitmap, BMP, images are always
+        saved without compression, which can make them large.  Portable Network Graphics,
+        PNG, use a loss less compression that works on a 1 bit, 8 bit or 24 bit image.<br/><br/>
+
+        The actions SaveImageSettingsTIFF and SaveImageSettingsJPEG
+        can be called prior to this action to adjust the file
+        format used to save the image when saving as a TIF or JPG image.
+        For example, the default file compression for TIF images is LZW.
+        By first calling SaveImageSettingsTIFF, the default compression can be changed for
+        when the SaveImageAs action saves a file as a TIFF. For example, if converting to a
+        black and white image, Group 3 or Group 4 can be configured as the compression
+        type as it is an efficient and lossless method for black and white images.<br/><br/>
+
+        If an application is ingesting JPEG images or TIF images with JPEG compression, and these
+        images will be used for recognition, it is highly recommended to convert the image
+        to a lossless format, such as a TIF with LZW compression, immediately after images are
+        ingested into a batch.  Subsequent actions can then operate on the new TIF image using
+        lossless compression.  The original version of the image is always available, if necessary,
+        for viewing in a Verification panel or for exporting at the end of the batch.
+        JPEG compression is intended for photographs, not for images
+        that contain text to be recognized.  JPEG compression will make crisp lines on letters
+        fuzzy, reducing the quality of the recognition. As the image is further manipulated, such as with
+        image enhancement, rotation, etc., and resaved again with JPEG compression,
+        additional quality will be lost with each save, even
+        if compression is set to a high quality.<br/><br/>
+
+        It may be useful to use the action SaveImageInformation along with this action.
+        SaveImageInformation will read image attributes and store the values in the DCO.
+        Application rules can be configured to act on this information.  For example,
+        if an image has a color depth greater than 24 bits per pixel, then the rules could
+        call SaveImageAs to reduce the color depth of the image.<br/><br/>
+
+        The SaveImageInformation action can also be used to obtain the compression used
+        within the image. For example, rules can be arranged to check the current
+        image compression type and if the compression type is "Jpeg", then the rules can call
+        SaveImageAs only on those images to save them with a lossless compression and
+        if the image already has a lossless compression, then the image can be left as-is.<br/><br/>
+        <e>
+          <b>Example 1:</b><br/>
+          SaveImageInformation("","","","","","","","@X.ImgCompression")<br/>
+          rrCompareCase("Jpeg", "@X.ImgCompression", "False")<br/>
+          SaveImageAsSettingsTIFF("LZW")<br/>
+          <b>SaveImageAs("TIF","0","","","","")</b><br/><br/>
+
+          This example checks to see if the current TIFF image
+          is using JPEG compression.  If it does have JPEG compression, the actions
+          configure the compression for saved TIF images to LZW using the
+          action SaveImageAsSettingsTIFF. The example is shown in the same rule as the
+          rule as SaveImageAs.  If the settings are intended to be the same for all pages,
+          then it would be more efficient to place SaveImageAsSettingsTIFF in a rule
+          attached to the batch open event. That would allow the action to be called
+          only once instead of over and over for each page.<br/><br/>
+
+          The SaveImageAs action will convert the current page image to a TIF using
+          LZW compression. It does not matter if the source image is a TIF or
+          a different image type, such as JPEG or PNG.
+          The parameter of 0 will retain the same color depth as
+          the original image.  If the image was black and white, it will stay a
+          1 bit black and white image.  If the source image was 24 bit color,
+          it will be saved as 24 bit color. This example is a good way to convert images
+          that may be saved using a lossy compression, such as JPEG, to a lossless
+          compression to limit further degradation of quality caused
+          by a lossless compression.<br/><br/>
+
+          <b>Example 2:</b><br/>
+          SaveImageAsSettingsJPEG("100","False","True")<br/>
+          <b>SaveImageAs("JPEG","0","Optimized","Optimized",".Old","False")</b><br/><br/>
+
+          This example converts the current image to a JPEG image. Although the color depth
+          parameter is set to "0", which means to retain the original color depth, JPEG
+          images can only be saved as 8 bit grayscale or 24 bit color.  If the source image
+          is 1 bit, then it will be upconverted.  While it will still look black and white,
+          it will be converted to a 24 bit color depth. This example also uses a custom
+          extension, ".Old", to back up the original file name, should the new file name
+          and the old file name evaluate to the same name.<br/><br/>
+
+          Again, while this example shows the SaveImageAsSettingsJPEG being called
+          in the same rule function just prior to SaveImageAs, if all pages are going
+          to have the same settings, then this action can be called at the document or batch
+          level and the setting will stay in effect for the remainder of the current task
+          profile. Calling this action at a higher level will avoid unnecessarily
+          calling this action over and over for each
+          page object.  If each page object may need different parameters when saved, then
+          calling the action with each page would be necessary.<br/><br/>
+
+          It is recommended to save as a JPEG or a TIF with JPEG compression if processing
+          photos that will not be used for text recognition. If performing text recognition
+          on an image, or image enhancements, it is recommended to first convert to a
+          lossless compression and do not use the JPEG image format.<br/><br/>
+
+          <b>Example 3:</b><br/>
+          rrSet("Group4", "@X.Compression")<br/>
+          rrSet("TIF", "@X.NewFileType")<br/>
+          rrSet("True", "@X.DeleteOriginal")<br/>
+          SaveImageAsSettingsTIFF(@X.Compression)<br/>
+          <b>SaveImageAs("@X,NewFileType","1","","","","@X.DeleteOriginal")</b><br/><br/>
+
+          This is another example that will convert the current page image to a TIF, regardless
+          of the original format. It will also convert the image to a black and white image
+          with Group 4 fax compression, which is an efficient and lossless black and white
+          compression.<br/><br/>
+
+          This example demonstrates using smart parameters to pass values to the actions. 
+          The example illustrates how a variable, NewFileType, is passed as a smart parameter to the action at runtime.          
+          The value of the variable "NewFileType" will be obtained and used as the input parameter.  In a realistic
+          example, it would be likely that some earlier rule or action would have set the value
+          to the DCO variable "NewFileType"
+          prior to calling the action.  For example, a value could have been previously
+          set in a field or be data that was recognized into a field and then the reference
+          to a field passed as the parameter, using the field's current runtime value as input
+          to the action.  Another approach could have the values configured in the
+          setup DCO, which can be set within Datacap Studio, so they pre-exist for the object and then the actions pull the value
+          at runtime from a pre-configured variable.<br/><br/>
+
+          <b>Example 4:</b><br/>
+          SaveImageInformation("","","","","","","@P.BitDepth","")<br/>
+          rrCompare("@P.BitDepth", "32")<br/>
+          SaveImageAsSettingsTIFF("LZW")<br/>
+          <b>SaveImageAs("tif", "24", "", "", ".prebitdepth", "False)</b><br/><br/>
+
+          This example is run on a page object and reduces the color depth of the image
+          associated with the page, if the image is a 32 bit color image.  It is required that the associated page file is an image.
+          This series of steps is useful because some actions do not support 32 bit color images.  If the current image is 32 bit color,
+          the image is saved as a TIF image with a color depth of 24 bits and backup the original image is saved by appending ".prebitdepth" to the filename.
+          The LZW compression is used because it is a loss-less compression
+          and it supports any color depth.  If the current image is 24 bits or less, then the rrCompare will return false causing the action
+          flow to stop in this current function and jump to the next function, if one exists.  Images of 24 bits or lower are left unchanged
+          by this series of actions.<br/><br/>
+
+            <b>Example 5:</b><br/>
+            - Ruleset Convert Lossy Images To Lossless<br/>
+            - - Other Rule<br/>
+            - - - Function 1 Image Information<br/>
+            - - - - SaveImageInformation("", "", "", "", "", "", "@X.OriginalColorDepth", "@X.OriginalCompresion")<br/>
+            - - - - SplitFileName("@X.IMAGEFILE", "", "", "", "@X.OriginalExt")<br/>
+            - - - - rrCompareNotCase("@X.OriginalCompression", "Jpeg", "False")<br/>
+            - - - Function 2 BW<br/>
+            - - - - rrCompareNumeric("@X.OriginalColorDepth", "˂", "8")<br/>
+            - - - - SaveImageAsSettingsTIFF("Group4")<br/>
+            - - - - <b>SaveImageAs("tif", "0", "", "", "-ingested", "False")</b><br/>
+            - - - Function 3 Gray and Color<br/>
+            - - - - SaveImageAsSettingsTIFF("LZW")<br/>
+            - - - - <b>SaveImageAs("tif", "0", "", "", "-ingested", "False")</b><br/><br/>
+
+            This example shows how to convert images that have a lossy compression type, such as JPG, to a lossless compression.
+            Lossy compressions were developed for photographs, they must not be used for document processing. The lossy compression causes
+            noise to be added to the image as soon as the image is saved. This noise changes crisp lines, such as characters
+            on a page, into fuzzy lines that can reduce the quality of character recognition. An image is often resaved during
+            batch processing for operations such as rotation, deskew, image enhancement, etc. Each time it is resaved, a lossy
+            compression will add additional noise to the image. This noise may be subtle to the eye, but it can still interfere with
+            document processing.<br/><br/>
+
+            Documents should always be processed using a lossless compression, such as fax compression for black and white images or
+            LZW compression for color images. If it is not possible to control the type of images created from the scanning process,
+            any image ingested to a batch that uses a lossy compression must be converted to a lossless compression before any other
+            actions use the image. The ruleset in Example 5 shows how to achieve this goal.<br/><br/>
+
+            The rule first saves the image compression used within the image to a variable.  The rule checks for JPG compression, from a JPG image or a TIF
+            image saved with JPG compression.  If the image does not have JPG compression, processing for this rule stops.<br/><br/>
+
+            If the image does have lossy compression, the rule further checks the color depth of the image. If the image is black and white,
+            the image is resaved with Group4 compression, which is an excellent, lossless, compression for black and white images.<br/><br/>
+
+            Otherwise, the image is saved with an LZW compression, which is lossless and allows any color depth.<br/><br/>
+
+            After this ruleset completes, the page image is ensured to be using a lossless compression and can continue
+            on to the rest of the batch workflow. While some damage has been done when the original image was saved
+            with a lossy compression, further image processing uses the lossless compression, preventing further
+            noise caused by the lossy compression.<br/><br/>
+            
+            The original ingested image is given a new name with the word "-Ingested" added to the name, so the original
+            input image can always be obtained, when necessary.<br/><br/>
+
+        </e>
+      </h>
+      <lvl>Page level only, and the page must refer to a valid single page image file</lvl>
+      <ret>
+        <b>True</b> if the operation is successful, else <b>False</b> if any error occurred.
+      </ret>
+      <see>
+        SaveImageSettingsTIFF, SaveImageSettingsJPEG, and SaveImageSettingsBMP.<br/>
+        Refer to the top-level help for more information about this action library.
+      </see>
+    </method>
+
+
+    <method name="SaveImageAsSettingsJPEG" qi=": Configures the settings used when saving an image as a JPEG image.">
+      <p name="Quality" type="string"/>
+      <p name="Grayscale" type="string"/>
+      <p name="Progressive" type="string"/>
+      <ap>
+        <b>Quality:</b> Controls the compression of the saved JPEG.  Valid values are 0-100 with 0 as the lowest quality
+        with the highest compression and 100 as the highest quality and the lowest amount of compression.
+        If this action is not called, or if the value is not provided, this value defaults to 100.<br/><br/>
+
+        <b>Grayscale:</b> "False" saves the image as color, "True" saves the image as grayscale.
+        If this action is not called or if the value is not provided, this value defaults to False.<br/><br/>
+
+        <b>Progress:</b> "False" the image is not saved as a Progressive image, "True" saves the image as a
+        progressive image.
+        If this action is not called or if the value is not provided, this value defaults to False.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Sets the JPEG file settings for the "SaveImageAs" action when
+        the image saved as a JPEG format and when saving a TIFF image with
+        JPEG compression.<br/><br/>
+
+        JPEG compression does not support 1 bit images.  The image must be color or grayscale.<br/><br/>
+
+        If an application is ingesting JPEG images or TIF images with JPEG compression, and these
+        images will be used for recognition, it is highly recommended to convert the image
+        to a lossless format, such as a TIF with LZW compression, immediately after images are
+        ingested into a batch.  Subsequent actions can then operate on the new TIF image using
+        lossless compression.  The original version of the image is always available, if necessary,
+        for viewing in a Verify panel or for exporting at the end of the batch.
+        JPEG compression is intended for photographs, not for images
+        that contain text to be recognized.  JPEG compression will make crisp lines on letters
+        fuzzy, reducing the quality of the recognition. As the image is further manipulated, such as with
+        image enhancement, rotation, etc., and resaved again with JPEG compression,
+        additional quality will be lost with each save, even
+        if compression is set to a high quality.<br/><br/>
+
+        When this action is called, the settings are retained for the current task profile.
+        If SaveImageAs is used later
+        in a subsequent task profile, then this action must be called again to change
+        the default value.<br/><br/>
+        <e>
+          <b>SaveImageAsSettingsJPEG("100","False","True")</b><br/>
+          SaveImageAs("JPEG","0","Optimized","Optimized",".Old","False")<br/><br/>
+
+          This example converts the current image to a JPEG image. Although the color depth
+          parameter is set to "0", which means to retain the original color depth, JPEG
+          images can only be saved as 8 bit grayscale or 24 bit color.  If the source image
+          is 1 bit, then it will be upconverted.  While it will still look black and white,
+          it will be converted to a 24 bit color depth. This example also uses a custom
+          extension, ".Old", to back up the original file name, should the new file name
+          and the old file name evaluate to the same name.<br/><br/>
+
+          Again, while this example shows the SaveImageAsSettingsJPEG being called
+          in the same rule function just prior to SaveImageAs, if all pages are going
+          to have the same settings, then this action can be called at the document or batch
+          level and the setting will stay in effect for the remainder of the current task
+          profile. Calling this action at a higher level will avoid unnecessarily
+          calling this action over and over for each
+          page object.  If each page object may need different parameters when saved, then
+          calling the action with each page would be necessary.<br/><br/>
+
+          It is recommended to save as a JPEG or a TIF with JPEG compression if processing
+          photos that will not be used for text recognition. If performing text recognition
+          on an image, or image enhancements, it is recommended to first convert to a
+          lossless compression.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only, and the page must refer to a valid single page image file</lvl>
+      <ret>
+        <b>True</b> if the operation is successful, else <b>False</b> if any error occurred.
+      </ret>
+      <see>
+        This action is used in conjunction with the action "SaveImageAs".
+        Refer to the top-level help for more information about this action library.
+      </see>
+    </method>
+
+
+    <method name="SaveImageAsSettingsTIFF" qi=": Configures the setting when saving an image as a TIFF image.">
+      <p name="Compression" type="string"/>
+      <ap>
+        <b>Compression:</b> The compression to use for the TIFF image.<br/><br/>
+
+        Valid Compressions:<br/>
+        "None" : No compression<br/>
+        "RLE" : Run Length Encoding<br/>
+        "LZW" : Lempel-Ziv-Welch<br/>
+        "PackBits" : Packed bits<br/>
+        "Deflate" : Deflate<br/>
+        "Group3" : Group 3 Fax<br/>
+        "Group4" : Group 4 Fax<br/>
+        "Jpeg" : JPEG lossy compression<br/><br/>
+
+        If this action is not called or if the value is not proved, this value defaults to LZW.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Sets the TIFF file settings for the "SaveImageAs" action when
+        the image saved as a TIFF image.<br/><br/>
+
+        If using a black and white image, the group 3 or group 4 image compressions are recommended.
+        If using a grayscale or color image, then LZW compression is recommended. These
+        compressions are loss-less compressions.  LZW is also fine for compressing black
+        and white images, however group 4 compression can be more efficient.<br/><br/>
+
+        If an application is ingesting JPEG images or TIF images with JPEG compression, and these
+        images will be used for recognition, it is highly recommended to convert the image
+        to a lossless format, such as a TIF with LZW compression, immediately after images are
+        ingested into a batch.  Subsequent actions can then operate on the new TIF image using
+        lossless compression.  The original version of the image is always available, if necessary,
+        for viewing in a Verify panel or for exporting at the end of the batch.
+        JPEG compression is intended for photographs, not for images
+        that contain text to be recognized.  JPEG compression will make crisp lines on letters
+        fuzzy, reducing the quality of the recognition. As the image is further manipulated, such as with
+        image enhancement, rotation, etc., and resaved again with JPEG compression,
+        additional quality will be lost with each save, even
+        if compression is set to a high quality.<br/><br/>
+
+        When this action is called, the settings are retained for the current task profile.
+        If SaveImageAs is used later
+        in a subsequent task profile, then this action must be called again to change
+        the default value.<br/><br/>
+        <e>
+          <b>SaveImageAsSettingsTIFF("LZW")</b><br/>
+          SaveImageAs("TIF","0","","","","")<br/><br/>
+
+          This example configures the compression for saved TIF images to LZW using the
+          action SaveImageAsSettingsTIFF. The example is shown in the same rule as the
+          rule as SaveImageAs.  If the settings are intended to be the same for all pages,
+          then it would be more efficient to place SaveImageAsSettingsTIFF in a rule
+          attached to the batch open event. That would allow the action to be called
+          only once instead of over and over for each page.<br/><br/>
+
+          The SaveImageAs action will convert the current page image to a TIF using
+          LZW compression. It does not matter if the source image is a TIF or
+          a different image type, such as JPEG or PNG.
+          The parameter of 0 will retain the same color depth as
+          the original image.  If the image was black and white, it will stay a
+          1 bit black and white image.  If the source image was 24 bit color,
+          it will be saved as 24 bit color. This example is a good way to convert images
+          that may be saved using a lossy compression, such as JPEG, to a lossless
+          compression to limit further degradation of quality caused
+          by a lossless compression.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only, and the page must refer to a valid single page image file</lvl>
+      <ret>
+        <b>True</b> if the operation is successful, else <b>False</b> if any error occurred.
+      </ret>
+      <see>
+        This action is used in conjunction with the action "SaveImageAs".
+        Refer to the top-level help for more information about this action library.
+      </see>
+    </method>
+
+    <method name="SetImageDPIByWidth" qi=": Adjusts the dpi of the image and optionally resizes based on the expected physical size.">
+      <p name="ImageWidth" type="string"/>
+      <p name="ImageDPI" type="string"/>
+      <p name="Rescale" type="string"/>
+      <ap>
+        <b>ImageWidth:</b> Physical width of the page in inches. If not specified, the value will default to 8.5 inches.<br/><br/>
+
+        <b>ImageDPI:</b> The target DPI for the updated image.  If not specified, the value will default to 300 dpi.<br/><br/>
+
+        <b>Rescale:</b> Indicates if the image should be rescaled.
+        True - rescale image width and height to match the specified dpi and physical size,
+        False - do not rescale the page, just set the DPI.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action is useful for images that
+        do not have a correctly specified DPI or need to be resized based on the expected width.
+        This action will adjust the DPI and width of the image to the specified DPI.
+        The image can also be resized to the correct logical size based on the expected physical width in inches.<br/><br/>
+
+        When the rescale parameter is true, the image size is adjusted.
+        The image is scaled proportionally in the horizontal and vertical directions based on the
+        width that has been specified for the image.  The final image will have the specified DPI and the pixel width and height
+        will be scaled to the specified logical size.<br/><br/>
+
+        Photos typically have a DPI of 72 or 96. While cameras often have a high pixel count, they are
+        unable to correctly set the DPI and physical size of an image. If a camera is used to take a
+        picture of a 8.5"x11" page or a 5" check, the camera cannot correctly set the image properties
+        that reflect the true size of the object. SetImageDPIByWidth can correct these kinds of images.
+        It is typically best to first deskew the image then crop the image in an attempt to retain
+        only the page or check that was photographed.  This action will then adjust the image
+        to correct the DPI and physical size.  This is important if recognition will be performed on the
+        image.  If a photo has a high resolution, recognition can fail if the DPI the image is
+        not within the range of 200 to 300 and if the calculated physical size of the image is
+        incorrect.<br/><br/>
+
+        <e>
+          <b>SetImageDPIByWidth("6", "", "True")</b><br/>
+          <br/>
+          This example is on a page level rule and sets the image width to 6 inches with
+          a default DPI of 300 while rescaling the image as necessary.
+          Typically, it is best to rescale the image.<br/><br/>
+
+          <b>SetImageDPIByWidth("6", "300", "False")</b><br/>
+          <br/>
+          This example is on a page level rule and sets the image width to 6 inches without rescaling the image.  This will just
+          change the dimensions, leaving the number of pixels unchanged within the image.<br/><br/>
+
+          SaveImageInformation("","","@P.DPIx","","","","","")<br/>
+          <b>SetImageDPIByWidth("8.5", "@P.DPIx", "True")</b><br/><br/>
+
+          This example adjust the image to 8.5" wide and keeps the original DPI of the image.
+          First the action SaveImageInformation obtains the current DPI of the image and
+          stores it in a DCO variable called DPIx.  The variable name can be anything
+          meaningful.  If the variable does not exist, it will be created.  If it does exist,
+          the current value will be overwritten with the new value.  Next the action
+          SetImageDPIByWidth adjusts the image to ensure it is 8.5" wide and passes
+          in the current DPI of the image.  This will adjust the image so it is 8.5"
+          wide, keeping the original DPI of the image.<br/><br/>
+
+          <b>SaveImageInformation("","","@P.DPIx","","","","","")</b><br/>
+          rrCompareNumeric("180",>,"@P.DPIx")<br/>
+          SetImageDPIByWidth("8.5", "@P.DPIx", "True")<br/><br/>
+
+          This example is similar to the previous example.
+          The difference is that rrCompareNumeric is used to first check
+          the DPI of the image.  The image will be adjusted only
+          if the DPI is 180 or less.<br/><br/>
+
+          SaveImageInformation("","","","","@P.PhysicalWidth","","","")<br/>
+          <b>SetImageDPIByWidth("@P.PhysicalWidth", "300", "True")</b><br/><br/>
+
+          This example maintains the same physical width but adjusts the DPI of the image
+          to 300.  The technique using SaveImageInformation and smart parameters is similar to the example above.
+          If the image is a low resolution image, increasing the DPI of the image
+          can improve recognition.  While it doesn't make the image sharper
+          it can still help recognition and it can cause some image enhancement
+          operations to work better prior to performing recognition.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only, and the page must refer to a valid single page image file</lvl>
+      <ret>
+        <b>True</b> if the operation is successful, otherwise <b>False</b> if any error occurred.
+      </ret>
+      <see>
+        RescaleImage<br/>
+        Refer to the top-level help for more information about this action library, including examples for how to correct
+        an image with an invalid DPI.
+      </see>
+    </method>
+
+    <method name="SaveImageInformation" qi=": Obtains the properties of an image and stores them in user variables within the DCO.">
+      <p name="ImageWidth" type="string"/>
+      <p name="ImageHeight" type="string"/>
+      <p name="ImageDPIX" type="string"/>
+      <p name="ImageDPIY" type="string"/>
+      <p name="PhysicalImageWidth" type="string"/>
+      <p name="PhysicalImageHeight" type="string"/>
+      <p name="ColorDepth" type="string"/>
+      <p name="Compression" type="string"/>
+      <ap>
+        <b>ImageWidth:</b> The input parameter is a smart parameter indicating the DCO location to store the image width in pixels. If not specified, the DCO variable is not created for width.<br/><br/>
+        <b>ImageHeight:</b> The input parameter is a smart parameter indicating the DCO location to store the image height in pixels. If not specified, the DCO variable is not created for height.<br/><br/>
+        <b>ImageDPIX:</b> The input parameter is a smart parameter indicating the DCO location to store the DPIX in dots per inch. If not specified, the DCO variable is not created for DPIX.<br/><br/>
+        <b>ImageDPIY:</b> The input parameter is a smart parameter indicating the DCO location to store the DPIY in dots per inch. If not specified, the DCO variable is not created for DPIY.<br/><br/>
+        <b>PhysicaImageWidth:</b> The input parameter is a smart parameter indicating the DCO location to store the physical width in pixels. If not specified, the DCO variable is not created for physical width.<br/><br/>
+        <b>PhysicalImageHeight:</b> The input parameter is a smart parameter indicating the DCO location to store the physical height in pixels. If not specified, the DCO variable is not created for physical height.<br/><br/>
+        <b>ColorDepth:</b> The input parameter is a smart parameter indicating the DCO location to store the color depth / bits per pixel. If not specified, the DCO object is not created for Bit Depth.<br/><br/>
+        Smart parameters are supported for all parameters.<br/><br/>
+        <b>Compression:</b> The input parameter is a smart parameter indicating the DCO location to store the name of the compression used in the image file.<br/><br/>
+      </ap>
+      <h>
+        This action will obtain the image information, Height, Width, DPI X, DPI Y, Physical Height,
+        Physical Width, Color Depth and Compression type, from the current page image and
+        the values into the Document hierarchy.  Only the desired parameters
+        needs to be specified. If a parameter is empty, then the value will not be saved in the DCO.<br/><br/>
+
+        The provided smart parameters identify where to save the information using standard smart parameter
+        syntax.  @B = batch, @D = Document, @P = Page, @F = Field, @X = current object.  For example,
+        if on a page level node, both @P.MyVar and @X.MyVar will work identically and store the result
+        in a variable called "MyVar" in the page level object.  If the variable exists, the value will be
+        overwritten.  If the variable does not exist, it will be created and the value stored.  Passing
+        the parameter "@B.MyVar" on any level node will create the variable at the top, batch-level,
+        node of the application runtime DCO.  A batch level variable can easily be accessed by any
+        level DCO object by using the @B notation.<br/><br/>
+        
+        If called on a page object that has a field called "MyField", then the parameter @P\MyField.MyVar"
+        will store the value in the a variable called "MyVar" within the "MyField" object.<br/><br/>
+
+        The saved information can be used as
+        required by the application.  Perhaps there is a use case to simply save the image size when the batch is
+        exported.  Other use cases could include the application performing specific actions based on the returned data.
+        For example, if the dpi of the image is below a particular value or if the width or height are not within
+        an expected range, the application could resize the image or take other steps based on the configured rules.
+        Actions that perform numeric comparisons can be used to control logic flow of rules based on the image information.<br/><br/>
+
+        Some images and image types do not have a compression type specified.
+        They can appear as empty or be listed as "Naive".<br/><br/>
+        <e>
+          <b>Example 1:</b><br/>
+          <b>SaveImageInformation("@P.Width","@P.Height","@P.DPIx","@P.DPIy","@P.PhysicalWidth","@P.PhysicalHeight","@P.BitDepth","@P.ImgCompression")</b>
+          <br/>
+
+          This example stores image information into variables specified by user at the page level.<br/><br/>
+          Width = "2479"<br/>
+          Height = "3508"<br/>
+          DPIx = "300"<br/>
+          DPIy = "300"<br/>
+          PhysicalWidth = "743700"<br/>
+          PhysicalHeight = "1052400"<br/>
+          BitDepth = "1"<br/>
+          ImgCompression = "Lzw"<br/><br/>
+
+          <b>Example 2:</b><br/>
+          <b>SaveImageInformation("","","@P.DPIx","@P.DPIy","@P.PhysicalWidth","@P.PhysicalHeight","@P.BitDepth", "")</b>
+          <br/>
+
+          This example stores image information DPIx, DPIy, PhysicalWidth, PhysicalHeight,BitDepth into respective variables
+          specified at the page level.<br/><br/>
+          DPIx = "300"<br/>
+          DPIy = "300"<br/>
+          PhysicalWidth = "743700"<br/>
+          PhysicalHeight = "1052400"<br/>
+          BitDepth = "1"<br/><br/>
+
+          <b>Example 3:</b><br/>
+          <b>SaveImageInformation("@P\Field1.Width","@P\Field1.Height","@P\Field1.DPIx","@P\Field1.DPIy","@P\Field1.PhysicalWidth","@P\Field1.PhysicalHeight","@P\Field1.BitDepth","")</b>
+          <br/>
+
+          This example stores image information into respective parameters specified by user at the field level.<br/><br/>
+          Width = "2479"<br/>
+          Height = "3508"<br/>
+          DPIx = "300"<br/>
+          DPIy = "300"<br/>
+          PhysicalWidth = "743700"<br/>
+          PhysicalHeight = "1052400"<br/>
+          BitDepth = "1"<br/><br/>
+
+          <b>Example 4:</b><br/>
+          <b>SaveImageInformation("","","@P.DPIx","","","","","")</b><br/>
+          SetImageDPIByWidth("8.5", "@P.DPIx", "True")<br/><br/>
+
+          This example adjust the image to 8.5" wide and keeps the original DPI of the image.
+          First the action SaveImageInformation obtains the current DPI of the image and
+          stores it in a DCO variable called DPIx.  The variable name can be anything
+          meaningful.  If the variable does not exist, it will be created.  If it does exist,
+          the current value will be overwritten with the new value.  Next the action
+          SetImageDPIByWidth adjusts the image to ensure it is 8.5" wide and passes
+          in the current DPI of the image.  This will adjust the image so it is 8.5"
+          wide, keeping the original DPI of the image.
+          The results of SaveImageInformation can be used in similar ways
+          in other actions.<br/><br/>
+
+          <b>SaveImageInformation("","","@P.DPIx","","","","","")</b><br/>
+          rrCompareNumeric("180",>,"@P.DPIx")<br/>
+          SetImageDPIByWidth("8.5", "@P.DPIx", "True")<br/><br/>
+          
+          This example is similar to the previous example. 
+          The difference is that rrCompareNumeric is used to first check
+          the DPI of the image.  The image will be adjusted only 
+          if the DPI is 180 or less.<br/><br/>
+
+          <b>Example 5:</b><br/>
+          <b>SaveImageInformation("","","","","","","@P.BitDepth","")</b><br/>
+          rrCompare("@P.BitDepth", "32")<br/>
+          SaveImageAsSettingsTIFF("LZW")<br/>
+          SaveImageAs("tif", "24", "", "", ".prebitdepth", "False)<br/><br/>
+
+          This example is run on a page object and reduces the color depth of the image
+          associated with the page, if the image is a 32 bit color image.  It is required that the associated page file is an image.
+          This series of steps is useful because some actions do not support 32 bit color images.  If the current image is 32 bit color,
+          the image is saved as a TIF image with a color depth of 24 bits and backup the original image is saved by appending ".prebitdepth" to the filename.
+          The LZW compression is used because it is a loss-less compression
+          and it supports any color depth.  If the current image is 24 bits or less, then the rrCompare will return false causing the action
+          flow to stop in this current function and jump to the next function, if one exists.  Images of 24 bits or lower are left unchanged
+          by this series of actions.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only, and the page must refer to a valid single page image file.</lvl>
+      <ret>
+        <b>True</b> if the operation is successful, else <b>False</b> if any error occurred.
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library, including examples
+        for how to correct an invalid DPI.<br/><br/>
+
+        Refer to the top-level help for the Application Objects action library for
+        information on the Datacap Hierarchy (DCO).<br/>
+      </see>
+    </method>
+
+
+  </com>
+</rrx>
+

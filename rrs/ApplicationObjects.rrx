@@ -1,0 +1,2466 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="ApplicationObjects" v="9.1.10.3">
+  <com ref="Datacap.Libraries.ApplicationObjects.Actions"  qi=" : Actions that create and manipulate DCO objects.">
+    <h>
+      Datacap applications all contain a hierarchy of Datacap Application Objects,
+      which is more commonly called the application's DCO hierarchy.
+      The DCO defines the structure of the objects of the application.  At the top level is the Batch object.  
+      There is only one batch object. All
+      objects are off of this main root node. The other objects are Document, Page and Field.  A typical structure
+      would look something like this:<br/><br/>
+
+      Batch<br/>
+      - Document<br/>
+      - - Page<br/>
+      - - - Field<br/><br/>
+
+      A Batch node can have a child Document, Page or Field. 
+      Documents can also have child Documents, Pages and Fields.  Pages can only have child Pages, and Fields.
+      Fields can only have child fields.<br/><br/>
+
+      Page objects are usually a child of a Document and are named and arranged in a way that is
+      meaningful for a specific application.  One exception is the page type "Other".  "Other" is a common
+      page type in Datacap applications.  As documents are ingested to create a batch, they are assigned the
+      initial type of "Other". This type is used as a starting point for processing documents.
+      Unlike other page types, the Other page is directly attached to the Batch node.  Other application specific
+      page types are typically attached to a Document object to group one or more pages or page types together
+      in a meaningful way.<br/><br/>
+
+      After files are ingested and assigned a type of Other, the next step is to identify and process the files.
+      The "Other" pages are typically processed then assigned new page 
+      types that define a more detailed hierarchy that groups
+      pages together under a Document.<br/><br/>
+      
+      Each page type can have a unique set of fields that indicate
+      areas on the page where data will be extracted.  A page typically defines the kind of page, such as
+      an "Invoice", the fields define the type of data expected on a page such as Date, Vendor Name,
+      Address, Invoice number, and other data expected on an Invoice.<br/><br/>
+      
+      It is also possible for a page to have different
+      locations of data based on the document although the same page type is used.  For example, this is commonly
+      performed in the APT application where invoices are processed, while each invoice has the same types of
+      data such as names, addresses, dates, line items, the location of this data can be different based
+      on the fingerprint of the page.  For example, in one invoice the date may be on the top left,
+      another invoice may have the date in the top right, and still another 
+      may place the date somewhere else on the page.
+      This allows an application to process the same type of page
+      consistently although the pages and location of data on each page is different.<br/><br/>
+
+      While there is only one Batch node, there can be multiple nodes of all of the other types.
+      An application specific hierarchy can consist of any combination of these objects that
+      defines the documents, pages and fields required to process a set of files as defined
+      by specific use cases.<br/><br/>
+
+      Here is one example:<br/>
+      For illustration (B=Batch, D=Document, P=Page, F=Field)<br/><br/>
+      
+      B MyApplication<br/>
+      - P Other<br/>
+      - D Invoice<br/>
+      - - P MainPage<br/>
+      - - - - F Date<br/>
+      - - - - F Invoice Number<br/>
+      - - - - F Invoice Amount<br/>
+      - - - - F Line Items<br/>
+      - - - - - F Quantity<br/>
+      - - - - - F Description<br/>
+      - - - - - F Price<br/>
+      - - P TrailingPage<br/>
+      - D Mortgage<br/>
+      - - P Agreement<br/>
+      - - - F Signature<br/>
+      - - - F Date<br/><br/>
+
+      While this is a very simple example, it shows a typical structure used in applications.  Each of these nodes is
+      a DCO node and each are used to represent the current state of the application as well as 
+      providing a way to attach processing rules and actions that will be acted upon each node within the
+      application that process the data.<br/><br/>
+      
+      Each DCO node can have a "property" / "variable" that holds metadata about the node.  These are defined
+      directly on the node.  For example, a page
+      will have a variable that contains the name of the file associated with the page. There are some sets of variables
+      that are standard however any number of additional user required variables can be created at any time.<br/><br/>
+
+      A DCO node can contain any number of variables or children.  While objects typically have a specific type of child,
+      there are some exceptions.  For example, a Page or a Field can be attached directly to a Batch node.  Likewise,
+      a Field node can in turn have additional children fields, as is required for line item processing.<br/><br/>
+
+      Each application has a "Setup DCO" and a "Runtime DCO".  A Setup DCO is the static hierarchy that defines the object layout
+      of the application.  It is called the "Setup DCO" because it is defined at application setup / design time.  It
+      defines one of all of the possible types of nodes that will be processed.  
+      The setup DCO is also used to define the relationship of each application object
+      to the application rules that will be run on each object.  For example rules can be attached to the "MainPage" object that will
+      run on each object that has been identified as a MainPage.  The same rules or different 
+      sets of rules can run on the TrailingPage.<br/><br/>
+
+      The Runtime DCO is the dynamic version of the object hierarchy that directly reflects a specific batch that is being
+      processed and contains all of the currently instantiated objects.  
+      For example, if there are 10 pages in the batch, there will be 10 page objects existing in the Runtime DCO.
+      The types of these pages may be mixed.  Perhaps there are 3 MainPages, 9 TrailingPages, all children of a set of 3 Invoice document objects
+      and 1 Agreement page under a Mortgage document object.  The runtime DCO will contain the values of each of the variables
+      contained in each object node.  At runtime, DCO nodes are created for the pages, documents and fields within the batch
+      to reflect the unique files and data within the batch.<br/><br/>
+
+      The primary focus of the Application Object action library is on manipulation of these DCO nodes.  Every action library
+      will read, act on, and can also update an object.
+      The Application Object library is more general for updating, organizing and deleting DCO nodes themselves.<br/><br/>
+
+      Access of variables and nodes is case sensitive but it is not recommended to use names and types 
+      for objects that differ only in case.<br/><br/>
+
+      User variables can be configured in the setup DCO. Any object that has a variable preconfigured will automatically
+      have that value unless it is changed at runtime.  For example, a DCO node may be configured with a
+      variable value so all objects of that type, will initially have the value set in the setup DCO, then specific
+      nodes can have that variable updated at runtime, as required by specific application use cases.<br/><br/><br/>
+      
+
+      <b>Predefined DCO Variables</b><br/><br/>
+
+      The following is a list of common variables and attributes that are used to process an application:<br/><br/>
+      
+      <b>ID</b> : The unique identifier for the object.<br/>
+      <b>TYPE</b> : The type of the object which corresponds to the setup DCO.<br/>
+      <b>STATUS</b> : The status has many meanings and refers to the current state of the object.<br/>
+      <b>IMAGEFILE</b> :  The file associated with a page node. Typically this is a TIFF, but it can be any type of file.<br/>
+      <b>PageName</b> : Often used to hold the original file name without the extension.<br/>
+      <b>ScanSrcPath</b> : The path and name of the source file.<br/>
+      <b>DATAFILE</b> : The name of the runtime dco for the fields. This file must only be manipulated using actions.<br/>
+      <b>TemplateID</b> : The ID of the fingerprint associated with the page.<br/>
+      <b>CCOFILE</b> : The name of the CCO file associated with the page.<br/><br/>
+
+      These common predefined variables can be read and written by any application.  
+      While an application can freely read these variables, care should be taken to update these variable using provided actions.
+      If a variable is updated incorrectly, it can cause problems at runtime.  If there is a need to update these variables,
+      there are often predefined actions to update the variables.  For example, the TemplateID can be updated using the SetPageFingerprintID
+      or the status can be updated using SetDCOStatus or SetDCOType to update the type.  The ID of a node is assigned when it is created
+      and should not be changed once created. For example, a new child node can be added at runtime using AddChildDCONode and the
+      ID for that child is specified as a parameter.  
+      Once created, the ID of a node should not be changed or results can be unpredictable.<br/><br/><br/>
+      
+
+      <b>DCO Status</b><br/><br/>
+      
+      Each DCO has a status property.  The status indicates if the data associated with the node is valid, invalid
+      or indicates a particular state or problem.  Verify panels are the primary place the status is used
+      although actions may set the status or make logic decisions based on the status of an object.<br/><br/>      
+
+      The status is updated at run time depending on the object type and the rules and actions of the task.
+      Some actions may update the status of a DCO object.  It is also possible for a failed ruleset
+      to automatically change the status of an object to fail, if the Status Preserve option is disabled.<br/><br/>
+
+      Some common status values are shown in this table with their conventional meanings.  Commonly used
+      status values are -1, 0, 1, 2, 49.  Other status status are less common and may or may not be used
+      as listed depending on the configuration and uses cases for the application.<br/><br/>
+      
+      If you are using an uncommon value for status, it is recommended that the listed values are used
+      instead of making up a new status value,
+      if they apply to your application. If a status is required by an application that is not
+      listed in the predefined values, a new unique value can be used in the 
+      application, however it will be unique for your application and may be updated
+      by an action that updates the status.  Actions can be used to look for the unique status
+      and control the logic flow of rules based on that status value.<br/><br/>
+            
+      -1 Hidden / Ignore. The object should be ignored. If set on a field, the field is not displayed in the verify panel.<br/><br/>
+      
+      0 OK / Passed. An object with no known issue or has had a problem corrected so it is now valid.  This status may be used
+      at any DCO level.<br/><br/>
+      
+      1 Error / Problem. A verify panel and actions can take specific actions for failed pages. This status may be used at any DCO level.<br/><br/>
+      
+      2 Overridden. Used for pages that fail validation but are overridden by the operator.<br/><br/>
+
+      3 InvalidType. Set by document creation if a page type is invalid.<br/><br/>
+      
+      48 RecogDoneOK. Indicates a page that has been successfully processed by the Recognition task and is ready for Verification.
+      This status does not mean that data in all fields on the page is complete and accurate.<br/><br/>
+
+      49 ScanOK.  Scan tasks will typically uses this as an initial page status.<br/><br/>
+
+      50 ScanBad. Indicates that unsuccessful scanning has resulted in a problem page.<br/><br/>
+
+      51 CannotFindAnchor. Indicates that the workflow’s Recognition task has failed to identify the anchor fields of the page.      
+      A batch containing a page with this status usually must be reviewed by a user in a "FixUp" panel.<br/><br/>
+
+      52 DontNeedVerification. Verification can be skipped. Typically a status of 0 would be used instead.<br/><br/><br/>
+
+      65 Indicates that although Recognition successfully identified the anchors on the page, a processing error prevented further steps.
+      Pages with this status should be treated as problems.<br/><br/>
+
+      66 Verification Done. Indicates that a page has been successfully processed by a "FixUp" task operating in the Verify mode.<br/><br/>
+      
+      70 RescanPage. Identifies the page as needing to be scanned again.<br/><br/>
+
+      71 VerificationFailed<br/><br/>
+      
+      72 PageOnHold. Suspends the processing of a page, often when a page requires special attention, and places its document on Hold as well.
+      If any page remains on Hold after the task processes the other pages in a batch, Taskmaster automatically assigns a Hold status to the batch itself.<br/><br/>
+      
+      73 PageOverridden<br/><br/>
+      
+      74 NoData. Ensures that none of the data on the page will be forwarded to an Export task – in effect, deleting the page.
+      The assignment of this status to a page, usually by an operator or supervisor, results in a Pending status for the document.<br/><br/>
+      
+      75 DeletedPage. Marks a page and its parent document for deletion and removes their association with the sponsoring batch.
+      This status does not, however, directly affect the corresponding Image file which can still exist in the batch.<br/><br/>
+      
+      76 Export completed. Indicates that the entire workflow has successfully processed a page.<br/><br/>
+
+      77 DeleteApproved. Indicates that an operator or supervisor has approved the deletion of the page and document.<br/><br/>
+      
+      78 Removed. “Removes” the page from the workflow and its data from further consideration.      
+      It also removes the document containing the page. In most cases, a page with this status is beyond repair.<br/><br/>
+      
+      79 ReviewPage.  Branches a page to a child job for review and possible repair.<br/><br/>
+
+      128 DeletedDoc. Indicates that an authorized operator or Supervisor has removed a document from the internal organization of the batch.<br/><br/>
+
+      129 Rescan. Indicates that the document needs to be scanned again.<br/><br/>
+
+      145 ReviewDoc. Marks the document for review by a remedial FixUp task.<br/><br/>
+
+      147 IncompleteDoc. Denotes a document with the wrong number or types of pages.<br/><br/><br/>
+      
+
+      <b>DCO Type and Page Identification</b><br/><br/>
+      
+      Images and files are ingested using the scan or virtual scan task.  During the ingestion, the pages are initially
+      assigned the page type of "Other".  This is a special page type that does not have any document structure and
+      uses the batch as a parent.  This is the starting point for processing of ingested files.<br/><br/>
+      
+      The next goal is to change the page type from "Other" to another meaningful page type.  
+      A DCO type cannot contain double quotes. Once assigned
+      a meaningful type, the pages can be processed and manipulated based on the use cases for
+      the application. While page identification is 
+      the next goal, it is not necessarily the next direct processing step.  The next step can vary from application
+      to application.<br/><br/>
+      
+      For example, if images are ingested as PDFs, word documents, emails or other types of formats, one of the
+      use cases may be to recognize these pages so the text within them can be analyzed, verified and stored.
+      In this situation, before performing page ID, these kinds of documents are typically converted into TIFF
+      images. The final result is that the original source file, such as a PDF, is still in the batch, but now
+      there are individual images for each page from within the parent file.  Similar work is typically performed
+      on emails or other types of documents that become a parent for multiple images, one new image
+      for each page.<br/><br/>
+      
+      Another common step prior to page ID is to perform image enhancements on all or some of the images.
+      If recognition is going to be performed and the image source isn't a nice clean document, such as
+      a Word document, then the image may need some image adjustments.  While leaving out many
+      details from this description, typically operations like deskew, automatic rotation, line removal
+      and other enhancements are performed to create clean images to provide to recognition.
+      The result would be a clean document that has proper orientation and is not skewed. 
+      It is also sometimes useful to remove any lines from the document in this step.<br/><br/>
+      
+      The actual page ID process can be performed in a number of ways and varies based on
+      specific use cases.  One approach would be to perform fingerprinting after image enhancement.
+      Fingerprint matching directly assigns a type ID to the page, changing it from "Other" to
+      the correct type. The fingerprinting actions will look at a page, and the known
+      fingerprints and match the page to the correct fingerprint, so now the page type
+      is determined along with the locations of any fields on the page.<br/><br/>
+      
+      Using barcodes or patch codes are another technique for determining the type of a page and
+      then assigning the page type with the SetPageType action. This could be a barcode
+      directly on the page to identify, or a separator page that is scanned before the current
+      page that that indicates the page type of the following page.<br/><br/>
+      
+      Other types of identification can include performing recognition and identifying a page
+      by specific text within the page that the application knows belongs to a specific type type
+      and then directly assigning the page type.  If a page is blank, that may be assigned a different
+      page type or possibly deleted or used as a separator.<br/><br/>
+      
+      Datacap provides a number of different kinds of actions that can be used to identify
+      the page type and then assign it.  Again, what is appropriate depends on the
+      application use cases.  Custom actions could even be used to use specific logic
+      to figure out a page type and then assign it to the page.  A page could also be
+      provided to a classification engine, which will determine the correct page 
+      type and fingerprint.<br/><br/>
+      
+      Some applications use manual page identification with the Flex ID panel to have operators
+      set page types by reviewing the document, 
+      or may simply supplement manual identification only for a smaller set of pages that could not
+      be automatically identified.  The actions are the tools to perform the
+      identification process, how to arrange them to achieve the
+      required page identification use cases is specific to an application.
+      Most applications use some common
+      techniques as described.<br/><br/>
+      
+      Once the Page ID rules have set new page types for each of the "Other" pages, then the "Create Documents"
+      ruleset can be called which will automatically organize all of the pages into the appropriate 
+      page hierarchy, grouping pages together under a document node, or multiple document nodes, as
+      defined by the application.  Once page identification is done and the new document structure has
+      been created, then processing of the batch can continue, but now that the page types are
+      identified, then specific rules, and different rules, can be run on each object based on
+      the DCO node level and the type.<br/><br/>
+      
+      After creating documents, the CreateFields action in the ApplicationObjects library will
+      generate the field objects for a page. Initially these fields exist with no position
+      information.  The position information is then determined by loading the zones
+      for the associated fingerprint or using actions to dynamically find zone locations
+      using rules at runtime.<br/><br/>
+
+      Once all the pages are identified and documents created, subsequent actions that
+      have been defined on the objects will run to perform the specific
+      operations required for each type of object within the DCO hierarchy.<br/><br/><br/>
+
+      <b>Field Confidence</b><br/><br/>
+      
+      A field represents a specific type of data from a field.  While it is not required,
+      a field usually also has position information that identifies the location
+      on the associated parent page object where the data exists.  This position information
+      is a representation of the pixel area on the page from where the text
+      was recognized in a format of: left, top, right, bottom.<br/><br/>
+      
+      Field objects have the ability to store recognized text that is associated
+      with the field.  For example, if the field represents a date, the position would
+      indicate the location of the text and the field's value would be the date, such as
+      "01/01/2020".<br/><br/>
+
+      Each character within the field's value also has an associated confidence level.
+      The confidence level represents if the recognition engine thinks the value that
+      was read is accurate or could have been misread. The confidence level is
+      represented as a number between 1 to 10, where 1 means the engine is very unsure
+      that the character is correct and 10 means the engine is very sure the number is
+      correct.  Typically a confidence value of 8, 9 or 10 are considered "high" confidence
+      and that the engine was probably correct in reading the text. This default
+      value is adjustable. If adjusted, it could be dropped to 7 or 6.  It is rarely raised
+      to 9 or 10.<br/><br/>
+      
+      Each of the characters has this confidence level. If any one of the characters
+      has a confidence lower than the minimum confidence, it is highlighted to the
+      verification operator when viewing the fields in the verify panel.  The operator
+      can visually confirm or correct any misread values.<br/><br/>
+
+      There are other ways to confirm characters are correct, including mechanisms
+      to automatically lower or raise confidence values based on one or more conditions.
+      The ValidationsAndTextAdjustments action library is one action library that
+      can perform automatic verification.  Other mechanisms such as pattern matching
+      or voting can also automatically adjust the confidence of characters
+      within a field.<br/><br/>
+      
+      In some situations, a character's confidence may be represented
+      in a range from 0-9. Be sure to understand the correct range when
+      working with confidence values.<br/><br/>
+
+      A field's confidence value can be returned as a string using the field property "CONFIDENCESTRING".
+      For example, if the action rrCompare("@P\Field1.CONFIDENCESTRING","99999") is called on a page
+      that has a field name "Field1", it will return true if the field contains 5 characters and
+      confidence of the field is "99999".<br/><br/>
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+    </h>
+    
+    <method name="AddChildDCONode" qi=": Adds new Node (Document, Page or Field) to the Runtime DCO">
+      <p name="ObjectType"/>
+      <p name="ID"/>
+      <p name="Type"/>
+      <p name="Status"/>
+      <p name="Index"/>
+      <ap>        
+        <b>ObjectType:</b> The new DCO node object type: 3=Field, 2=Page, 1=Document.<br/><br/>
+        <b>ID:</b> The Node's ID. This value must be unique. If blank, a unique ID will be assigned.<br/><br/>
+        <b>Type:</b> The Node's Type.<br/><br/>
+        <b>Status:</b> The Node's Numeric Status. Optional, Defaults to 0.<br/><br/>
+        <b>Index:</b> The Node's Zero based Index. Optional, Defaults to add to the end of the children (-1).<br/><br/>
+        
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        Creates a child DCO node of the type indicated by the first argument (A Field, Page or Document).
+        The new node is a child to the current DCO node.<br/><br/>
+        
+        If a node of the same type and ID exists no new node will be created and the action will return True.<br/><br/>
+        
+        Restrictions: Documents can only have child Documents, Pages and Fields.  Pages can only have child Pages, and Fields.
+        Fields can only have child fields.<br/><br/>
+        
+        The new child node is added to the runtime DCO hierarchy. The new node will now function just like all existing
+        nodes meaning that any rules defined for that object type in the setup DCO will now run in subsequent rules.
+        For example, if a page is added to a document, subsequent page level rules associated with that object type
+        will be run on this new node.<br/><br/>
+
+        A page level node must have a unique ID but typically has common types.  For example, the ID of a page could
+        be "TM000005" and the type could be "Main_Page".  It is common for fields to have a field ID that is the same
+        as the field type, however the ID must be unique.
+        <e>
+          <b>AddChildDCONode("3","NewField","NewField","0","-1")</b><br/>
+          This example adds a new field DCO node to the current object. 
+          The new field is added to the end of the collection of children
+          and has an initial status of 0.<br/><br/>
+
+          <b>AddChildDCONode("@X.MyLevel", "@X.MyID", "@P\TM000001\TYPE", "@X.MyStatus", "@X.MyPosition")</b><br/>
+          This example illustrates obtaining the parameter values at runtime.  If the parameters
+          are static, then they can simply be hard coded in the parameter as in first example.
+          Here the intent is to show that values can be obtained from other locations
+          as necessary.  The object created is determined by the value of "MyLevel" on the current node.
+          Likewise, the ID is determined by the value of the variable MyID on the current node.
+          Assuming this action is called on a document node, the type obtained is the same type
+          of the page with ID "TM000001" and that page's type is passed as a parameter to create
+          a sibling page of the same type.  The last two parameters in this example are also
+          obtained from variables on the current object.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if the node is successfully created.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help for a list of status values.
+      </see>
+    </method>
+
+    <method name="AddChildDCONodeToBatch" qi=": Adds new Node (Document, Page or Field) to the Runtime DCO on the batch level">
+      <p name="ObjectType"/>
+      <p name="ID"/>
+      <p name="Type"/>
+      <p name="Status"/>
+      <p name="Index"/>
+      <ap>
+        <b>ObjectType:</b> The new DCO node object type: 3=Field, 2=Page, 1=Document. 
+        If the parameter provided is invalid, this value will default to "3" (Field).<br/><br/>
+        <b>ID:</b> The Node's ID. This value must be unique. If blank, a unique ID will be assigned.<br/><br/>
+        <b>Type:</b> The Node's Type.<br/><br/>
+        <b>Status:</b> The Node's Numeric Status. Optional, Defaults to 0.<br/><br/>
+        <b>Index:</b> The Node's Zero based Index. Optional, Defaults to add to the end of the children (-1).<br/><br/>
+
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        Creates a child DCO node of the type indicated by the first argument (A Field, Page or Document).
+        The new node is a child to the batch top-level DCO node.  The child will always be added to
+        the batch object regardless of the calling object's level.<br/><br/>
+
+        If a node of the same type and ID exists no new node will be created and the action will return True.<br/><br/>
+
+        Restrictions: Documents can only have child Documents, Pages and Fields.  Pages can only have child Pages, and Fields.
+        Fields can only have child fields.<br/><br/>
+
+        The new child node is added to the runtime DCO hierarchy. The new node will now function just like all existing
+        nodes meaning that any rules defined for that object type in the setup DCO will now run in subsequent rules.
+        For example, if a page is added to a document, subsequent page level rules associated with that object type
+        will be run on this new node.<br/><br/>
+
+        A page level node must have a unique ID but can have common types.  For example, the ID of a page could
+        be "TM000005" and the type could be "Main_Page".  It is common for fields to have a field ID that is the same
+        as the field type, however the ID must be unique.
+        <e>
+          <b>AddChildDCONodeToBatch("3","NewField","NewField","0","-1")</b><br/>
+          This example adds a new field DCO node to the batch object.
+          The new field is added to the end of the collection of children
+          and has an initial status of 0.<br/><br/>
+
+          <b>AddChildDCONodeToBatch("@X.MyLevel", "@X.MyID", "@P\TM000001\TYPE", "@X.MyStatus", "@X.MyPosition")</b><br/>
+          This example illustrates obtaining the parameter values at runtime.  If the parameters
+          are static, then they can simply be hard coded in the parameter as in first example.
+          Here the intent is to show that values can be obtained from other locations
+          as necessary.  The object created is determined by the value of "MyLevel" on the current node.
+          Likewise, the ID is determined by the value of the variable MyID on the current node.
+          Assuming this action is called on a document node, the type obtained is the same type
+          of the page with ID "TM000001" and that page's type is passed as a parameter to create
+          a sibling page of the same type.  The last two parameters in this example are also
+          obtained from variables on the current object.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if the node is successfully created.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help for a list of status values.
+      </see>
+    </method>
+    
+    <method name="CheckDCOStatus" qi=": Confirms that the status of the Document Hierarchy's current object is identical to the status entered as the parameter.">
+      <p name="ExpectedStatus"/>
+      <ap>
+        <b>ExpectedStatus:</b> The expected status of the current DCO object.
+        Multiple expected status values can be provided as a comma separated list.
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Confirms that the status of the Document Hierarchy's current object is identical
+        to any of the the status values entered as the parameter.<br/><br/>
+        
+        When only one status value is provided, 
+        this action is equivalent to the following action:<br/>
+        rrCompare("expected status","@X.STATUS")<br/>
+        Either action will achieve the same result where "expected status" is
+        the same value passed in to CheckDCOStatus when a single status value
+        is expected.  It may be still desirable to
+        use CheckDCOStatus for clarity of intention.
+        If an object needs to be checked for multiple possible status values,
+        then use CheckDCOStatus.<br/><br/>
+        <e>
+          <b>CheckDCOStatus("0")</b><br/>
+          CopyFile("@PILOT(BATCHDIR)+\+@ID+.tif", "@APPPATH(export)+\+@ID+.tif", true)
+          This action returns true if the current object has a
+          status equal to 0, and false if it does not.
+          This kind of action is used to control logic flow. The action after this action
+          will run if true is returned.  If false is returned, then the next action is
+          skipped and control continues on the next function in the ruleset.
+          In this particular example, if the status of the current object is 0 then
+          the CopyFile action is run to and the current image file 
+          is copied to the export directory. Any set of required
+          actions can follow a check like this.<br/><br/>
+
+          <b>CheckDCOStatus("0,2,49")</b><br/>          
+          This action returns true if the current object has a
+          status equal to 0 or 2 or 49, and false if it does not.<br/><br/>
+          
+          rrSet("48", "@X.StatusToCheck")<br/>
+          <b>CheckDCOStatus("@X.StatusToCheck")</b><br/>
+          This is similar to the above example however the expected status
+          is stored in a DCO variable called "StatusToCheck".  In this example,
+          the variable was previously set to "48" so the action will check if the
+          current DCO object has a status of 48 and returns true if the current object has a status
+          equal to 48, and false if it does not.<br/><br/>          
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True</b> if the DCO status matches the parameter value. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        SetDCOStatus, CheckDCOType, rrCompare<br/>
+        Refer to the top level help for more information about an object's status.
+      </see>
+    </method>
+
+
+    <method name="CheckDCOType" qi=": Confirms that the status of the Document Hierarchy's current object is identical to the status entered as the parameter.">
+      <p name="ExpectedType"/>
+      <ap>
+        <b>ExpectedType:</b> The expected type of the current DCO object.
+        Multiple expected status values can be provided as a comma separated list.
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Confirms that the type of the Document Hierarchy's current object is identical
+        to any of the the type values entered as the parameter.<br/><br/>
+
+        When only one type value is provided,
+        this action is equivalent to the following action:<br/>
+        rrCompare("expected type","@X.TYPE")<br/>
+        Either action will achieve the same result where "expected type" is
+        the same value passed in to CheckDCOType when a single type value
+        is expected.  It may be still desirable to
+        use CheckDCOType for clarity of intention.
+        If an object needs to be checked for multiple possible type values,
+        then use CheckDCOType.<br/><br/>
+        <e>
+          <b>CheckDCOType("Invoice")</b><br/>
+          CopyFile("@PILOT(BATCHDIR)+\+@ID+.tif", "@APPPATH(export)+\+@ID+.tif", true)<br/>
+          This action returns true if the current object has a
+          type equal to Invoice, and false if it does not.
+          This kind of action is used to control logic flow. The action after this action
+          will run if true is returned.  If false is returned, then the next action is
+          skipped and control continues on the next function in the ruleset.
+          In this particular example, if the type of the current object is Invoice then
+          the CopyFile action is run to and the current image file
+          is copied to the export directory. Any set of required
+          actions can follow a check like this.<br/><br/>
+
+          <b>CheckDCOType("Invoice,Main_Page,Trailing_Page")</b><br/>
+          This action returns true if the current object has a
+          type equal to Invoice or Main_Page or Trailing_Page, and false if it does not.<br/><br/>
+
+          rrSet("Main_Page", "@X.TypeToCheck")<br/>
+          <b>CheckDCOType("@X.TypeToCheck")</b><br/>
+          This is similar to the above example however the expected type
+          is stored in a DCO variable called "TypeToCheck".  In this example,
+          the variable was previously set to Main_Page so the action will check if the
+          current DCO object has a type of Main_Page and returns true if the current object has a type
+          equal to Main_Page, and false if it does not.<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True</b> if the DCO status matches the parameter value. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        SetDCOStatus, CheckDCOType, rrCompare<br/>
+        Refer to the top level help for more information about an object's type.
+      </see>
+    </method>
+
+
+    <method name="CheckDocumentCount" qi=": Compares the number of documents to a previously set variable.">
+      <ap>None.</ap>
+      <h>
+        This action counts the number of documents 
+        within the batch and confirms that it matches the adjusted or expected
+        number of documents.  A single document can contain multiple pages,
+        but will still be counted as one document.<br/><br/>
+
+        The number of expected documents is usually provided by the operator of a job's Scan task.
+        This very handy action can compare the actual amount to the estimate at any time after a
+        <b>CreateDocuments</b> action has assembled the documents in the batch.<br/>
+
+        The action will check the count against an "adjusted" count or an "expected" count.  The
+        adjusted count is determined by the value of the batch level variable "AD".
+        If the batch level variable "AD" does not exist or is not a valid number, the actual pages
+        count from the batch pilot object is used.  It is expected that a previous rule or task
+        as set the AD variable at the batch level as appropriate for the application logic.<br/><br/>
+
+        if the adjusted count, @B.AD, is not set, or is zero, then the batch page count
+        is compared to the "expected" page count.  The expected page count is determined
+        by the value of the batch level variable "ED".
+        If the batch level variable "ED" does not exist or is not a valid number, the expected pages
+        count from the batch pilot object is used.<br/><br/>
+
+        If both the adjusted count and expected counts are non-zero, then this action will
+        compare the number of pages against the expected count.<br/><br/>
+
+        Refer to the CreateDocuments action to understand how it converts the pages in a
+        batch to a document structure after each page has had a page type configured
+        in a typical Page ID task.<br/><br/>
+        <e>
+          rrSet("10","@B.AD")<br/>
+          <b>CheckPageCount()</b><br/><br/>
+
+          In this example, if the actual number of documents in the batch is 10,
+          then the action will return true, otherwise it will return false.
+          It does not matter if a document has one page or many pages,
+          it will still be counted as one document.<br/><br/>
+
+          rrSet("12","@B.ED")<br/>
+          rrSet("10","@B.AD")<br/>
+          <b>CheckPageCount()</b><br/><br/>
+
+          In this example,
+          because both ED and AD are set, the count will be checked against
+          the ED setting.<br/><br/>
+        </e>
+        
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>True</b> if the actual count is the same as the expected or adjusted count.
+        Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    
+    
+    <method name="CheckFieldConfidence" qi=": Checks the confidence of all fields on child pages against a minimum acceptable confidence value and sets the page status.">
+      <p name="MinimumConfidence"/>
+      <p name="NewPageStatus"/>
+      <p name="PageStatusToCheck"/>
+      <ap>        
+        <b>MinimumConfidence:</b> The Numeric value of the minimum confidence required for the action to return true.
+        The confidence must be an integer between 1 and 10.
+        If a field has the variable "ReqConf" set, the value of this variable will override
+        the provided parameter. The "ReqConf" variable uses the range 0-9.
+        <br/><br/>
+        
+        <b>NewPageStatus:</b> The Numeric Page Status code to assign to any page that has one or 
+        more fields with Low Confidence data: if a field's ConfidenceString property contains 
+        a value lower than the first parameter.  Child fields, line items, etc. are included.  
+        Typically, "1" (Problem) is the value of this parameter.<br/><br/>
+        
+        <b>PageStatusToCheck:</b> A comma separated list of page status to check.  
+        If blank then only pages with a status of "0" will be checked.  Pages that already
+        have a page status of "1" will be skipped even if it is specified as a parameter.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        Checks the confidence of all field data on child pages with a status that matches the specified status.
+        Each field will have the confidence value of each character within the field evaluated 
+        against a minimum acceptable confidence value.
+        1 is the lowest confidence level and 10 is the highest confidence.<br/><br/>
+        
+        Starting from the current DCO node, the action will check each field to confirm each character meets
+        the minimum confidence.  If any field contain characters that have a confidence 
+        lower than the specified minimum, the parent page status is changed
+        to the new status provided by the parameter.  If this action is called on a page object,
+        then just the fields on the page object will be checked.  If called on a document, then all
+        pages within that document node are checked.  If called at the batch level, then all pages
+        in the entire batch are checked.<br/><br/>
+        
+        If a field object has the variable "ReqConf" set, then the value of
+        that variable will override the value of the MinimumConfidence parameter for the field.<br/><br/>
+        
+        A typical use for this action is to confirm that the recognized field data
+        is of a high enough confidence so the application can assume that the page data has been
+        recognized accurately.  If one or more characters in any field attached to the page have a confidence
+        that is lower than the minimum, then the page status is changed. Typically the status is changed
+        to "1" so the page will be flagged for review by a verify operator in a verification panel. 
+        During verification, the operator will review and adjust the recognized data as necessary,
+        raising the confidence so the page will result in a successful status allowing it to complete
+        the verification step.<br/><br/>
+        <e>
+          <b>CheckFieldConfidence("8", "1", "")</b><br/>
+          This example will confirm that all fields contain characters that have a confidence
+          of 8, 9 or 10.  If one character of any field has a lower confidence, then the parent
+          page will be set to a status of "1".  Only pages with a status of "0" will be checked.<br/><br/>
+
+          rrSet("1","@X.TheNewStatus")<br/>
+          <b>CheckFieldConfidence("6", "@X.TheNewStatus", "0,2,49")</b><br/>
+          This is similar to the above example.  Here the action will check that
+          each character on a page has a confidence between 6 and 10.  If a field has
+          a lower confidence, then the parent page will be set to the value provided
+          in the DCO variable "TheNewStatus", which was preset to "1".  Pages with
+          a status of 0, 2 or 49 will be checked.  If a page does not match this status,
+          the page's fields will not be checked.<br/><br/>
+        </e>
+      </h>
+      <lvl>
+        Batch, Document or Page.
+      </lvl>
+      <ret>
+        <b>True</b> if all fields in all source pages meet the confidence requirement.<br/>
+        <b>False</b> if any field on any page has low confidence data, or if the parameters are not Numeric.
+      </ret>
+      <see>
+        CheckDCOStatus<br/><br/>
+        Refer to the top level help of this action library for more information regarding confidence.<br/>
+      </see>
+    </method>
+
+
+    <method name="CheckIntegrity" qi=": Checks that the batch meets the document page count requirements.">
+      <ap>None.</ap>
+      <h>
+        Checks that the integrity of the batch, as detailed in the Page file
+        of the current task, meets the integrity requirements (min, max, order) set within the
+        Document Hierarchy (Setup DCO).<br/><br/>
+
+        "Integrity" refers to the correct types and numbers of pages within each document
+        in the batch and the correct order of the pages in each document.<br/><br/>
+
+        This action performs an integrity check on the entire batch regardless of the DCO level on which it is called.<br/><br/>
+
+        Refer to the CreateDocuments action to understand how it converts the pages in a
+        batch to a document structure after each page has had a page type configured
+        in a typical Page ID task.<br/><br/>
+        <e>
+          <b>CheckIntegrity()</b><br/>
+          This action is typically called at a batch level after the document structure has
+          been created by the "Create Documents" action to confirm the objects
+          within the batch meet the integrity requirements.<br/>
+        </e>
+      </h>
+      <lvl>Any level, but usually called at the batch level.</lvl>
+      <ret>
+        Returns <b>True</b> if no integrity problems are found.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        See the top level help for more information regarding the DCO.
+      </see>
+    </method>
+    
+    
+    <method name="CheckLastDCOType" qi=": Checks the type of the previous sibling object.">
+      <p name="PreviousTypeToMatch"/>
+      <p name="LevelToCheck"/>
+      <p name="IgnoreTypes"/>
+      <ap>        
+        <b>PreviousTypeToMatch:</b> The previous object's DCO Type to compare. The comparison is case sensitive.<br/><br/>
+
+        <b>LevelToCheck:</b> (Optional) Objects to compare:<br/>
+        0 - All<br/>
+        1 - Documents only<br/>
+        2 - Pages only<br/>
+        3 - Fields only<br/><br/>
+        
+        If this parameter is blank or invalid, it will default to 0.<br/><br/>
+
+        <b>IgnoreTypes:</b> (Optional) A comma-delimited list of Types to skip/ignore in the evaluation.  
+        If the prior object's Type is listed
+        within the parameter then it will be not be evaluated and if present, 
+        the next object prior to it will be evaluated to see if it matches the specified type.
+        The first previous sibling object not within this list will 
+        be checked to see if its type matches the expected type.<br/><br/>
+        
+        If the parameter is blank, then only the previous object will be checked to see if it
+        matches the expected type.<br/><br/>
+        
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        This action allows you to test the previous sibling DCO Type relative
+        to the current DCO node
+        so an application can take specific subsequent steps based on that type.
+        This previous node is also considered to be the "last" object
+        that was processed prior to the current DCO object that is being
+        processed by the rules engine.<br/><br/>
+        
+        The type of the previous sibling object is compared to the type
+        provided in the parameter. If the type of the previous sibling DCO node exactly matches
+        the specified type, then the action will return true.<br/><br/>
+        
+        The LevelToCheck parameter determines if every sibling should be checked or
+        if only specific sibling types should be checked. If the previous sibling level
+        does not match the level to check, then the action will look backwards through
+        the previous siblings until it finds a DCO node with the correct level to check. 
+        For example, if there previous node is a page but the level to check
+        is specified as document nodes, then the page node will be skipped and
+        the search will continue until the first sibling node is found that
+        matches the expected level is found.<br/><br/>
+        
+        If one or more types to skip has been provided, the previous sibling DCO node
+        will not be checked to see if it is a matching type if the type is specified
+        in the skip parameter list.  For example, if looking for objects of the level
+        of "page" and the previous sibling found is a page and the type of the page
+        is listed in the skip list, then that node will not be compared and instead
+        the search will continue to look at the next previous sibling.<br/><br/>   
+        
+        This action only checks sibling objects that are in the DCO prior to the 
+        currently running object.  For example, if the current object
+        is a page level object and the previous search reaches the
+        first page in the current document, the search will not continue to
+        the previous document in the DCO hierarchy.<br/><br/>
+        <e>
+          <b>CheckLastDCOType("Separator", "", "")</b><br/>
+          SetPageType("Invoice")<br/>
+          SetPageStatus("1")<br/><br/>
+
+          Assuming this action is called on a Page level DCO object, 
+          this sequence checks to see if the previous sibling object was a Separator page.
+          If so, the type and status of the current page are set to Invoice and 1.
+          If the previous sibling object's type was not a "Separator", the subsequent actions will not execute.
+          If the previous sibling object's type is "Separator", then the SetPageType action will run next.<br/><br/>
+          
+          Note that this example does not limit checks to page level sibling objects only, 
+          to do that it would set the second parameter to 2.<br/><br/>
+
+          <b>CheckLastDCOType("Separator", "", "Trailing_Page,Main_Page")</b><br/>
+          For this example, assume the batch has this document object
+          that contains these pages:<br/><br/>
+          
+          ˂Document><br/>
+          - ˂Main_Page><br/>
+          - ˂Separator><br/>
+          - ˂Trailing_Page><br/>
+          - ˂Trailing_Page><br/>
+          - ˂Invoice><br/>
+          - ˂EOB><br/>
+          - ˂Trailing_Page><br/><br/>
+          
+          If the action shown is called on the "Invoice" page, then the action
+          would find at the first Trailing_Page and ignore it because
+          it is in the ignore list. It would then look at the node before
+          it which is another Trailing_Page and it would also be ignored.
+          The action would then look at the previous sibling of "Separator"
+          and return True because that previous sibling is not skipped and it matches
+          the expected type.<br/><br/>
+          
+          As another example, assume that the action is called on the
+          EOB object.  The action would look at the previous sibling
+          "Invoice".  This type is not ignored so the action would
+          see if it is the expected type "Separator".  Because the
+          previous sibling is not "Separator", the action will return false.<br/><br/>
+        </e>
+      </h>
+      <lvl>Document, Page or Field.</lvl>
+      <ret>
+        <b>True</b> if the Type property of the Document Hierarchy's previous sibling non-skipped object
+        matches the page type attempting to be matched.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        SetDCOType, CheckDCOType<br/>
+        Refer to the top level help topic for more information about an object's type.
+      </see>
+    </method>
+
+
+    <method name="CheckPageCount" qi=": Confirms the number of pages in the batch meets the expected count.">
+      <ap>None.</ap>
+      <h>
+        Counts the number of pages within the batch and confirms that it matches the adjusted or expected
+        number of pages.<br/><br/>
+
+        The action will check the count against an "adjusted" count or an "expected" count.  The
+        adjusted count is determined by the value of the batch level variable "AP".
+        If the batch level variable "AP" does not exist or is not a valid number, the actual pages
+        count from the batch pilot object is used.  It is expected that a previous rule or task
+        as set the AP variable at the batch level as appropriate for the application logic.<br/><br/>
+
+        if the adjusted count is not set, or is zero, then the batch page count
+        is compared to the "expected" page count.  The expected page count is determined
+        by the value of the batch level variable "EP".
+        If the batch level variable "EP" does not exist or is not a valid number, the expected pages
+        count from the batch pilot object is used.<br/><br/>
+
+        If both the adjusted count and expected counts are non-zero, then this action will
+        compare the number of pages against the adjusted count.  If the adjusted count
+        is zero, then this action will check the current number of pages against
+        the expected count.<br/><br/>
+        
+        Refer to the CreateDocuments action to understand how it converts the pages in a
+        batch to a document structure after each page has had a page type configured
+        in a typical Page ID task.<br/><br/>
+        <e>
+          rrSet("10","@B.AP")<br/>
+          <b>CheckPageCount()</b><br/><br/>
+          
+          In this example, if the actual number of pages in the batch is 10,
+          then the action will return true, otherwise it will return false.<br/><br/>
+
+          rrSet("12","@B.EP")<br/>
+          rrSet("10","@B.AP")<br/>
+          <b>CheckPageCount()</b><br/><br/>
+          
+          In this example,
+          because both EP and AP are set, the count will be checked against
+          the AP setting.<br/><br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>True</b> if the actual count is the same as the expected or adjusted count.
+        Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+      <method name="ClearVariableInFields" qi=": Copies the value of the field along with the position and confidence.">
+          <p name="VariableName" type="string"/>
+          <p name="FieldPrefix" type="string"/>
+          <ap>
+              <b>VariableName:</b> The variable to clear in all child fields.<br/><br/>
+
+              <b>FieldPrefix:</b> Optional.  If provided, only fields that match this type prefix will be cleared.<br/><br/>
+
+              Smart parameters are supported for all parameters.<br/><br/>
+          </ap>
+          <h>
+              This action clears a specific variable in all child fields for the current page.  If a FieldPrefix is provided,
+              then the action only clears the variable if the field type starts with the text
+              provided in the FieldPrefix.
+              <br/><br/>
+              <e>
+                  <b>ClearVariableInFields("FlexFieldType","Field")</b><br/><br/>
+
+                  This example clears the variable "FlexFieldType" in
+                  all child fields that have the type "FieldXXXXXXXX".<br/><br/>                  
+              </e>
+          </h>
+          <lvl>Page.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>
+              Refer to the top level help topic for more information about the document hierarchy.
+          </see>
+      </method>      
+      
+
+    <method name="CopyFieldAndChildren" qi=": Copies an entire field object to another page or field.">
+      <p name="Target"/>
+      <p name="Source"/>      
+      <ap>
+        <b>Target:</b> Specifies the parent page or field object where the new field will be added. It must
+        consist of smart parameter syntax that navigates to the target page / field object or it can be the name of the page
+        where the child field will be copied.<br/><br/>
+        
+        <b>Source:</b> Specifies the field object to copy as a child to the target object. This must be a smart parameter navigation specification
+        for a field object.<br/><br/>
+      </ap>
+      <h>
+        This action copies the source field and all of its child fields, if any, to the destination object.
+        The field's text values and runtime DCO variables and children are also copied.<br/><br/>
+        
+        The target object cannot be a child of the source object.<br/><br/>
+
+        If the target object already contains a child field of the same name, the existing child field will be removed
+        and will be replaced by the new field and its children.<br/><br/>        
+        <e>
+          <b>CopyFieldAndChildren("TM000002", "@X")</b><br/>
+          This example assumes the action is part of a rule called on the field that will be copied.
+          The current field object, specified by the smart parameter syntax "@X", and any child fields
+          is copied to the page with the ID "TM000002". If the current field object is called "MyField",
+          then "MyField", and any children field objects, will be copied to the page with ID TM000002.<br/><br/>
+
+          rrSet("TM000002", "@P.MyTarget")<br/>
+          <b>CopyFieldAndChildren("@P.MyTarget", "@X")</b><br/>
+          This example is very similar to the previous example.  The difference is that the target page name
+          is stored within a DCO variable.  In this case, the DCO variable is called "MyTarget" and
+          is a variable on the parent page of the field attached to this rule.
+          In a realistic scenario, the variable "MyTarget" would have populated in a previous rule or
+          task and is now being used by CopyFieldAndChildren.  This example sets the variable
+          immediately before calling the action for illustration of how the page name can be stored
+          in a variable.<br/><br/>
+
+          <b>CopyFieldAndChildren("@D\Main_Page", "@P\MyFieldToCopy")</b><br/>
+          This example assumes the action is part of a rule called on a page that contains a field called "MyFieldToCopy"
+          or on a child field of that page. The example also assumes that the source page is within the same document structure
+          that contains a Main_Page.
+          The smart parameter "@P\MyFieldToCopy" instructs the action to access the field "MyFieldToCopy" from
+          the current page.  The smart parameter "@D\Main_Page" instructs the action to locate the "Main_Page"
+          object which is a child of the parent document object.
+          The result is that the field "MyFieldToCopy" and any child fields it contains, if any, 
+          are copied to the "Main_Page" of the current parent document.<br/><br/>
+        </e>
+      </h>
+      <lvl>
+        This action can be called on any level as but is typically called on the 
+        current page object that contains the field to be copied or 
+        on the current field to be copied.
+      </lvl>
+      <ret>
+        True if the operation succeeds.  False if an error occurs.
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about DCO variables.
+      </see>
+    </method>
+    
+    <method name="CountPagesToVariable" qi=": Counts the number of pages in the document.">
+      <p name="Variable"/>
+      <ap>
+        <b>Variable:</b> The variable that will hold the page count. If the input is a smart parameter
+        syntax that specifies a variable, the value will be stored in that location.  If the input
+        is not a smart parameter, it will be treated as the name of the variable to
+        use on the current DCO object.<br/>        
+      </ap>
+      <h>
+        This action will count the number of page objects that exist on the current 
+        DCO document object and write the result into the variable.<br/><br/>
+        <e>
+          <b>CountPagesToVariable("MyVarName")</b><br/>
+          This example will place the count in a variable called "MyVarName" on the current
+          document object.  If the variable does not exist in the DCO, it will be created.<br/><br/>
+
+          <b>CountPagesToVariable("@B.MyVarName")</b><br/>
+          This example uses smart parameter syntax and 
+          will place the count in a variable called "MyVarName" on the batch level
+          object.  If the variable does not exist in the DCO, it will be created.<br/><br/>
+        </e>
+      </h>
+      <lvl>Document level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about DCO variables.
+      </see>
+    </method>
+    
+    
+    <method name="CreateDocuments" qi=": Arranges the contents of a batch into documents based on the Document Integrity rules.">
+      <ap>None.</ap>
+      <h>        
+        This action assembles all of the pages within the batch to a hierarchy of Batch->Document->Page.
+        Pages within the batch are grouped together based on the document integrity rules based
+        in the settings in the Setup DCO.  The special document and page level variables/properties
+        "min", "max" and "order", along with the order of the pages within the batch, are
+        used to determine how many pages, and which pages, belong under 
+        a single document node.  The rules for how the pages become arranged can be complex
+        and these variables must be properly set in the Setup DCO.  The result is that
+        the pages are arranged in the runtime DCO in the manner specified.<br/><br/>
+        
+        Initially pages are ingested to a batch with a page type of "Other", which is a page
+        without a document structure and each page is attached directly to the batch node.
+        After ingestion, images could be manipulated such as splitting single page tifs
+        out of a PDF or from a multi-page tif. The parent fields may then be marked as deleted
+        so they are no longer processed, although they can still exist in the batch for export
+        at the end of the process. Images may then have image enhancements applied to 
+        clean them up and make them consistent for the page identification step.<br/><br/>
+        
+        Next page identification would occur.  Rules run on each page of type "Other". These
+        custom rules then determine the actual page type of the document. It could be determined
+        by matching an image fingerprint to assign a the real type, reading a barcode on the
+        actual page or on the preceding page, to determine the correct type, other types of automated tests
+        can be performed, or pages can be manually identified with the Flex ID task.  Once
+        the correct type for a page is determined, the page type is changed from "Other"
+        to the correct type.  This is important as the next step will be to create the document
+        structure.  The <b>CreateDocuments</b> action will look at these assigned page types
+        and generate the desired object hierarchy based on the order, page types, and the
+        special "min", "max" and "order" variables.<br/><br/>        
+        
+        A high-level example of how this action can work would can be illustrated with
+        the foundation APT application. In this application, a single document can contain
+        one "Main_Page" type followed by any number of "Trailing_Page" types.  Separators can also
+        be optionally used to note the start and end of documents.  The order in which the
+        pages exist within the batch is also very important as it determines how pages are associated
+        with the same document. A document can consist of only 1 Main_Page and no trailing pages
+        or it can have any number of trailing pages.  As CreateDocuments runs, it will
+        look at each page type, the controlling variables and organize each page under a document.
+        The first document may have under it 1 Main_Page and 2 Trailing_Page. This is a 3
+        page document.  The next page type was Main_Page and since only 1 is allowed,
+        create documents created a new document node and put the page in the new document node
+        along with the trailing pages, if any.  This continues until all of the pages
+        have been arranged.<br/><br/>
+        
+        When developing an application, the runtime DCO is written to the batch directory
+        for use by the next step in the workflow. This XML can be reviewed by the 
+        application developer to confirm that the application is configured correctly so
+        the pages are arranged correctly under documents.  While the developer can
+        manually review the XML file, it is only for direct use by the systems within
+        Datacap.  Any direct manipulation by custom actions or other applications
+        is not supported.  If writing custom actions, the supported DCO objects
+        and Datacap APIs can be used to manipulate the DCO and its nodes.<br/><br/>
+
+        Batches containing existing document structures will cause this action to return False,
+        with no affect to the existing document structure.  If it is necessary to 
+        re-create the batch structure a second time, then the existing document structure
+        needs to be removed prior to calling this action. This can be performed
+        with the action RemoveDocumentStructure.<br/><br/>
+
+        Note: During document creation, temporary IDs are assigned (with a different format than final Document IDs), 
+        and if the action fails, these temporary IDs may remain.<br/><br/>
+
+        This action is applied at the Batch level, and generally in its own Ruleset such as a CreateDocuments ruleset.<br/><br/>
+        <e>
+          <b>CreateDocuments()</b>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        <b>True</b> if successful. Otherwise, <b>False.</b><br/><br/>
+        
+        This action will not create a document structure if a document structure already exists.
+        If there is a need to re-create the document structure, first remove the document structure
+        then call this action.<br/>
+      </ret>
+      <see>
+        RemoveDocumentStructure<br/>
+        Refer to the top level help topic for more information about the document structure.
+      </see>
+    </method>
+      
+    
+    <method name="CreateFields" qi=": Creates the fields for a page and the associated runtime DCO Data file.">
+      <ap>None.</ap>
+      <h>
+        Creates the runtime field objects based on the field structure defined
+        for the page within the setup DCO. Once the fields have been created,
+        then the rules engine will begin running rules on fields and operations
+        such as recognition can be performed on the fields.<br/><br/>
+        
+        This action creates the field DCO structure.  It does not load the position
+        information for the fields. A fields "zone" or "position" is determined by the
+        fingerprint that is associated with the page.  A single page type can have one
+        or more fingerprints that are applicable to the page. For example, a page could be
+        an "Invoice" type. Invoices have a known set of data that is captured such as
+        Date, Invoice Number, Customer, Vendor, Tax, Total, etc. An invoice from vendor
+        "XYZ Plumbing" probably has a very different format than an invoice from "123 Donuts".
+        Different fingerprint templates will identify the "zone" coordinates for each field
+        on the different documents, allowing documents of different formats to be processed
+        by a single application with the same set of rules. Additional fingerprints allows
+        an application to ingest and validate invoices from other vendors without 
+        having to develop new rules to process the new type of document.<br/><br/>
+        
+        When this action is run and the fields are created, they exist in the 
+        batch as an XML datafile. The Data file for the first page
+        in the batch, tm000001, as an example, is tm000001.xml.  While developing
+        an application it may be useful to look at this file to debug problems.
+        It is not recommended and is not supported for custom actions or external
+        program to directly
+        use or manipulate the runtime DCO XML file. The only way a custom action is allowed
+        to manipulate DCO nodes is through the Datacap DCO object interface.<br/><br/>
+
+        This Data file lists all fields for the current page based on the fields listed
+        in the setup Document Hierarchy. Each field has an ID and 
+        three properties with default values:
+        TYPE, Position, and STATUS. If this action is called but fields are not
+        created, then it is recommended to confirm that the action is being
+        called on the correct page object and that the setup DCO is correct.<br/><br/>
+
+        Subsequent actions of various kinds such as Recognition, Locate, Zone, Validation, etc.,
+        can assign other values to these properties.  
+        These actions can also add properties, also called DCO variables,
+        and values to the Data file, or remove properties and values.<br/><br/>
+        <e>
+          AnalyzeImage()<br/>          
+          SetSearchArea("0.5")<br/>
+          SetProblemValue("0.3")<br/>
+          SetDirectoryFPX("@APPPATH(fingerprint)")<br/>
+          FindFingerprint("True")<br/>
+          <b>CreateFields()</b><br/><br/>
+
+          This Invoices application sequence sets up the current page for processing,
+          associates the page with a fingerprint,
+          and finally creates the fields and associated runtime DCO with blank fields for the page.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>True</b> if successful. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help for this action library for information regarding application
+        objects, the DCO hierarchy, variables and how they can be used.<br/>
+      </see>
+    </method>
+
+
+    <method name="CopyFieldTextConfidenceAndPosition" qi=": Copies the value of the field along with the position and confidence.">
+      <p name="Source" type="string"/>
+      <p name="Target" type="string"/>
+      <ap>
+        <b>Source:</b> A reference to the source field.<br/><br/>
+
+        <b>Target:</b> A reference to the target field.<br/><br/>
+
+        Either parameter is optional.  If a parameter is not specified, it will default to the text value of the
+        calling object.<br/><br/>
+      </ap>
+      <h>
+        The action retrieves the value, confidence, zone coordinates and image reference of the source field object,
+        and copies them to the target field object.  The target must specify a field object.
+        <br/><br/>
+        <e>
+          <b>CopyFieldTextConfidenceAndPosition("@B\OPERATOR","@P\OPERATOR")</b><br/><br/>
+
+          This example copies the Batch field OPERATOR values to the
+          OPERATOR field of the bound object of the Document Hierarchy.  It implies that this action is called on a page
+          object and the child field OPERATOR will be the target field.<br/><br/>
+
+          <b>CopyFieldAndConfidence("@P\Total","@X")</b><br/><br/>
+
+          This example assumes the rule is associated with a field object.  The values from the sibling
+          field object "Total" will be copied to the current field object.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level but the parameters must reference a field using smart parameter notation.</lvl>
+      <ret>
+        <b>False</b> if the action cannot retrieve the target or source object. Otherwise, <b>True.</b>
+        If the position or confidence cannot be copied, the action will still return <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy.
+      </see>
+    </method>
+    
+
+    <method name="CopyFieldAndPositionToVariable" qi=": Copies the value of the field and position to another variable in the same field object for all child objects.">
+      <p name="TextVariable" type="string"/>
+      <p name="PositionVariable" type="string"/>
+      <ap>
+        <b>TextVariable:</b> The name of the variable to store the text value. If blank, then the text value will not be stored.<br/><br/>
+
+        <b>PositionVariable:</b> The name of the variable to store the position. If blank, then the position will not be stored.<br/><br/>
+
+        Smart parameters are supported for both variables.<br/><br/>
+      </ap>
+      <h>
+        This action will check the current object and all children objects.  If the object is a field
+        object, then the text value of the field will be stored in a backup variable whose name is specified by the
+        TextVariable parameter and the position of the field will be backed up into a variable whose name is
+        specified by the PositionVariable.  Variables will be created using the provided name on the current field
+        object, if this action is called on a field, and each field child field object of the current object. <br/><br/>
+        
+        This action can be useful to back up field information on an entire page. For example, the action could
+        be called prior to a Verify task and then after the verification is complete, the application can check to see
+        if the data as changed in any the fields.<br/><br/>
+        <e>
+          <b>CopyFieldAndPositionToVariable("PreVerify Val", "PreVerify Pos")</b><br/><br/>
+
+          Assuming this action is called on a document object, the action will check all fields on every
+          page within the document object.  For each field on every page, the text value of the field will be duplicated
+          in a variable called "PreVerify Val" on the same object and the field position will be stored
+          in a variable called "PreVerify Pos".  For example, if the document contained two pages and
+          each page contained three fields, then each field on each page will have the new
+          variable "PreVerify Val" and "PreVerify Pos" created with the data from the field.<br/><br/>
+
+          rrSet("PreVerify Val", "@X.MyTextVarName")<br/>
+          rrSet("PreVerify Pos", "@X.MyPosVarName")<br/>
+          <b>CopyFieldAndPositionToVariable("@X.MyTextVarName", "@X.MyPosVarName")</b><br/><br/>
+
+          This second example will have the same result as the first example.  This is simply an illustration
+          of obtaining the names of the variables at runtime using smart parameters.  In an actual implementation
+          the names would probably have been set by some other rule or obtained from a location that was
+          set at runtime.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy.
+      </see>
+    </method>
+
+      
+
+    <method name="DeleteDCOChildOfType" qi=": Deletes a child DCO node of the specified type.">
+      <p name="Type"/>
+      <ap>
+        <b>Type:</b> The child type to remove.
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Deletes all child objects of the specified type from the Document Hierarchy.
+        The search is only 1 level deep which will only delete immediate child objects. 
+        Grandchildren are not evaluated but will be removed if their parent is removed.<br/><br/>
+
+        This action must be the last action called in a ruleset. Due to the removal of objects
+        from the DCO, subsequent actions may not run on objects that were not deleted.  Any
+        subsequent actions must be run in a following ruleset.<br/><br/>
+        <e>
+          <b>DeleteDCOChildOfType("Trailing_Page")</b><br/>
+          Assuming the application has pages of type called "Trailing_Page", when called
+          at on a document level object, any children of type "Trailing_Page" will
+          be removed from the parent object. Subsequent rules will no longer be run
+          on the object that was removed.<br/><br/>
+        </e>
+      </h>
+      <lvl>Document, Page or Field.</lvl>
+      <ret>
+        <b>False</b> if the child objects do not exist. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy.
+      </see>
+    </method>
+
+
+    <method name="DeleteDCOChildWithStatus" qi=": Deletes a child DCO node of the specified status.">
+      <p name="Status"/>
+      <ap>
+        <b>Status:</b> Remove all children with the specified status.
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Deletes all child objects with the specified status from the Document Hierarchy.
+        The search is only 1 level deep which will only delete immediate child objects.
+        Grandchildren are not evaluated but will be removed if their parent is removed.<br/><br/>
+        
+        This action must be the last action called in a ruleset. Due to the removal of objects
+        from the DCO, subsequent actions may not run on objects that were not deleted.  Any
+        subsequent actions must be run in a following ruleset.<br/><br/>
+        <e>
+          <b>DeleteDCOChildWithStatus("75")</b><br/>
+          While any status can be specified, 75 typically means that the object 
+          has been previously marked for deletion.  The example
+          will delete any children of with a status of 75
+          from the parent object. Subsequent rules will no longer be run
+          on the object that was removed.<br/><br/>
+        </e>
+      </h>
+      <lvl>Document, Page or Field.</lvl>
+      <ret>
+        <b>True</b> unless an error occurs then <b>False</b> is returned.
+        If no child objects are removed because none of them have a matching
+        status, the action will still return true.
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy and an object's status.
+      </see>
+    </method>
+
+
+    <method name="DeleteDCOParent" qi=": Deletes the parent DCO node of the current node.">
+      <ap>None.</ap>
+      <h>
+        Deletes the parent of the document hierarchy object to which a rule with this action is bound.<br/><br/>
+        
+        This action will also delete the current object as well.  This must be called as
+        the last action on a ruleset and that any subsequent actions
+        that need to run must be placed in a following ruleset.<br/><br/>
+        <e>
+          <b>DeleteDCOParent()</b><br/>
+          If called on a page object, this will delete the parent object, which is
+          usually a document node.  If called on
+          a field node, this will delete the parent which is typically a page node.<br/><br/>
+        </e>
+      </h>
+      <lvl>Document, Page, and Field.  The calling object must have a parent node and a grandparent node.</lvl>
+      <ret>
+        <b>False</b> if a parent object cannot be found, the grandparent cannot be found or if the deletion
+        of the parent object fails.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy.
+      </see>
+    </method>
+
+    <method name="DeleteDCOChildrenWithVariableValue" qi=": Removes immediate children that contain a variable with a specific value.">
+        <p name="VariableName" qi="The variable to test on the child object."/>
+        <p name="VariableValue" qi="The value that indicates the child is to be deleted."/>
+      <ap>
+        All parameters support smart parameters.<br/>
+      </ap>
+      <h>
+          This action removes immediate children from the batch object, such as pages that have the batch object as the parent. 
+          The child object is removed if it contains the specified DCO variable and the variable's value matches the provided value.<br/><br/>
+
+          One use for this action is that as objects are processed, they can have a variable set that indicates
+          they are no longer needed and should be removed from the DCO tree.  For example, PDF or multi-page TIFF
+          documents that have been burst into single pages.  This action does not delete any of the files
+          associated with the object, it only removes the object from the DCO tree so it is no longer processed.
+          Any files that were associated with the object will remain in the batch directory.<br/><br/>
+
+          The action is expected to run at the batch level and will only look at the immediate children, meaning
+          that it does not traverse down document hierarchies to delete pages.
+          Therefore, this action must be called prior to calling the CreateDocuments action which creates the full
+          document tree structure.<br/><br/>
+
+          It is recommended that this action is called only in the last function of a ruleset.<br/><br/>          
+          <e>              
+              <b>DeleteDCOChildrenWithVariableValue("original_source_image", "yes")</b><br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+      
+
+    <method name="DeleteDCOChildren" qi=": Deletes all child objects from the calling object of the Document Hierarchy.">
+      <ap>None.</ap>
+      <h>
+        Deletes all child objects such as pages or fields that are children of the bound object of the Document
+        Hierarchy. If called on a page object, this action will also remove the page data file (.xml),
+        which holds the field information, from the batch,
+        if it exists.<br/><br/>
+        <e>
+          <b>DeleteDCOChildren()</b><br/>
+          If this action were called on a document node, then all of the pages attached
+          to the document, and their field objects, will be removed from the DCO.  If called
+          on a page level object, then all of the fields will be removed from the page.
+          If called on a field, then any children sub-fields will be removed.<br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if successful, otherwise <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy.
+      </see>
+    </method>
+
+    <method name="DeleteDCOChildrenAndVariables" qi=": Clears all variables and child objects of the current object.">
+      <ap>None.</ap>
+      <h>
+        Removes all DCO children and variable references from the currently bound object.  All child
+        objects are deleted and all variables in the current DCO object are deleted, leaving the
+        current DCO object existing, but it will not contain any data.<br/><br/>
+
+        Once a child object is deleted, it no longer exists in the object hierarchy and
+        rules will not be run on deleted objects.<br/><br/>
+
+        While not explicitly prevented, this action is not expected to be called at the
+        batch level because every object and variable from within the batch will be removed.<br/><br/>
+        <e>
+          CreateFields()<br/>
+          <b>DeleteDCOChildrenAndVariables()</b><br/><br/>
+
+          Applied at the Page level, the example will first add fields to the page and then remove
+          all of the fields and all of the variables within the current page object.  While
+          these two actions would not typically be ordered like this in a real application,
+          it is intended to demonstrate that all of a page's field objects will be removed
+          by this action.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if all child objects and their variables are removed, otherwise <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy.
+      </see>
+    </method>
+
+
+    <method name="DeleteDCOVariable" qi=": Deletes the specified DCO variable">
+      <p name="VariableName" type="string"/>
+      <p name="ObjectType" type="string"/>
+      <ap>
+        <b>VariableName:</b> The name of the variable to delete.<br/><br/>
+
+        <b>ObjectType:</b> Indicates if the variable should be deleted on the current object
+        or on children of a specific type.  If the value is invalid or blank, the current object
+        will be used.<br/><br/>
+
+        0 = Current object only.<br/>
+        1 = Child document objects only.<br/>
+        2 = Child page objects only.<br/>
+        3 = Child field objects only.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        This action will delete the specified variable from the runtime DCO.  If the ObjectType is set to the
+        current object, then the variable will be deleted for just the current object.  If a document,
+        page or field object type is specified, then if the current object, or any of the child objects,
+        match the specified object type, then the specified variable will be deleted.<br/><br/>
+
+        It is not required that the variable exists on the target object, but if it does exist it will
+        be deleted.<br/><br/>
+        <e>
+          <b>DeleteDCOVariable("MyVar","3")</b><br/><br/>
+
+          This example will delete the variable "MyVar" on the current object, if it is a field,
+          and all child objects. If this was called on a document object, then all of the fields
+          on all pages within the current document would be checked and the variable would
+          be deleted.<br/><br/>
+
+          rrSet("MyVar", "@X.NameOfVarToDelete")<br/>
+          rrSet("3", "@X.ObjectTypeToUpdate")<br/>
+          <b>DeleteDCOVariable("@X.NameOfVarToDelete","@X.ObjectTypeToUpdate")</b><br/><br/>
+
+          This second example has the same results as the first example.  It simply illustrates that
+          the values can be passed using smart parameters. In an actual implementation, the variables
+          would like be assigned in some previous rule or task.<br/><br/>
+
+          <b>DeleteDCOVariable("MyVar", "0")</b><br/><br/>
+
+          This example deletes the variable "MyVar", but only on the current object that is
+          associated with the running rule.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy.
+      </see>
+    </method>
+    
+
+    <method name="HasDCOChildOfType" qi=": Returns true if the current object has a child of the specified type.">
+      <p name="Type"/>
+      <ap>
+        The type to locate as a child of the current DCO node. Smart parameters are supported. <br/><br/>
+      </ap>
+      <h>
+        This action checks the child objects of the current node to see if any of them
+        match the type that is specified.  This action only checks the immediate child objects
+        with a one child depth and will not check the children of the child nodes.<br/><br/>        
+        <e>
+          <b>HasDCOChildOfType("Main_Page")</b><br/>
+          If the current DCO node has a child page object of the type "Main_Page", the
+          action will return true.  If it does not, it will return false.<br/><br/>
+          
+          rrSet("Airline", "@X.LookForMe")
+          <b>HasDCOChildOfType("@X.LookForMe")</b><br/>
+          This example checks each of the child node to see if one of them
+          is of the type specified in the DCO variable "LookForMe".  In this example,
+          the variable was previously set with "Airline" causing the action
+          to look for a child of type "Airline".<br/><br/>          
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if the current object contains a child or children specified of the type
+        specified by the parameter.  Otherwise, <b>False.</b><br/><br/>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information about the document hierarchy and an object's type.
+      </see>
+    </method>
+
+    <method name="IsDocumentCountMoreThan" qi=": Counts the number of documents and returns true or false if the count is exceeded.">
+      <p name="Count"/>
+      <p name="ReturnTrueIfMore"/>
+      <ap>
+        <b>Count:</b> The document count to compare.<br/>
+        <b>ReturnTrueIfMore:</b> Controls if the action returns true or false based on the comparison.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        Counts all of the document objects within the batch and returns true or false based
+        on the provided count.<br/><br/>
+
+        This action only counts document nodes attached to the batch level object.
+        Typically documents only exist off of the batch level.  If an application should have
+        a document that is the child of another document node, the child document nodes
+        are not included in the total count.<br/><br/>
+        <e>
+          <b>IsDocumentCountMoreThan("1", "true")</b><br/>
+          This example returns true if there are more than 1 document object in the batch.<br/><br/>
+
+          <b>IsDocumentCountMoreThan("1", "false")</b><br/>
+          This example returns false if there are more than 1 document object in the batch.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        if returnTrueIfMore is <b>true,</b> the action returns true if the document count exceeds the parameter, otherwise <b>false</b> is returned.<br/><br/>
+        if returnTrueIfMore is <b>false,</b> the action returns false if the document count exceeds the parameter, otherwise <b>true</b> is returned.<br/>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information regarding document objects.
+      </see>
+    </method>
+    
+    <method name="IsFirstDocumentInBatch" qi=": Checks to see if this is the first document in the batch.">
+    <ap>
+      None.<br/>
+    </ap>
+    <h>
+      Checks to see if this is on an object in the first document in a batch.  If called on
+      a document node, the action will return true if it is the first document in the batch.
+      If called at a page or field level, the action will check to see if the parent
+      document node is the first node in the batch.<br/><br/>
+      <e>
+        <b>IsFirstDocumentInBatch()</b><br/>
+        If the current node belongs to the first document, the action will return true
+        and the next action in the function will run.  If not, the action will return false
+        and control will switch to the next function in the ruleset.
+      </e>
+    </h>
+    <lvl>
+      Document, Page or Field.<br/>
+    </lvl>
+    <ret>
+      <b>True</b> if on the first document, or the current object in the first document.  Otherwise <b>False.</b>
+    </ret>
+      <see>
+        Refer to the top level help topic for more information regarding document objects.
+      </see>
+    </method>
+      
+    <method name="IsFirstPageInBatch" qi=": Checks to see if this page is the first in the batch.">
+      <ap>
+        None.<br/>
+      </ap>
+      <h>
+        Checks to see if this page is the first in the batch.  
+        If documents have been created,
+        it does not matter if this has been arranged as the first page object or if other
+        page objects have been placed ahead of it in the DCO tree.  If the page was
+        the first page created in the batch, it will return true.<br/><br/>
+        <e>
+          <b>IsFirstPageInBatch()</b><br/>
+          If the current page node is the first page in the batch, the action will return true
+          and the next action in the function will run.  If not, the action will return false
+          and control will switch to the next function in the ruleset.<br/><br/>
+        </e>
+      </h>
+      <lvl>
+        Page Level Only.
+      </lvl>
+      <ret>
+        <b>True</b> if it is the first page.  Otherwise <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information regarding page objects.
+      </see>
+    </method>
+
+      <method name="IsMultiPageDocument" qi=": Checks if the current document object has multiple pages."> 
+          <ap>
+              None.
+          </ap>
+          <h>
+              This action returns true if the current document object contains multiple child pages.
+              If called on a page or field object, the action will check the parent document object.<br/>
+              <e>
+                  <b>IsMultiPageDocument()</b><br/>
+              </e>
+          </h>
+          <lvl>
+              Document, page or field level.
+          </lvl>
+          <ret>
+              <b>False,</b> if called at the Batch level, the document object cannot be found,
+              or if the document does not have more than 1 child.
+              Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+      <method name="IsSinglePageDocument" qi=": Checks if the current document contains a single page.">
+          <ap>
+              None.
+          </ap>
+          <h>
+              This action is used to determine if the current object is a document with only 1 child page attached.
+              <e>
+                  <b>IsSinglePageDocument()</b><br/>
+                  PopulateZNField()<br/>
+              </e>
+          </h>
+          <lvl>Document, page or field level.</lvl>
+          <ret>
+              <b>False,</b> if called at the Batch level, the document object cannot be found,
+              or if the document has more than 1 child.
+              <b>True,</b> if the document contains one page.
+          </ret>
+       </method>   
+      
+
+    <method name="JoinDocumentWithPreviousDocument" qi=": Combines the previous document into the current document.">
+      <p name="Type"/>
+      <ap>
+        <b>Type:</b> Document Type of previous document (to be joined with the current document).<br/>
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        Called on a document level object, the pages from the previous document
+        are moved into this document.  The pages from the previous document will be placed
+        in front of the pages in the current document.<br/><br/>
+        
+        The previous document object will be removed so the result is that the
+        structure of both documents are merged into a single document level object.<br/><br/>
+        
+        If the type of the previous document does not match the type
+        provided in the parameter, then the documents will not be joined.<br/><br/>
+        <e>
+          <b>JoinDocumentToPreviousDocument("SeparatorDoc")</b><br/>
+          The current document object will be merged with the previous document object,
+          if the previous document type is "SeparatorDoc".<br/><br/>
+          
+          If the runtime DCO was like this before:<br/><br/>
+          
+          SeparatorDoc<br/>
+          - Page1<br/>
+          - Page2<br/>
+          InvoiceDoc<br/>
+          - Main_Page<br/>
+          - Trailing_Page<br/>
+          - Trailing_Page<br/>
+          - Trailing_Page<br/><br/>
+          
+          After calling the join action, the structure will look like this:<br/><br/>
+
+          InvoiceDoc<br/>
+          - Page1<br/>
+          - Page2<br/>          
+          - Main_Page<br/>
+          - Trailing_Page<br/>
+          - Trailing_Page<br/>
+          - Trailing_Page<br/><br/>
+        </e>
+      </h>
+      <lvl>
+        Document Level Only.
+      </lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information regarding document objects.
+      </see>
+    </method>
+    
+
+    <method name="MoveBatchPageToPreviousDocument" qi=": Moves the current page without a document structure into a document object.">
+      <p name="NewDocumentType"/>
+      <ap>
+        <b>NewDocumentType:</b> If the current page is the batch's first child object, a new document object
+        will be created with the type specified.<br/>
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        The current page will be moved to become a child of the first document node
+        that is previous to the current page node.  If the page is the first object
+        in the batch, then a new document node will be created and this page object
+        will be moved to the new document, becoming a child page of the new document object.<br/><br/>
+        
+        This action must be run on a page object that is directly attached to the batch level object.
+        The "Other" page type is an example of a page that does not have a document hierarchy and
+        is directly attached to the batch DCO node.<br/><br/>        
+        
+        If this action is run on a page node that is already in a document structure,
+        the action will exit without moving the page.<br/><br/>
+        <e>
+          <b>MoveBatchPageToPreviousDocument("OtherDoc")</b><br/>
+          This example must be run on a page object that is directly attached to the
+          batch level object. This is a page that has not yet been assigned to a document
+          structure.  The page will be moved into the previous sibling document, if it
+          is a document object.  If there isn't a previous document object, then
+          a new document object will be created and assigned the provided type.<br/><br/>
+          
+          With the DCO structure like this:<br/><br/>
+          
+          Batch<br/>
+          - Document1<br/>
+          - InvoicePage<br/>
+          - Document2<br/>
+          
+          If the action is called on "InvoicePage", then the page will be moved
+          to the "Document1" object.<br/><br/>
+
+          Batch<br/>
+          - InvoicePage<br/>
+          - Document1<br/>          
+          - Document2<br/>
+
+          If the action is called on "InvoicePage", then a new document node
+          of type "OtherDoc" will be created and "InvoicePage"
+          will be moved to the new "OtherDoc" object.<br/><br/>
+        </e>
+      </h>
+      <lvl>
+        Page Level, but will execute only if the page's parent is the batch level object.
+      </lvl>
+      <ret>
+        Always <b>True.</b><br/>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information regarding page objects.
+      </see>
+    </method>
+
+
+      <method name="PageIDBySequenceTypes" qi=": Assigns a type to all pages of type 'Other' from a list of types.">
+          <p name="SequenceTypes" qi="A comma separated list of page types to assign."/>
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              This action processes all pages with a type of "Other", assigning them page types
+              as specified by the input parameter list. The action will process each page and assign each type
+              in order as they appear in the DCO tree.
+              When the end of the list is reached, assignments will start again from the start of the list.<br/><br/>
+              <e>
+                  <b>PageIDBySequenceTypes("Front,Back")</b><br/><br/>
+                  
+                  The action will set the page types of the batch to Front, Back, Front, Back, Front, and so on.
+                  It is assumed that the pages have all been ingested in the correct order, or that earlier
+                  actions have determined the correct order and have either properly ordered the pages
+                  or have created a correct list used as a parameter.<br/>
+              </e>
+          </h>
+          <lvl>
+              Batch level.
+          </lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+      
+
+      <method name="PageIDByVariableChange" qi=": Assigns page types using a main and trailing page paradigm based on the value of a DCO variable.">
+          <p name="VariableToWatch" qi="The name of the variable to check in each page object."/>
+          <p name="MainPageType" qi="The type to assign to the first page of the document."/>
+          <p name="TrailingPageType" qi="The type to assign to all trailing pages in the document."/>
+          <ap>
+              Smart parameters are supported for all parameters.<br/>
+          </ap>
+          <h>
+              This action processes all pages within a batch and sets the page type according to the input parameters.
+              When pages are ready for PageID, a variable can be "watched" so that when it changes
+              a new page type will be triggered.<br/><br/>
+              
+              One use case for this action is to create the document structure from
+              multi-page TIFFs or PDFs that went through a VScan process and have
+              been split into single images.<br/><br/>
+
+              The action will watch the DCO variable that is identified by the first parameter.  The first page
+              in the batch will be set to the page type identified by the second parameter.  The action will
+              then continue to look at the DCO variable for each subsequent page.  If the value of the variable
+              does not change, each subsequent page will considered a trailing page and is assigned the page type identified by the third
+              parameter.  Processing all of the pages in the batch, this continues until the value of the DCO variable changes.  When a change is
+              detected, it indicates a new main page and that page type is set to the page type identified in the second parameter.
+              Subsequent pages are then set to the page type identified by the third parameter, until reaching
+              the last page of the batch, or the watched variable changes again.<br/><br/>
+
+              While this action is attached to the batch level node,
+              the DCO variable identified in the first parameter is a variable that must exist on
+              every page level DCO object in the batch.<br/><br/>
+              <e>
+                  <b>PageIDByVariableChange("ScanSrcPath", "Main_Page", "Trailing_Page")</b><br/><br/>
+
+                  In this example, the variable ScanSrcPath contains the path to the
+                  source image. When TIF pages are split from a multiple page TIF or PDF,
+                  the ScanSrcPath variable identifies the parent document that was split into pages.
+                  This variable will be the same for all pages that came from the parent and will change
+                  on pages that came from a different parent.
+                  This action will watch the contents of the variable ScanSrcPath on each page within
+                  the batch. When the variable changes,
+                  the first page will be set to the page type Main_Page, and any
+                  other pages that continue to have the same value in ScanSrcPath that immediately follow will
+                  have the page type set to Trailing_Page.
+                  The action will scan through each page, looking at the value of ScanSrcPath.  When it changes again,
+                  the first page will be set to the page type Main_Page and any subsequent pages with the same
+                  value in ScanSrcPage will have the page type set to Trailing_Page.  This will continue until
+                  all pages in the batch have been set.  It is also assumed that after splitting a document into
+                  multiple pages, the parent document has been deleted from the DCO tree prior to calling this action.
+              </e>
+          </h>
+          <lvl>
+              Batch level.
+          </lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="PopulateTaxType" qi=": Loads the search terms for the Taxes field.">
+          <p name="Types"/>
+          <ap>
+              A comma separated list of types to process for creation of the tax lineitems.<br/>
+          </ap>
+          <h>
+              For each tax type provided, a "Tax_Type" and "Tax_Value" lineitem field is created.
+              The current field must not contain children.<br/><br/>
+
+              This action is for APT and not intended for general use.<br/>
+              <e>
+                  <b>PopulateTaxType("Sales,VAT,GST")</b>
+                  <br/>
+              </e>
+          </h>
+          <lvl>
+              Field Level.  The Taxes/TaxLineitem/Tax_Value field in APT.
+          </lvl>
+          <ret>
+              Always <b>TRUE.</b>
+          </ret>
+      </method>
+      
+
+    <method name="PromotePageToDocument" qi=": Converts a page object to a document object.">
+      <p name="NewDocumentType"/>
+      <p name="NewDocumentID"/>
+      <ap>
+        <b>NewDocumentType:</b> The new document type for this page node.<br/><br/>
+
+        <b>NewDocumentID:</b> The new document ID for this page node. If a parameter is provided
+        this ID must be unique within the batch. 
+        Leave this field blank to have the action create a unique ID.<br/><br/>
+
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        This action converts the current page object to a document level object.  This action is useful for situations
+        where file has been ingested as a page level node and it is desired to change the page node to a document node,
+        so the file associated with the node is now a document level object.<br/><br/>
+
+        This is achieved by creating a new document node of the type specified in the parameter.
+        The variables from the current page node, such as IMAGEFILE and other variables will be copied
+        over to the new document node.  If the page has associated data files, they will now be
+        associated with the current document using the same variable names.<br/><br/>
+
+        The ID of the new document object will be unique, it will not duplicate the ID from the original page object.  
+        Once the new document object is created, the existing page DCO node will have its status changed
+        to "75", indicating that it is in "Deleted" state. This action does not delete the page from the object hierarchy.
+        To fully remove the page object from the batch, use an action like DeleteDCOChildWithStatus("75") to remove
+        pages that have been marked for deletion.<br/><br/>
+
+        The current page node must be a direct child of the batch.  The new document node will be a child of the batch.<br/><br/>
+
+        Any child fields of the current page will not be moved to the document object.  
+        Any child fields and associated data will be deleted when the page node is deleted.<br/><br/>
+
+        After this action is called, it is recommended that no further rules are run on the page object as it will be removed. 
+        Additionally, any rules which will be run on the new document object should be in a 
+        following ruleset, not the same ruleset as this action.<br/><br/>        
+        <e>
+          Ruleset1<br/>
+          - Rule1 (Attached to a page DCO)<br/>
+          - - Function1<br/>
+          - - - <b>PromotePageToDocument(“Invoice”,“”)</b><br/>
+          - Rule2 (Attached to batch close)
+          - - Function2<br/>
+          - - - DeleteDCOChildWithStatus("75")<br/><br/>
+
+          Ruleset2<br/>
+          - Rule3 (Attached to a document level “Invoice” DCO)<br/>
+          - - Function3<br/>
+          - - - SetNamePattern(“2”)<br/>
+          - - - rrSet(“1”,”@X.convPdfIgnoreContent”)<br/>
+          - - - rrSet(“0”,”@X.y_createLayout”)<br/>
+          - - - PDFFREDocumentToImage(“300”,”18”,”33”,”32”,”.bw.tif”,”col.tif”,”gray.tif”,”0”,”False”,100”)<br/><br/>
+
+          This example assumes that Rule1 is attached to a page level object that needs to be promoted to a document 
+          object, Rule2 is attached to the batch close event and 
+          Rule3 is attached to an “Invoice” document object.  The action PromotePageToDocument 
+          will convert the current page object to a new document object of type “Invoice”.  The original
+          page is marked with status 75 to indicate it is deleted.<br/><br/>
+
+          Rule2 runs at the batch level and deletes all children that have a status of 75. This action
+          must be the last action in a ruleset.  Any subsequent actions must be in a separate ruleset.
+          If desired, DeleteDCOChildWithStatus could be in its own ruleset as long as the ruleset
+          does not contain additional actions.  Any subsequent actions must be in a new ruleset.<br/><br/>
+          
+          Ruleset1 will complete and then the next ruleset2 will run on the new document node, 
+          converting the associated PDF file into multiple TIF images.  
+          A new page object will be created for each TIF and each page will be a child of the Invoice document.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only.  The page must be a direct child of the batch object.</lvl>
+      <ret>
+        Returns <b>false</b> if the NewDocumentType parameter is blank or if an error occurs, otherwise <b>true</b>.
+      </ret>
+      <see>
+        Refer to the top level help topic for more information regarding field objects.
+      </see>
+    </method>
+    
+    
+    <method name="RefreshFields" qi=": Updates the Data file for a page in a batch with new fields and also preserves the data for previously created fields.">
+      <ap>None.</ap>
+      <h>
+        Updates the runtime field data file for a page 
+        with new fields and also preserves the data for previously created fields. If additional fields have been
+        created after a previous call to CreateFields, this action will create the required
+        child DCO field objects for the current page for the newly created fields.<br/><br/>
+
+        This action is similar to CreateFields except that if there is already a Data file for a page then it will not
+        erase the previously created fields and will just add new fields to the page.
+        Existing fields will remain unchanged.<br/><br/>
+        <e>
+          SetPageType("Main_Page")<br/>
+          <b>RefreshFields()</b><br/><br/>
+          
+          This sequence of actions assigns the page type "Main_Page" to the current
+          page, then will initialize any new fields that belong to "Main_Page"
+          that do not already exist on the current page.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True</b> if successful. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic for more information regarding field objects.
+      </see>
+    </method>
+
+
+    <method name="RemoveDocumentStructure" qi=": Removes the document hierarchy from the batch.">
+      <ap>
+        None.
+      </ap>
+      <h>
+        This action will flatten the document - page hierarchy from the batch.  If the batch consists of multiple documents,
+        each with a set of pages, the document level is removed and all of the pages become a flat structure.
+        Once complete, there is no distinction of sets of pages within a document.<br/><br/>
+        
+        It is recommended that this action is called as the last action within a ruleset.
+        Place any following actions into a follow on ruleset.<br/><br/>
+        <e>
+          <b>RemoveDocumentStructure()</b><br/><br/>
+          
+          If a batch has a document structure like this:<br/><br/>
+
+          Batch<br/>
+          - Invoice<br/>
+          - - Main_Page<br/>
+          - - Trailing_Page<br/>
+          - - Trailing_Page<br/>
+          - Invoice<br/>
+          - - Main_Page<br/>
+          - - Trailing_Page<br/>
+          - Invoice<br/>
+          - - Main_Page<br/>
+          - - Trailing_Page<br/>
+          - - Trailing_Page<br/>
+          - - Trailing_Page<br/><br/>
+
+          After this action completes, the DCO structure will be:<br/><br/>
+
+          Batch<br/>
+          - Main_Page<br/>
+          - Trailing_Page<br/>
+          - Trailing_Page<br/>
+          - Main_Page<br/>
+          - Trailing_Page<br/>
+          - Main_Page<br/>
+          - Trailing_Page<br/>
+          - Trailing_Page<br/>
+          - Trailing_Page<br/><br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for more information regarding the DCO hierarchy.
+      </see>
+    </method>
+
+    <method name="SetDCOStatus" qi=": Assigns a value to the Status property of the current object of the Document Hierarchy.">
+      <p name="Type" type="string" />
+      <ap>
+        An Integer representing the new status.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Assigns a value to the Status property of the current object of the Document Hierarchy.
+        The status indicates various states of the object. It may indicate the last step
+        that was performed on the object or it can convey that the object is in an error
+        state.<br/><br/>
+        <e>
+          CheckDCOType("Invoice")<br/>
+          <b>SetDCOStatus("1")</b><br/>
+          This sequence checks to see if the current object of the Document Hierarchy is a 
+          an Invoice.  If so, the value of the object's Status property is set to "1".<br/><br/>
+          
+          Function1 Test Date Range<br/>
+          - IsFieldDateEqualOrBefore("@DATE()")<br/>
+          - IsFieldDateWithinXDays("7")<br/>
+          - <b>SetDCOStatus("0")</b><br/>
+          Function2 Date Outside Range<br/>
+          - <b>SetDCOStatus("1")</b><br/>
+          Assuming this is called on a field object node, these actions first validate that the
+          current field contains a valid date that is equal to or before the current date.  
+          The next action then confirms that the date is within 7 days of today's date.
+          If both of these tests pass the status of the field is set to "0"
+          indicating that it does not have any errors.
+          If either "IsField..." action fails, then control passes
+          to the following function which sets the object status to "1"
+          which indicates it has a failure.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the input parameter is not an integer, otherwise <b>True.</b>
+      </ret>
+      <see>
+        SetDCOType, SetPageType<br/><br/>
+        Refer to the top level help of this action library for information regarding DCO types and status.
+      </see>
+    </method>
+
+    <method name="SetDCOType" qi=": Assigns a value to the Type property of the current object of the Document Hierarchy.">
+      <p name="Type" type="string" />
+      <ap>
+        <b>Type:</b> The new value to assign to the current DCO node's Type property.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Assigns a value to the Type property of the current object of the Document Hierarchy.
+        When changing the type of the current node, the status value of the node
+        is left unchanged.<br/><br/>
+        
+        This action can set the type of a page similar to the action SetPageType.  SetPageType
+        also has some slightly different features refer to that action for details.<br/>        
+                
+        The batch type defaults to the name of the application. While this action allows the
+        batch type to be changed, it is not recommended as it could cause unintended results.<br/><br/>
+        
+        This action allows field types to be changed. Typically the field type and field ID are
+        the same value.<br/><br/>
+        
+        An object's type value may not contain a double quote.  If a double quote is provided,
+        it will be changed to a single quote.<br/><br/>
+        <e>
+          CheckLastDCOType("Separator")<br/>
+          <b>SetDCOType("Invoice")</b><br/><br/>
+
+          This sequence checks to see if the previous sibling object of the application's
+          document hierarchy was a Separator page. If so, it
+          sets Invoice as the Type property of the current object.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetDCOStatus, SetPageStatus, SetDocumentType<br/><br/>
+        Refer to the top level help of this action library for information regarding DCO types and status.
+    </see>
+    </method>
+
+    <method name="SetDocumentStatus" qi=": The action assigns a status to the current document node or parent document node.">
+      <p name="Type" type="string" />
+    <ap>
+      <b>Type:</b> An integer representing the new status.<br/><br/>    
+    </ap>
+    <h>
+        Similar to the SetDCOStatus action, but works at the Document, Page or Field level.  If called at the
+        page or field level, the status is set for the parent document object and the status of the current
+        child object will not be changed.<br/><br/>
+      <e>
+          CheckDCOType("Invoice")<br/>
+          <b>SetDCOStatus("1")</b><br/>
+          This sequence checks to see if the current object of the Document Hierarchy is a 
+          an Invoice.  If so, the value of the object's Status property is set to "1".<br/><br/>
+          
+          Function1 Test Date Range<br/>
+          - IsFieldDateEqualOrBefore("@DATE()")<br/>
+          - IsFieldDateWithinXDays("7")<br/>
+          - <b>SetDCOStatus("0")</b><br/>
+          Function2 Date Outside Range<br/>
+          - <b>SetDCOStatus("1")</b><br/>
+          Assuming this is called on a field object node, these actions first validate that the
+          current field contains a valid date that is equal to or before the current date.  
+          The next action then confirms that the date is within 7 days of today's date.
+          If both of these tests pass the status of the field is set to "0"
+          indicating that it does not have any errors.
+          If either "IsField..." action fails, then control passes
+          to the following function which sets the object status to "1"
+          which indicates it has a failure.<br/><br/>
+      </e>
+    </h>  
+    <lvl>Document, Page or field level.</lvl>
+    <ret>
+      <b>False</b> if the input parameter is not an integer, otherwise <b>True.</b>
+    </ret>
+     <see>
+     SetPageType, SetDCOStatus, SetDCOType, SetDCOStatus<br/>
+       Refer to the top level help topic for more information regarding an object's status.
+    </see>
+  </method>
+    
+     <method name="SetDocumentType" qi=": The action assigns a type to the current document or parent document object of the Document Hierarchy.">
+      <p name="Type" type="string" />
+      <ap>
+        <b>Type:</b> The new value to assign to the Document DCO node's Type property.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Similar to the SetDCOType action, but works at the Document, Page or Field level to set the
+        document object type.  If called at the page or
+        field level, the type is still set for the parent document object and the type of the current
+        object will not be changed.<br/><br/>
+
+        When changing the type of a page node, the status value of the node
+        is left unchanged.<br/><br/>
+
+        An object's type value may not contain a double quote.  If a double quote is provided,
+        it will be changed to a single quote.<br/><br/>
+        <e>
+          The application's scan task typically assigns Other as the Page Type and 49 as the default
+          Page Status for every successfully scanned image in the batch.<br/><br/>
+
+          The sequence below is an example of a rule that changes the type of the current page to Invoice and assigns a page new status:<br/>
+          <b>SetPageType("Invoice")</b><br/>
+          SetPageStatus("1")<br/><br/>
+
+          This combination sets the page as an Invoices page, and gives it a status of 1. 
+          This means that the page has not yet been validated and must be processed by a 
+          task which applies Validation rules.
+        </e>
+      </h>
+      <lvl>Page and Field levels.</lvl>
+      <ret>
+        <b>False</b> if the current DCO node is not a page or a field or if the provided field does not have a parent object.
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        SetPageStatus, SetDCOStatus, SetDCOType<br/><br/>
+        Refer to the top level help of this action library for information regarding DCO types and status.
+      </see>
+    </method>
+      
+    <method name="SetFieldConfidence" qi=": Sets the confidence for all characters in a field to the same value.">
+      <p name="Target" type="string" />
+      <p name="NewConfidence" type="string" />
+      <ap>
+        <b>Target:</b> A smart parameter that resolves to a DCO field node.<br/><br/>
+        <b>NewConfidence:</b> The confidence value (1-10) to be assigned to the field's characters.
+        If the parameter is invalid or out of range, it will default to 10, which is the
+        highest confidence.<br/><br/>
+        
+        Smart parameters are supported for all parameters.<br/>
+     </ap>
+      <h>
+        This action unconditionally sets the confidence values for every character within a field to a specific value.
+        This action can help change confidence levels when the preceding actions are all successful
+        and it is desired to update the field confidence automatically to show that all characters are valid.
+        Conversely, it is possible to set all of the characters to a low confidence value to ensure
+        that the characters are all reviewed in a follow on process or in a verification panel.<br/><br/>
+        
+        If a field has text such as "Hello Datacap" and the characters were recognized
+        in order with these confidences, "8,8,8,8,4,4,8,8,8,3,9,9", calling this
+        action with a confidence value of 8 will set the confidence for each character
+        in the field to a value of 8, regardless of its current value.<br/><br/>        
+        
+        For example, if a set of calculations involving one or more fields is
+        successful, this may indicate that the confidence level of those fields' values should be forced
+        to a high confidence - regardless of the
+        confidence set by the recognition engine.  After the success of the calculation, the rules
+        can call <b>SetFieldConfidence("@P\MyField","10")</b> to unconditionally re-set 
+        the confidence values of the fields to the highest possible confidence.
+        The examples below show how the ValidationsAndTextAdjustments action
+        CalculateFields could be used to automatically validate the results
+        of field recognition. Applications can have other kinds of use cases that
+        would allow a field to be automatically validated and set to a high
+        confidence without requiring operator interaction.  Another example
+        could be a database look-up of a recognized name, or other automatic type
+        of confirmation that one or more fields are believed to be recognized
+        correctly even if the recognition engine is unsure of some of the characters.<br/><br/>               
+        
+        When viewing the confidence directly in the field level XML, values are actually
+        0 - 9 to permit one character to reflect the value of each character within
+        the xml.  This illustrates that to the user the range is exposed as 1 - 10 
+        but internally it is sometimes treated as 0-9. When developing and debugging
+        an application, be aware of this potential situation.<br/><br/>
+      <e>                
+        <b>SetFieldConfidence("@P\GrossSalary", "10")</b><br/>
+        This example sets all characters in the field "GrossSalary" to a confidence of 10.
+        The action could be called on a page level DCO node or on a sibling field level
+        DCO node and the smart parameter would resolve correctly as first it would
+        resolve to the current page and then to the child DCO node called "GrossSalary".<br/><br/>
+                
+        <b>SetFieldConfidence("@P\AdjustedPay" , "1")</b><br/>
+        Similar to the previous example, this one will lower the confidence of each
+        character in the field "AdjustedPay" to a low confidence of 1.
+        If called on a page level node, it will navigate from the current page to find
+        the child "AdjustedPay".  If called on a field level node, it will navigate up
+        to the parent page, then look for the sibling field "AdjustedPay".<br/><br/>
+        
+        <b>SetFieldConfidence("@X", "1")</b><br/>
+        Similar to the previous action, however this one would be expected to
+        be called directly on a field level DCO node and the current field's confidence
+        would be adjusted.<br/><br/><br/>
+
+        
+        This next example shows using SetFieldConfidence in the context
+        of a test run before setting the confidence.<br/><br/>
+        
+        CalculateFields("@STRING('1TotalWages' + '2TaxableInterest' + "3Unemployment' = '4AdjustedGross')")<br/><br/>              
+        <b>SetFldConfidence("@P\1totalWages", "10")</b><br/>
+        <b>SetFldConfidence("@P\2TaxableInterest", "10")</b><br/>
+        <b>SetFldConfidence("@P\3Unemployment", "10")</b><br/>
+        <b>SetFldConfidence("@P\4AdjustedGross", "10")</b><br/>
+        If the calculation works, the application can assume that all of the characters are read
+        correctly because all of the fields summed up to the correct value 
+        and <b>SetFieldConfidence</b> can adjust the fields to high confidence.
+        Note, in this example it would be a good practice to also add a check
+        that the values are all non-zero to eliminate a completely "bad read".<br/><br/>
+      </e>
+    </h>  
+    <lvl>Any level.</lvl>
+    <ret>
+      Always <b>True.</b> If the target input parameter is invalid, no confidence levels 
+      are changed and a message is logged.
+    </ret>
+      <see>
+        Refer to the top level help topic for more information regarding a field's confidence.
+      </see>
+  </method>
+
+    
+    <method name="SetObjectID" qi=": Renames the target dco node with a new object ID.">
+      <p name="NewID" type="string" />
+      <p name="TargetObject" type="string" />
+      <ap>
+        <b>NewID:</b> The value that will be used as the new Target ID. If this parameter is blank, the
+        text property of the current object will be used.<br/><br/>
+
+        <b>TargetObject:</b> A smart parameter referencing a target which is receiving the new ID.
+        If this parameter is blank, then the current object will be the target.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        Allows an object's ID to be changed at runtime. An object's ID should be unique.<br/><br/>
+
+        An object's ID is set by Datacap actions and clients when new objects are created.
+        The assigned ID usually does not need to be manually set or changed. Changing an object's
+        ID can change how rules are run. An object's ID should not be manually changed unless it
+        is absolutely necessary as it can produce unintended results. If this action must
+        be used, it is recommended that this be run in the last rule of a
+        ruleset so any subsequent rules are run in a new ruleset.<br/><br/>
+        <e>
+          <b>SetObjectID("@F.MySourceVar","@P")</b><br/><br/>
+
+          Assuming this action is called on a field object, new ID value is obtained from
+          the variable called "MySourceVar".  The value is then assigned to
+          of the calling object's Parent page object.<br/><br/>
+
+          <b>SetObjectID("","")</b><br/><br/>
+
+          Assuming this action is called on a field object, new ID value is obtained from
+          the text value of the current field.  The value is then assigned to the ID
+          of the current field.<br/><br/>
+        </e>
+        <br/>
+        <br/>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the action cannot locate the target object.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help of this action library for information regarding DCO types and status.
+      </see>
+    </method>
+
+
+    <method name="SetPageStatus" qi=": The action assigns a page status to the current page or the parent page object of the Document Hierarchy.">
+      <p name="Type" type="string" />
+    <ap>
+      <b>Type:</b> An integer representing the new status.<br/><br/>    
+    </ap>
+    <h>
+        Similar to the SetDCOStatus action, but works at the Page or Field level.  If called at the
+        field level, the status is set for the parent page object and the status of the field
+        object will not be changed.<br/><br/>
+      <e>
+          CheckDCOType("Invoice")<br/>
+          <b>SetDCOStatus("1")</b><br/>
+          This sequence checks to see if the current object of the Document Hierarchy is a 
+          an Invoice.  If so, the value of the object's Status property is set to "1".<br/><br/>
+          
+          Function1 Test Date Range<br/>
+          - IsFieldDateEqualOrBefore("@DATE()")<br/>
+          - IsFieldDateWithinXDays("7")<br/>
+          - <b>SetDCOStatus("0")</b><br/>
+          Function2 Date Outside Range<br/>
+          - <b>SetDCOStatus("1")</b><br/>
+          Assuming this is called on a field object node, these actions first validate that the
+          current field contains a valid date that is equal to or before the current date.  
+          The next action then confirms that the date is within 7 days of today's date.
+          If both of these tests pass the status of the field is set to "0"
+          indicating that it does not have any errors.
+          If either "IsField..." action fails, then control passes
+          to the following function which sets the object status to "1"
+          which indicates it has a failure.<br/><br/>
+      </e>
+    </h>  
+    <lvl>Page or field level.</lvl>
+    <ret>
+      <b>False</b> if the input parameter is not an integer, otherwise <b>True.</b>
+    </ret>
+     <see>
+     SetPageType, SetDCOStatus, SetDCOType, SetDCOStatus<br/>
+       Refer to the top level help topic for more information regarding an object's status.
+    </see>
+  </method>
+      
+
+    <method name="SetPageType" qi=": Assigns a Page Type to the current Page or parent Page object of the Document Hierarchy.">
+      <p name="Type" type="string" />
+      <ap>
+        <b>Type:</b> The new value to assign to the current DCO node's Type property.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Similar to the SetDCOType action, but works at the Page or Field level.  If called at the
+        field level, the type is still set for the parent page object and the type of the field
+        object will not be changed.<br/><br/>
+
+        When changing the type of a page node, the status value of the node
+        is left unchanged.<br/><br/>
+
+        An object's type value may not contain a double quote.  If a double quote is provided,
+        it will be changed to a single quote.<br/><br/>
+        <e>
+          The application's scan task typically assigns Other as the Page Type and 49 as the default
+          Page Status for every successfully scanned image in the batch.<br/><br/>
+
+          The sequence below is an example of a rule that changes the type of the current page to Invoice and assigns a page new status:<br/>
+          <b>SetPageType("Invoice")</b><br/>
+          SetPageStatus("1")<br/><br/>
+
+          This combination sets the page as an Invoices page, and gives it a status of 1. 
+          This means that the page has not yet been validated and must be processed by a 
+          task which applies Validation rules.
+        </e>
+      </h>
+      <lvl>Page and Field levels.</lvl>
+      <ret>
+        <b>False</b> if the current DCO node is not a page or a field or if the provided field does not have a parent object.
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        SetPageStatus, SetDCOStatus, SetDCOType<br/><br/>
+        Refer to the top level help of this action library for information regarding DCO types and status.
+      </see>
+    </method>
+    
+  </com>
+</rrx>

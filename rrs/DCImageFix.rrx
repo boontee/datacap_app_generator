@@ -1,0 +1,144 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="DCImageFix" v="9.1.0.1">
+  <g>
+    <![CDATA[
+'**************************************************************************************************
+' Document Convertion Actions
+
+'IBM InfoSphere Classification Actions
+
+' Licensed Materials - Property of IBM
+' “Restricted Materials of IBM”
+' 5725-C15 5725-C69
+'
+' © Copyright IBM Corp. 1994, 2013 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+
+' Version = "8.0.0"
+' Created 05/11/2009 JMartinez
+
+' Version = "8.1.0.0"
+' Created 05/23/2011 JMartinez
+'- Moved parameter information from the qi= tag to the standard parameter help section
+'- Moved action information from the qi= tag to the standard action help section
+'- Added IBM Copyright notice
+'**************************************************************************************************
+    ]]>
+</g>
+  
+  <com ref="Datacap.Libraries.ImageFix.Actions" >
+    <method name="ImageEnhance" >
+      <p name="BackupFileExtension" type="string"/>
+      <ap>
+        The file extension that the action is to assign to the backup of the original Image file.
+        For example: tio<br/><br/>
+        The extension must be at least 1 character.  If the leading period is provided, 
+        it must have at least one character following it.  Long name file extensions are allowed.
+      </ap>
+      <h>
+        Initiates image processing to perform a preconfigured set of image enhancements.<br/><br/>
+
+        Include this action after a <scr>LoadSettings</scr> or <scr>LoadSettings_FingerprintID</scr> action.<br/><br/>
+          
+          The following file types are supported: tiff, tif, jpeg, jpg and bmp.<br/><br/>
+        <e>
+          LoadSettings("C:\ParentDir\Invoice\Process\ImageFix.ini")<br/>
+          <b>ImageEnhance("tio")</b>
+          <br/><br/>
+
+          Keep in mind in this example that the ImageFix settings specified in ImageFix.ini will be
+          applied to every page in the batch.  An example of the copied file name: "TM000001.tio".<br/><br/>
+
+          LoadSettings("C:\ParentDir\Invoice\Process\ImageFix.ini")<br/>
+          <b>ImageEnhance("tio.tif")</b>
+          <br/><br/>
+
+          This example uses a longer file extension, which preserves the original file type,
+          making it easier to view the original file without renaming.
+          An example of the copied file name: "TM000001.tio.tif".
+        </e>
+      </h>
+      <lvl>Page or Field Level.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not 3 or 4 alphanumeric characters, or if there is an exception encountered while enhancing the image.  Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="LoadSettings">
+      <p name="BackupFileExtension" type="string" />
+      <ap>
+        <i>String</i>value of the path to the ImageFix Settings file (.ini).<br/><br/>
+
+        Note, however, that the action can use Smart Parameter syntax, such as the '@PATH(string)'
+        method to specify the path.
+      </ap>
+      <h>
+        This action loads the settings that the <b>ImageFix</b>action will use to process all images
+        in the current batch. The action's parameter includes the file's name and complete path to
+        its location in the application's <b>Process</b>directory. As an alternative, the parameter
+        can use a <i>smart</i> parameter such as @Path to designate the value of the path to the
+        same <b>Process</b>directory.<br/>
+        <e>
+          <scr>
+            <b>LoadSettings(C:\ParentDir\Invoice\Process\ImageFix.ini)</b>
+          </scr>
+          <br/>
+          <scr>ImageEnhance(tio)</scr>
+          <br/>
+          <br/>
+        </e>
+        <e>
+          Loads the settings file using the path denoted by the "ScanFixSettings" key that is listed
+          in the Paths.ini file.  If the key pointed to a relative path, it would be converted to the
+          appropriate full path and then use that path to find the settings:<br/><br/>
+          <scr>
+            <b>LoadSettings(@PATH(ScanFixSettings))</b>
+          </scr>
+          <br/>
+          <scr>ImageEnhance(tio)</scr>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the ImageFix Settings file that you specify as a parameter is not found. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="LoadSettings_FingerprintID">
+      <p name="FingerprintsFolderPath" type="string" />
+      <ap>
+        <i>String</i> value of the path to the fingerprint folder <br/><br/>
+
+        Note, however, that the action can use Smart Parameter syntax, such as the '@PATH(string)'
+        method to specify the path.<br/><br/>
+      </ap>
+      <h>
+        Loads the specific ImageFix Settings file (.ini) that corresponds to the Fingerprint ID of the current page.<br/><br/>
+
+        The action will search the application's fingerprint folder for a fingerprint-specific
+        ImageFix Settings file. Settings for these files are assigned during the Image Enhancement phase
+        of Fingerprint Definition, using tools of Rule Manager's Image Processing Setup dialog.
+        (Chapter 3 of the Rule Manager Reference shows you how to define a fingerprint-specific
+        ImageFix Settings file.)<br/><br/>
+
+        <b>Important!</b> The name of a fingerprint-specific ImageFix Settings file is limited to
+        the Fingerprint ID with the ".ini" extension: 1044.ini, for example.
+        <e>
+          <scr>
+            <b>LoadSettings_FingerprintID()</b>
+          </scr>
+          <br/>
+          <scr>ImageEnhance(tio)</scr>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if a fingerprint-specific Settings file does not exist. Otherwise, <b>True.</b>
+      </ret>
+      </method>
+    
+    </com>
+</rrx>

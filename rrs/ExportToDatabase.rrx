@@ -1,0 +1,747 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="ExportToDatabase" v="9.1.9.2">
+  <com ref="Datacap.Libraries.ExportToDatabase.Actions"  qi="Saves batch data into a database.">
+    <h>
+        The ExportToDatabase action library used to export the page level and field level values into a table in the Database.
+        Typically, exporting data to a database is the last step in a successful batch process.<br/><br/>
+        
+        The action DatabaseOpenConnection connects to a database using the connection string. 
+        Subsequent export actions then use the open database connection for their work.        
+        Similarly DatabaseCloseConnection will close the existing open connection.<br/><br/>
+        
+        <b>Note:</b> The ExportToDatabase Action library is 64-bit action library. 
+        Ensure the 64 bit database (db2, Microsoft Access, SQL Server, Oracle) driver is installed properly.
+        Microsoft Access is only supported for development in a single rulerunner environment. It is not supported for production.<br/><br/>
+        
+        The ExportToDatabase actions only support use within a single rulerunner. A profile using these actions
+        must only be run by one rulerunner.<br/><br/>
+
+        <b>SetTableName:</b><br/><br/>
+        The action SetTableName confirms that the table name which is passed to action is present in database or not if not, then this action will return False.        
+        This action must be called before exporting the any values into the table. 
+        In the example below, the action checks if the Export Results table is present in the database or not.
+        If not, then action returns false. If present, the action returns true and then processing moves to next action.<br/><br/>
+
+        <b>SetTableName("Export_Results") </b><br/>
+        ExportFieldToColumn("MyDate", "db_Date") <br/>
+        AddRecord() <br/><br/>
+
+        <b>ExportToColumn:</b><br/>
+        ExportToColumn is a field-level action that exports the captured value of the current Field object from the page's Data file to a target column
+        within a previously designated table of an open Export database.<br/><br/>
+
+        <b>ExportFieldToColumn:</b><br/><br/>
+        Action ExportFieldToColumn is a page-level action that extracts the captured value of a Field object from the Data file of the current page,
+        and specifies its target location within a table of the Export database.<br/><br/>
+        
+        For Example:<br/>
+        SetTableName("Export Results")<br/>
+        <b>ExportFieldToColumn("VendorID","db_Number","2") </b><br/>
+        <b>ExportFieldToColumn("Date","db_Date") </b><br/>
+        <b>ExportFieldToColumn("Total","db_Total") </b><br/>
+        AddRecord()<br/><br/>
+
+        <b>AddRecord:</b><br/>
+        The AddRecord action inserts assembled data into the database SetTableName("Invoice") <br/>
+        ExportFieldToColumn("VendorID","db_Vendor")<br/>
+        ExportFieldToColumn("Number","db_Number") <br/>
+        ExportFieldToColumn("Total","db_Total") <br/>
+        <b>AddRecord()</b><br/><br/><br/>
+
+        
+        <b>⟸ ♕ Generating Statistics ♕ ⟹</b><br/><br/>
+
+        The statistics actions are used to calculate the page classification count and recognition count. The counts are stored in runtime DCO.
+        The statistics actions utilize the DatabaseOpenConnection and DatabaseCloseConnection actions,
+        but do not require the use of any of the other export actions.<br/><br/>
+
+        There are situations where classification or recognized text changes conditionally.
+        For example, recognized field text can be changed by "cleaning" rulesets or
+        by a verification operator.
+        This action library identifies that values that has been changed and counts them
+        counted as recognition errors or page classification errors.<br/><br/>
+
+        The page type must be set, and a recognition action must be called, and field values populated, prior to calling
+        any of these actions Recognize action should be called before calling any of these actions.
+        SaveFieldsRecognizedText must be called prior to any cleaning actions or user verification.<br/><br/>
+
+        The saving of statistics data can be controlled in the application manager.
+        The check box <b>Save Statistics</b> can be checked or unchecked, which sets the application manager entry "SaveReportStatistics".
+        This value can be then used in the ruleset to control the call of Statistics actions.<br/><br/>
+
+        For Example:<br/>
+        rrCompareCase("@APPVAR(SaveReportStatistics)", "True", "False")<br/>
+        SaveFieldsText("")<br/><br/>
+
+        In the example, the application logic first checks if the application is configured
+        to save statistics information.  If so, it then calls the statistics action.<br/><br/>
+
+        The following are the typical logical steps performed when using the statistics actions. These
+        steps are not all performed in a single task:<br/><br/>
+
+        1. Perform recognition and populate fields.<br/>        
+        2. Call the action StatisticsSaveFieldsText.<br/>
+        3. The verify operator has performed verification on page types and field recognition results.<br/>
+        4. Call the action StatisticsCompareFieldsText.<br/>
+        5. Call the action DatabaseOpenDatabase.<br/>
+        6. Perform any necessary actions to export batch data using the ExportToDatabase actions.<br/>
+        7. Call the action StatisticsAddToDatabaseTotals.<br/>
+        8. Call the action ExportCloseDatabase.<br/><br/><br/>
+
+
+        <b>⟸ ♕ The Datacap Document Object Hierarchy (DCO) ♕ ⟹</b><br/><br/>
+        
+        Applications are created with a "Setup DCO" and each batch has a unique "Runtime DCO".
+        The DCO is explained in the top-level help of the ApplicationObject action library.<br/><br/><br/>
+        
+
+        <b>⟸ ♕ Smart Parameters ♕ ⟹</b><br/><br/>
+
+        Smart parameters are a syntactic way of specifying action parameters that are resolved at runtime,
+        allowing dynamic input of data to actions.  The complete smart parameter reference is available
+        in the top-level help of the RuleRunnerLogic action library.<br/><br/>
+    </h>
+
+      <method name="AddRecord" qi="Inserts assembled data into the database table specified by a previous SetTableName action.">
+          <ap>None. </ap>
+          <h>
+              Inserts assembled data into the database table specified by a previous <b>SetTableName</b> action.<br/><br/>
+
+              <b>Important:</b> This action must be placed after earlier actions that open the database, gather data, and access the correct table.<br/><br/>
+              
+              <e>
+                  SetTableName("Invoice")<br/>
+                  ExportFieldToColumn("VendorID","db_Vendor")<br/>
+                  ExportFieldToColumn("Number","db_Number")<br/>
+                  ExportFieldToColumn("Total","db_Total")<br/>
+                  <b>AddRecord()</b><br/><br/>
+
+                  This ExportDB rule applies to a Page object of the Document Hierarchy.<br/><br/>
+
+                  The actions open the database and direct the rule's attention to the Invoice table.
+                  The rule then sets up a record with three values - Vendor ID, Invoice Number and Total.
+                  Afterwards, the AddRecord action updates the table with new information. <br/><br/>
+
+                  Note: A return of False means the record may not have been successfully exported,
+                  and needs to be followed by a "failure check" rule that typically would call
+                  SetTaskStatus(0), or the RuleRunnerLogic action SetTaskAbortBatch, to ensure that the batch aborts.<br/><br/>
+              </e>
+          </h>
+          <lvl>All, but generally used at the Page or Field level.</lvl>
+          <ret>
+              <b>False</b> if there is no connection to the database; if an error occurs when the action
+              attempts to add the record to the database; or if a SetTableName action was not previously used.<br/><br/>
+              Otherwise, <b>True</b>.
+          </ret>
+          <see>
+              SetTableName, ExportFieldToColumn
+          </see>
+      </method>
+
+      <method name="DatabaseCloseConnection" qi="Closes an open connection to your Export database.">
+      <ap>None.</ap>
+      <h>
+        Closes an open connection to the previously opened Export database. <br/><br/>
+
+        Usually, this action is placed in a ruleset that is separate from the ruleset that opens
+        the connection and stores the data. <br/><br/>
+
+        For example, this action could be placed into a ruleset called ExportDBClose,
+        and attached to a batch level close event which executes after all data has been
+        exported from the batch to the specified database.<br/><br/>
+          
+        <e>
+          <b>DatabaseCloseConnection()</b><br/><br/>
+
+          This action closes the previously opened connection to the Export database. <br/><br/>
+
+          This action is usually part of a separate ruleset that prevents the need to repeatedly
+          open the connection to the Export database. (You can open the connection once in the first
+          ruleset, export data from all documents and pages in the batch, then close the connection once
+          in the second ruleset.)  The database must be opened, used and closed all within
+          the same task profile.  You cannot open the connection in one task profile and then
+          expect to use the connection in a different task profile.
+        </e>
+      </h>
+      <lvl>All, but generally used as part of a separate ruleset at the Batch level. </lvl>
+      <ret>
+        <b>True, </b> even if the connection is already closed.
+      </ret>
+      <see>DatabaseOpenConnection</see>
+
+
+    </method>
+
+    <method name="DatabaseOpenConnection" qi="Opens a connection to the database specified as the parameter.">
+      <p name="strConnectionString" type="string"/>
+      <ap>
+          The Connection String of the target Export database.
+          Use smart parameters to retrieve the connection from the application manager
+          to avoid clear text passwords in your application.<br/>
+      </ap>
+      <h>
+        Opens a connection to the database specified as the parameter. <br/><br/>
+
+        A rule containing this action can apply to any object of the Document Hierarchy (DCO), but it is most often used at the batch level. <br/><br/>
+          
+          This action connects to the database using a 64 bit connection.  
+          The proper 64 bit client interface must be available for the target database.<br/><br/>
+        <e>
+          <b>DatabaseOpenConnection("@APPVAR(*/exportdb:cs)")</b><br/><br/>
+
+          <b>Note:</b> This action must come before any other ExportToDatabase actions.  This example
+          uses smart parameters to obtain the connection string from the application service
+          where the custom connection string key "exportdb" has been created in the "Custom Values" tab.
+          It provides a single location for the connection string and security for passwords. 
+          If necessary, multiple custom variables can be created to connect to different databases.<br/><br/>
+
+          <b>Note:</b> If the action is establishing a connection with an Oracle database,
+          or an SQL Server database using SQL Server Authentication, be sure to expand the DSN parameter
+          by adding the correct Provider, user ID and Password.  For example:<br/><br/>
+
+            <b>Access:</b><br/>
+            DatabaseOpenConnection("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Datacap\TravelDocs\TravelDocsExport.mdb;Persist Security Info=False;")<br/><br/>
+            
+            Access databases are not supported in a production environment.<br/><br/>
+
+            <b>Oracle:</b><br/>
+            DatabaseOpenConnection("PROVIDER=OraOLEDB.Oracle;Data Source=1040Look;ID=Admin;Password=Admin;")<br/><br/>
+
+            <b>SQL Server:</b><br/>
+            DatabaseOpenConnection("PROVIDER=ODBCMSSQL;DSN=1040Look;CATALOG=;DBNTA=;UID=Admin;PWD=Admin;")<br/><br/>
+
+            <b>DB2:</b><br/>
+            Provider=IBMDADB2;Data Source=MYDB2SOURCE;UID=user;PWD=password<br/><br/>
+
+            <b>Note:</b> Although the examples show the full connection string, it is recommended that a smart
+            parameter is used to obtain the connection string from the application service, as shown in the first example,
+            to provide password security and application portability.<br/><br/>
+        </e>
+      </h>
+      <lvl>All, but generally used at the Batch level.</lvl>
+      <ret>
+        <b>True</b> if the connection opens. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        DatabaseCloseConnection
+      </see>
+    </method>
+
+    <method name="SetTableName" qi="Sets the name of the table in your database to which the data is to be exported.">
+      <p name="TableName" type="string"/>
+      <ap>
+        <b>TableName.</b> The name of the database table where the exported data will be inserted.<br/><br/>
+        The action confirm that the supplied table name is valid.  If the table name is not valid, SetTableName will return False.
+        Note that this value causes an extra database call so it is typically specified only during development,
+        not in a production system as it will increase the number of database calls and running time.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Sets the name of the table in your database to which the data is to be exported.  This action needs to be used before the AddRecord action.<br/>
+        <e>
+          <b>SetTableName("Export_Results")</b><br/>
+          ExportFieldToColumn("MyDate", "db_Date")<br/>
+          AddRecord()<br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Returns <b>False</b> only if the first parameter contains an invalid table name and a value of 1 is specified as a second parameter.
+        Otherwise, this action always returns <b>True. </b>
+      </ret>
+      <see>AddRecord</see>
+    </method>
+
+    <method name="ExportBatchIDToColumn" qi="Stores the current batch ID into the database.">
+      <p name="Column" type="string"/>
+      <p name="SQLFormatValue" type="string"/>
+      <ap>
+        <b>Column.</b> The name of the database column that will hold the value.<br/><br/>
+
+        <b>SQLFormatValue.</b> Optional: Can be set to  the numerical value of 1, 2, or 3.<br/><br/>
+
+        If this parameter is not specified, quotes will be placed around the value in the SQL query to update the table. <br/><br/>
+
+        Setting the value to 1 causes this action to return False if the Table name is invalid;
+        otherwise, the error will not be discovered until the action that performs the DB insert call,
+        such as an AddRecord action, is called.  This value would typically
+        only be used in a development environment as it will increase processing time.<br/><br/>
+
+        Setting this value to 2 allows NULL column values and inserts no quotes around values (for numeric) in the SQL query to update the database. <br/><br/>
+
+        Setting the value to 3 allows NULL and if the column value is not NULL,
+        the column value will be surrounded in quotes in the SQL query to update the database.
+
+        Smart parameters are supported for all parameters.<br/><br/>
+        <br/><br/>
+      </ap>
+
+      <h>
+        Exports the current Batch ID to the database column specified by the parameter. The action also has an optional query format parameter with two values.<br/><br/>
+          
+        <e>
+          SetTableName("Export_Results")<br/>
+          <b>ExportBatchIDToColumn("db_BatchID","1")</b><br/>
+          ExportFieldToColumn("Date","db_Date")<br/>
+          ExportFieldToColumn("Total","db_Total")<br/>
+          AddRecord()<br/>
+        </e>
+      </h>
+      <lvl>All, but generally at the Page or Field level. </lvl>
+      <ret>
+        <b>False</b> if the second parameter is set to "1" and the parameters do not identify a
+        valid database column. Otherwise, <b>True.</b>
+      </ret>
+      <see>AddRecord, ExportFieldToColumn, ExportPropertyToColumn</see>
+
+    </method>
+
+    <method name="ExportToColumn" qi="A field-level action that exports the captured value of the current Field object from the page's Data file to a target column within a previously designated table of an open Export database.">
+      <p name="Column" type="string"/>
+      <p name="SQLFormatValue" type="string"/>
+      <ap>
+          <b>Column. </b> The name of the database column that will hold the value of the current field. <br/><br/>
+
+          <b>SQLFormatValue.</b> Optional: Can be set to  the numerical value of 1, 2, or 3.  <br/>
+
+          If this parameter is not specified, quotes will be placed around the value in the SQL query to update the table. <br/><br/>
+          Setting the value to 1 causes this action to return False if the Table name is invalid;
+          otherwise, the error will not be discovered until the action that performs the DB insert call,
+          such as an AddRecord action, is called.  This value would typically only be used
+          in a development environment as it will increase processing time. <br/><br/>
+
+          Setting this value to 2 allows NULL column values and inserts no quotes around values (for numeric) in the SQL query to update the database. <br/><br/>
+
+          Setting the value to 3 allows NULL and if the column value is not NULL, the column value will be
+          surrounded in quotes in the SQL query to update the database. <br/><br/>
+          
+          Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        This field-level action exports the captured value of the current Field object from the page's
+        Data file to a target column within a previously designated table of an open Export database.
+        Optionally, it can assign a query format to the action.<br/><br/>
+          
+        <e>
+          Batch Level:<br/>
+          DatabaseOpenConnection("@APPVAR(*/exportdb:cs)")<br/>
+          SetTableName("Export_Results”) <br/><br/>
+
+          Current field:<br/>
+          <b>ExportToColumn("db_Date","3”) </b><br/><br/>
+
+          Last Field:<br/>
+          AddRecord()<br/><br/>
+
+          This example exports the captured value of the Field object to which the rule applies,
+          from the Data file of the current page to the db_Date column of the Export_ Results table,
+          within the Export database.<br/>          
+        </e>
+      </h>
+      <lvl>Field level only. </lvl>
+      <ret>
+        <b>False</b> if:<br/>
+        <b>1.</b> There is no connection to the database.<br/>
+        <b>2.</b> The column identified by the parameters does not exist.<br/>
+        <b>3.</b> A SetTableName action was not previously used.<br/><br/>
+
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>ExportFieldToColumn, ExportPropertyToColumn</see>
+
+    </method>
+
+    <method name="ExportFieldToColumn" qi="A page-level action that extracts the captured value of a Field object from the Data file of the current page, and specifies its target location within a table of the Export database.">
+      <p name="Field" type="string"/>
+      <p name="Column" type="string"/>
+      <p name="SQLFormatValue" type="string"/>
+      <ap>
+
+        <b>Field. </b> The name of the field whose value will be stored in the column.<br/><br/>
+
+        <b>Column. </b> The name of the database column that will hold the value.<br/><br/>
+
+        <b>SQLFormatValue.</b> Optional: Can be set to  the numerical value of 1, 2, or 3.  If this parameter is not specified,
+        quotes will be placed around the value in the SQL query to update the table.<br/><br/>
+
+        Setting the value to 1 causes this action to return False if the Table name is invalid;
+        otherwise, the error will not be discovered until the action that performs the DB insert call,
+        such as an AddRecord action, is called.  This value would typically only be
+        used in a development environment as it will increase processing time. <br/><br/>
+
+        Setting this value to 2 allows NULL column values and inserts no quotes around values
+        (for numeric) in the SQL query to update the database. <br/><br/>
+
+        Setting the value to 3 allows NULL and if the column value is not NULL,
+        the column value will be surrounded in quotes in the SQL query to update the database.<br/><br/>
+
+
+        Smart parameters are supported for all parameters<br/><br/>
+      </ap>
+      <h>
+        This is a page-level action that extracts the captured value of a Field object from the
+        Data file of the current page, and specifies its target location within a table of the Export database.<br/><br/>
+
+        Within a rule, this action should run before an AddRecord action, which commits the data
+        to the database.
+        <e>
+          SetTableName("Export_Results")<br/>
+          <b>
+            ExportFieldToColumn("VendorID","db_Number","2")<br/>
+            ExportFieldToColumn("Date","db_Date")<br/>
+            ExportFieldToColumn("Total","db_Total")
+          </b><br/>
+          AddRecord()<br/><br/>
+
+          This action exports the captured value of three Field objects from the Data file of the current page,
+          to corresponding columns of the Export Results table, within the open Export database.<br/><br/>
+
+          <b>Important:</b> DatabaseOpenConnection action must have been previously called to establish a connection
+          to your Export database.  This is usually accomplished by a rule at the Batch level.
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if:<br/>
+        <b>1.</b> There is no connection to the database.<br/>
+        <b>2.</b> The database column specified as a parameter does not exist.<br/>
+        <b>3.</b> The Field object identified by the parameter does not exist.<br/>
+        <b>4.</b> A SetTableName action was not used previously.<br/><br/>
+
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>SetTableName, ExportToColumn</see>
+
+    </method>
+
+    <method name="ExportSmartParamToColumn" qi="Adds the evaluated value of a smart parameter to a column of the Export database">
+      <p name="SmartField" type="string"/>
+      <p name="Column" type="string"/>
+      <p name="SQLFormatValue" type="string"/>
+      <ap>
+        <b>SmartField. </b> A smart parameter that specifies the value to be stored into the column.<br/><br/>
+
+        <b>Column.</b> The name of the database column that will hold the value.<br/><br/>
+
+        <b>SQLFormatValue. </b> Optional: Can be set to  the numerical value of 1, 2, or 3.<br/><br/>
+
+        If this parameter is not specified, quotes will be placed around the value in the SQL query to update the table. <br/><br/>
+
+        Setting the value to 1 causes this action to return False if the Table name is invalid;
+        otherwise, the error will not be discovered until the action that performs the DB insert call,
+        such as an AddRecord action, is called.  This value would typically only be used
+        in a development environment as it will increase processing time.<br/><br/>
+
+        Setting this value to 2 allows NULL column values and inserts no quotes
+        around values (for numeric) in the SQL query to update the database.<br/><br/>
+
+        Setting the value to 3 allows NULL and if the column value is not NULL,
+        the column value will be surrounded in quotes in the SQL query to update the database.<br/><br/>
+
+        Smart parameters are supported for all parameters<br/><br/>
+        <br/><br/>
+      </ap>
+      <h>
+        Using the database opened by an earlier ExportDB action, this action will
+        store a value into the specified column for the current row.
+        <br/><br/>
+        <e>
+          <b>ExportSmartParamToColumn("@P\MyField.TYPE","EXPDBCOLUM")</b>
+        </e>
+      </h>
+      <lvl>All, but generally at the Page or Field level.</lvl>
+      <ret>
+        <b>False</b> if:<br/><br/>
+        <b>1.</b> There is no connection to the database.<br/>
+        <b>2.</b> The column identified by the parameter does not exist.<br/>
+        <b>3.</b> A <b>SetTableName</b> action was not previously used.<br/><br/>
+        Otherwise, <b>True.</b>
+      </ret>
+
+    </method>
+
+    <method name="ExportNodeXMLToColumn" qi="Exports the value of the XML property of the bound object (node) of the Document Hierarchy to a column of the Export database.">
+      <p name="SmartParameter Path" type="string"/>
+      <p name="Column" type="string"/>
+      <p name="SQLFormatValue" type="string"/>
+      <ap>
+        <br/><br/>
+        <b>SmartParameter Path.</b> The smart parameter path to the bound object of the Document Hierarchy.
+        This object's XML property will be added to a designated column of the Export database.<br/><br/>
+
+        <b>Column.</b> The String value of the name of the target column in the Export database.
+        The action will add the value of the calling object's XML property to this column.<br/><br/>
+
+        <b>SQLFormatValue.</b> Optional: Can be set to the numerical value of 1 or 3.  <br/><br/>
+
+        If this parameter is not specified, quotes will be placed around the value in the SQL query to update the table.<br/><br/>
+
+        Setting the value to 1 causes this action to return False if the Table name is invalid;
+        otherwise, the error will not be discovered until the action that performs the
+        DB insert call, such as an AddRecord action, is called.  This value would typically
+        only be used in a development environment as it will increase processing time.<br/><br/>
+
+        Setting the value to 3 allows NULL and if the column value is not NULL, the column value<br/><br/>
+        will be surrounded in quotes in the SQL query to update the database.<br/><br/>
+        Smart parameters are  supported  all parameters<br/><br/>
+      </ap>
+      <h>
+        This action exports the value of the <b>XML</b> property of the bound object (node)
+        of the Document Hierarchy to a column of the Export database.<br/>
+        <br/>
+        <e>
+          <b>ExportNodeXMLToColumn("@P\MyField","MYDBCOLUM")</b>
+        </e>
+      </h>
+      <lvl>All, but generally at the Page or Field level.</lvl>
+      <ret>
+        <b>False</b> if:<br/>
+        <br/>
+        <b>1.</b> There is no connection to the database.<br/>
+        <b>2.</b> The column identified by the parameter does not exist.<br/>
+        <b>3.</b> A <b>SetTableName</b> action was not previously used.<br/>
+        <b>4.</b> The smart parameter path does not point to a valid object of the Document Hierarchy.<br/>
+                  If the smart parameter path is invalid then the Null/Blank value get inserted into table and action returns true.<br/><br/>
+        Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="ExportPropertyToColumn" qi="Adds the value of a property (variable) of the selected object to a column of the Export database">
+      <p name="PropertyName" type="string"/>
+      <p name="Column" type="string"/>
+      <p name="SQLFormatValue" type="string"/>
+      <ap>
+        <br/>
+        <b>PropertyName.</b> The property name whose value will be stored in the column.<br/><br/>
+
+        <b>Column.</b> The name of the database column that will hold the value.<br/><br/>
+
+        <b>SQLFormatValue.</b> Optional: Can be set to  the numerical value of 1, 2, or 3.  <br/><br/>
+
+        If this parameter is not specified, quotes will be placed around the value in the SQL query to update the table.<br/><br/>
+        Setting the value to 1 causes this action to return False if the Table name is invalid;
+        otherwise, the error will not be discovered until the action that performs the DB
+        insert call, such as an AddRecord action, is called.  This value would
+        typically only be used in a development environment as it will increase processing time.<br/><br/>
+
+        Setting this value to 2 allows NULL column values and inserts no quotes around values
+        (for numeric) in the SQL query to update the database.<br/><br/>
+
+        Setting the value to 3 allows NULL and if the column value is not NULL,
+        the column value will be surrounded in quotes in the SQL query to update the database.<br/><br/>
+
+        Smart parameters are supported for all parameters<br/><br/>
+
+      </ap>
+      <h>
+        Adds the value of a property (variable) of the selected object to a column of the Export database.
+        <e>
+          SetTableName("Export_Results")<br/>
+          ExportFieldToColumn("VendorID","db_Number")<br/>
+          <b>ExportPropertyToColumn("Status","db_PageStatus","2")</b><br/>
+          ExportFieldToColumn("Total","db_Total")<br/>
+          AddRecord()<br/><br/>
+
+          This sequence updates the db_PageStatus column of the Export Results table with the value of
+          the selected object's Status property. It also uses the optional third parameter to define
+          a <i>Style</i> for the action.
+        </e>
+      </h>
+      <lvl>All, but generally used at the Page or Field level. </lvl>
+      <ret>
+        <b>False</b> if:<br/><br/>
+        <b>1.</b> There is no connection to the Export database.<br/>
+        <b>2.</b> The column of the database does not exist.<br/>
+        <b>3.</b> The property (variable) identified by the parameter does not exist.<br/>
+        <b>4. </b> A SetTableName action was not used previously.<br/><br/>
+
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>ExportToColumn, ExportFieldToColumn, ExportBatchIDToColumn</see>
+    </method>
+
+
+      <method name="StatisticsAddToDatabaseTotals" qi="Calculates page type classification and field recognition accuracy statistics.">          
+          <ap>
+              None.
+          </ap>
+          <h>
+              Updates the application summary statistics in the reportTotal table with this batch's totals.  
+              Once this action executes successfully it sets batch variable TotalStatsUpdated to avoid double-counting.<br/><br/>
+
+              DatabaseOpenConnection must be called prior to using this action. ExportCloseConnection must be called after all export database
+              actions have completed in the current task profile.  If a connection to the database has not been made,
+              this action will attempt to open the database using the default database connection "@APPVAR(values/dsn/exportdb:cs)"
+              but the action ExportCloseConnection must still be called in the same task profile,
+              once the database is no longer needed.<br/><br/>
+
+              Before StatisticsAddToDatabaseTotals updates the database, it checks the DCO variable TotalStatsUpdated to confirm that statistics
+              have not yet been saved for the current batch.
+              Once this action executes successfully it sets batch variable TotalStatsUpdated to avoid double-counting within the database.<br/><br/>
+              
+              This action saves the data in Application Engine Database ReportTotal table.
+              The database column rt_featureCount1 and rt_TotalSizeKB are updated by this action.<br/><br/>
+              
+              The field rt_featureCount1 will be updated only when there is a change observed in the recognition of page or fields.<br/><br/>
+              
+              The rt_TotalSizeKB field will store the size of Batch Directory.<br/><br/>
+              
+              This action does not perform any updates in the reportBatch table.<br/><br/>              
+              <br /><br />
+              <e>
+                  <b>StatisticsAddToDatabaseTotals()</b>
+                  <br/>
+                  <br/>
+              </e>
+          </h>
+          <lvl>
+              Batch.
+          </lvl>
+          <ret>
+              <b>False,</b> if the database connection does not exist or if an error occurs.  Otherwise, <b>True.</b><br/><br/>
+              
+              If the database connection does not exist, the batch will be set to the "Abort" state.<br/><br/>
+          </ret>
+          <see>
+              StatisticsCompareFieldsText, StatisticsSaveFieldsText.<br/><br/>
+              
+              Refer to the top-level help of this action library for general information about exporting batch statistics.<br/>
+          </see>
+      </method>
+
+      <method name="StatisticsCompareFieldsText" qi="Calculates page type classification and field recognition accuracy statistics.">
+          <p name="SaveStatusVariableName" type="string" qi="Optional. If provided, the action will also save the object status using the variable name provided."/>
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Call this action after data verification to calculate accuracy based on the changes to data during verification.
+              The StatisticsSaveFieldsText action must have previously run after the recognition has been performed, but before operator verification.
+              If the verify operator has corrected any of the recognized fields, this action will count the number of fields that have been changed.
+              The saved values that were generated by StatisticsSaveFieldsText, are compared with the values that exist after operator verification, 
+              calculating accuracy statistics.<br/><br/>
+
+              All pages within the batch, and all fields on all pages, are processed by this action.<br/><br/>
+
+              Batch variables are populated with accuracy values:<br/><br/>
+
+              PageClassifiedErrors: the number of page classification errors (page type changed after auto-classification).<br/>
+              PageClassifiedCount: the number of pages classified in this batch.<br/>
+              FieldRecognitionCount: the number of fields with recognized text.<br/>
+              FieldRecognitionErrors: the number of fields that were incorrectly recognized (text values were changed after recognition).<br/>
+              FieldAccuracyPct: Field recognition accuracy percentage.<br/>
+              ClassifyAccuracyPct: Classification accuracy percentage.<br/><br/>
+
+              The action processes all pages and fields to calculate the values of the listed variables but takes no further action.
+              This action does not
+              have any interaction with the database, it simply prepares data for later processing, saving results in batch level variables.
+              It is not necessary to open the connection to the export database before using this action.<br/><br/>
+
+              The action compares the original page type classification with the final value after verification. Any differences that have
+              occurred are counted. The calculation will be done for only those pages which were classified correctly and
+              have a variable <b>ClassifiedPageType</b> in DCO xml added by the action SaveFieldsRecognizedText.
+              <br/><br/>
+              
+              Following are the variables added in runtime DCO file by this action:<br/>
+              <ul>
+                  <li>
+                      <b>PageClassifiedErrors :</b>
+                  </li>
+                  The variable contains the page classification errors count (page type changed after auto-classification).<br/>
+                  It compares the saved value in ClassifiedPageType with the current type of page.
+                  If the value of the variable and type of page is different it is assumed the page type is changed after auto-classification and the count of PageClassifiedErrors variable will be increased.<br/>
+                  <li>
+                      <b>PageClassifiedCount :</b>
+                  </li>
+                  The variable stores the total number of pages classified in this batch.<br/>
+                  The count compares the saved value in ClassifiedPageType which was added by the action SaveFieldsRecognizedText.
+                  The page type classified as Other is considered as not classified or incorrectly classified.<br/>
+                  <li>
+                      <b>FieldRecognitionCount :</b>
+                  </li>
+                  The variable stores the total number of fields that were recognized.<br/>
+                  The count is based on the variable RecognizedText, that was added by a previous call to the action SaveFieldsRecognizedText.<br/>
+                  <li>
+                      <b>FieldRecognitionErrors :</b>
+                  </li>
+                  The variable stores the number of fields that were incorrectly recognized, meaning it was changed after recognition.<br/>
+                  It compares the value in variable RecognizedText with the current field object text.
+                  If values are different, it is assumed that the value of the current field object is changed after recognition and the count of the variable FieldRecognitionErrors will be increased.<br/>
+                  <li>
+                      <b>FieldAccuracyPct :</b>
+                  </li>
+                  Field Accuracy Percentage calculates the percentage of field recognition accuracy using the value of the variable FieldRecognitionCount and FieldRecognitionErrors.<br/>
+                  <li>
+                      <b>ClassifyAccuracyPct : </b>
+                  </li>
+                  Classify Accuracy Percentage calculates the percentage of page classification accuracy using the value of the variable PageClassifiedCount and PageClassifiedErrors.<br/>
+              </ul>
+              <br/><br/>
+
+              This action must be called as a final step before submitting the results to the database with the action StatisticsAddToDatabaseTotals.
+              <br/><br/>              
+              <e>
+                  <b>StatisticsCompareFieldsText("")</b><br/><br/>
+
+                  These are the logical steps that must be performed in previous tasks before calling StatisticsCompareFieldsText()<br/><br/>
+
+                  <ul>
+                      <li>
+                          Perform recognition and populate fields.<br/>
+                      </li>
+                      <li>
+                          Call the action StatisticsSaveFieldsText.<br/>
+                      </li>
+                      <li>
+                          The verify operator has performed verification on page types and field recognition results.<br/>
+                      </li>
+                  </ul>
+              </e>
+          </h>
+          <lvl>
+              Batch.
+          </lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>StatisticsSaveFieldsText</see>
+      </method>
+      
+
+      <method name="StatisticsSaveFieldsText" qi="Stores the current recognition and page classification results prior to verification.">
+          <ap>None.</ap>
+          <h>
+              Call this action after page classification and OCR recognition, but before verification, to save the original recognized data for statistics calculations.
+              Information is stored within page and field variables allowing the contents to be saved or later compared to the results after verification.<br/><br/>
+
+              All pages within the batch, and all fields on all pages, are processed by this action.<br/><br/>
+
+              The classification type of each page is stored in page variable "ClassifiedPageType".
+              The recognized text value of each field is stored in field variable "RecognizedText".
+              In a second step, in a later profile, these variables will be checked by the action StatisticsCompareFieldsText
+              and compared to the current values to determine if the verification operator has changed
+              any page type classifications or has updated recognized field text on each page.<br/><br/>
+
+              This action does not
+              perform any interaction with the database, it simply prepares data for later processing, saving results in batch level variables.
+              It is not necessary to open the connection to the export database before using this action.<br/><br/>
+
+              <e>
+                  <b>StatisticsSaveFieldsText()</b><br/>
+                  <br/>
+              </e>
+          </h>
+          <lvl>
+              Batch.
+          </lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+          <see>StatisticsCompareFieldsText</see>
+      </method>
+
+  </com>
+</rrx>
+
+

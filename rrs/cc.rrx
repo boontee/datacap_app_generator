@@ -1,0 +1,535 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="CC" v="9.1.5.10">
+  <g>
+    <![CDATA[
+'**************************************************************************************************
+'IBM Content Classification Actions
+
+' Licensed Materials - Property of IBM
+' "Restricted Materials of IBM"
+' 5725-C15 5725-C69
+'
+' © Copyright IBM Corp. 1994, 2011 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+
+'Version = "8.1.0.1"
+' Updated 03/05/2012 JMartinez
+' Replaces ICM.rrx
+
+'Version = "8.1.0.2"
+' Updated 03/06/2012 JMartinez
+' Updated help text for action 
+
+'Version ="8.1.0.3"
+'Updated 03/07/2012 JMartinez
+'Changed Datacap.Libraries.ICM namespace to Datacap.Libraries.CC and updated help text for action FindFingerprintCC to remove extra carriage return.
+
+Version ="8.1.0.4"
+'Updated 06/05/2012 JMartinez
+'Updated help text for action FindFingerprintCC
+
+'Version ="8.1.0.5"
+'Updated 06/07/2012 CMcGhee
+'Updated help text for action SetProblemValueCC
+
+'Version= "9.0.0.1"
+'Updated 9/25/2015 JMartinez
+'Added actions SetDecisionPlanCC, SetDecisionPlanFieldsCC,  RunDecisionPlanCC. Private: RunDecisionPlanForFileInVariableCC,ClassifyTextCC, ClassifySeparateBlocksCC
+'Added deprecation notice for the action FindFingerprintCC, replaced with ClassifyCC
+'Added action ClassifyCC
+
+'Version= "9.0.0.2"
+'Updated 10/01/2015 JMartinez 
+'Added actions ClassifyTextCC and RunDecisionPlanForTextCC to classify any text. 118212
+
+'Version= "9.0.0.3"
+'Updated 10/02/2015 JMartinez 118203
+' When running classification via a knowledge base (ClassifyCC, ClassifyTextCC actions) a list of matches and their confidence values is kept in the variables "MatchinCategoryX", "MatchinCategoryConfX". Variable "MatchingCategoriesCount" is also populated with the number of matches retured.
+' The behavior of the ClassifyCC can be altered so that it does not update the page type with the classification with the highest confidence. This can be done by setting the variable "UpdateDCOType" to "0" prior to calling this action.
+
+'Version= "9.0.0.4"
+'Updated 10/06/2015 JMartinez 118203
+' Added action RunDecisionPlanForBlocksCC
+
+'Version= "9.0.0.5"
+'Updated 10/06/2015 JMartinez 118203
+' Updated action help.
+
+'Version= "9.0.0.6"
+'Updated 10/30/2015 JMartinez 118203
+' Updated actions help.
+
+'Version= "9.0.0.7"
+'Updated 11/14/2015 JMartinez 133799
+' Updated actions help.
+
+'Version= "9.0.0.8"
+'Updated 11/16/2015 JMartinez 133799
+' Updated actions help.
+
+'Version= "9.0.0.9"
+'Updated 11/17/2015 JMartinez 133799
+' Updated actions help.
+
+'Version = '9.1.3.10"
+'Updated 09/08/2017 MShah 172950
+' Added NLC Actions
+
+'Version = '9.1.3.11"
+'Updated 09/27/2017 Xiaoying 173077
+' Added Visual Recognition Actions for classification
+
+'Version = '9.1.3.12"
+'Updated 10/05/2017 MShah 174643
+' Added VisualRecogTrain and NLCClassifyText Actions
+
+'Version = '9.1.3.13"
+'Updated 10/05/2017 MShah 174643
+' Change VR and NLC Classify actions to take the classifierName
+
+'Version = '9.1.3.14"
+'Updated 10/11/2017 MShah 174643
+' Moved VR and NLC Classify actions to DocumentAnalytics action library
+'**************************************************************************************************
+    ]]>
+  </g>
+  <com ref="Datacap.Libraries.CC.Actions"  qi="IBM Content Classification Actions.">
+    <method name="FindFingerprintCC" qi="This action should not be used, as it is scheduled to be removed in future versions. It has been replaced by ClassifyCC.">
+      <h>
+        This Action has been marked for Deprecation and will removed in a future release. It has been replaced with Action <b>ClassifyCC</b>.
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True,</b> if the classification is successful. Otherwise, <b>False.</b>
+      </ret>
+    </method>
+	
+    <method name="ClassifyCC" qi="Finds the closest matching document type and assigns the page type to the page.">
+      <h>
+        This action identifies a page using the IBM Content Classification technology. This technology analyzes the full text of pages and attempts to find match within
+        the Knowledge Base specified in the SetKnowledgeBaseCC action. If a match is found, the Page type is populated with the ID of the category that was matched.<br/> If a match is not
+        found, the page type is set to "Other". <br/><br/>
+
+        When classification is complete, a list of matches and their confidence values are stored in the <b>"MatchingCategoryX"</b> and <b>"MatchingCategoryConfX"</b> variables. The number of matches is stored in the variable <b>"MatchingCategoriesCount"</b>.<br/><br/>
+
+        To run classification without updating the page type, set the variable "UpdateDCOType" to "0" prior to calling this action. In this case classification will not update the page type, but the variables mentioned aboved will still be populated.<br/><br/>
+
+        Because the matching relies on a page's full text, a full page recognition action must be called prior to using the ClassifyCC action. <br/>
+        <br/>
+        <b>Note:</b>Starting in Taskmaster 9.0.1, this action supports classification of text located layout files generated by the <b>Recognize</b> actions in the <b>RecognitionOCRA</b> and <b>OCR_SR</b> action libraries.
+        If a layout file is present, the action will automatically load it as the source of the text to be classified.<br/>
+
+        <br/><br/>
+
+        <e>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          SetLanguageCC("English")<br/>
+          SetKnowledgeBaseCC("Mortgage")<br/>
+          SetProblemValueCC(0.9)<br/>
+          Recognize() <br/>
+          <b>ClassifyCC()</b>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True,</b> if the fingerprint is found. Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+    <method name="SetKnowledgeBaseCC" qi="Sets the name of the Content Classication Knowledge Base to use to classify documents.">
+      <p name="KnowledgeBaseName" type="string" qi=" The name of the IBM Content Classification Knowledge Base. This parameter is required and cannot be empty. Smart parameters are supported." />
+      <h>
+        Sets the name of the IBM Content Classification Knowledge Base to use to classify documents in an application. <br/><br/>
+        This action must be called after the SetListenerURLCC action.
+        This action must be called before the actions SetProblemValueCC and UpdateKnowledgeBaseCC.<br/><br/>
+        <e>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          <b>SetKnowledgeBaseCC("Mortgage")</b><br/>
+          UpdateKnowledgeBaseCC()
+        </e>
+      </h>
+      <lvl>All. </lvl>
+      <ret>
+        <b>False</b>, if the parameter is empty. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="SetProblemValueCC" qi="Sets the minimum score for fingerprint matching.">
+      <p name="MinScore" type="double" qi="Minimum score for fingerprint matching. Valid values are fractional values between zero and one (for example: 0.0 and 1.0) " />
+      <h>
+        When ClassifyCC searches for a fingerprint match, a score between zero (no match) and one (a
+        positive match) is calculated. This action sets the minimum score that a match must have
+        to be considered a match. Any matches with a score less than the value specified is rejected.
+        With this action, you can control the tolerance for documents matching an existing example. <br/><br/>
+
+        When setting up the parameter in your application, use the decimal character from the system locale defined
+        for the application in the Taskmaster Application Manager.  For example, when the decimal character is
+        a period, use a value from 0.0 to 1.0.  When the decimal character is a comma, use a value from 0,0 to 1,0.<br/><br/>
+
+        This action must be called before the FindFingerprintCC action.
+        <e>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          <b>SetProblemValueCC(0.9)</b><br/>
+          ClassifyCC()
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True </b>if the parameter value is between the valid range of zero to one (0.0 and 1.0) Otherwise, <b>False</b>.
+      </ret>
+    </method>
+
+    <method name="SetLanguageCC" qi="Sets the language used in the specified Knowledge Base.">
+      <p name="LanguageName" type="string" qi="The name of the language used in the specified Knowledge Base"/>
+      <h>
+        This action sets the language of the specified Knowledge Base or Decision Plan.<br/><br/>
+
+        This action must be called before the ClassifyCC action.
+        <e>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          <b>SetLanguageCC("English")</b><br/>
+          SetKnowledgeBaseCC("Mortgage")<br/>
+          SetProblemValueCC(0.9)<br/>
+          ClassifyCC()
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True</b>.
+      </ret>
+
+    </method>
+
+    <method name="SetListenerURLCC" qi="Sets the URL of the CC Listener that will be used for classification.">
+      <p name="URL" type="string" qi="The URL of the CC Listener that will be used for classification. Smart parameters are supported." />
+      <h>
+        This action configures the URL of the IBM Content Classification Listener that will be used for classification, and opens the connection to the IBM Content Classification Listener. <br/><br/>
+
+        This action must be called before the actions FindFingerprintCC, SetKnowledgeBaseCC, and UpdateKnowledgeBaseCC.
+        <e>
+          <b>SetListenerURLCC("http://localhost:18087") </b><br/>
+          SetKnowledgeBaseCC("Mortgage")<br/>
+          SetProblemValueCC(0.9)<br/>
+          ClassifyCC()
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True,</b> if the service URL is successfully set.  Otherwise, <b>False.</b>  Note that
+        this action does not test that the CC Listener exists and is running.
+      </ret>
+    </method>
+
+    <method name="SetDecisionPlanCC" qi="Sets the name of the Content Classification Decision Plan to use to classify text.">
+      <p name="DecisionPlanName" type="string" qi="Sets he name of the IBM Content Classification Decision Plan. This parameter is required and cannot be empty." />
+      <h>
+        Sets the name of the IBM Content Classification Decision Plan to use to classify text. <br/><br/>
+        This action must be called after the SetListenerURLCC action.
+        This action must be called before the actions RunDecisionPlanCC, RunDecisionPlanForBlocksCC, and RunDecisionPlanForTextCC.
+        <e>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          <b>SetDecisionPlanCC("Mortgage")</b>
+          <br/>
+        </e>
+      </h>
+      <lvl>All. </lvl>
+      <ret>
+        <b>False</b>, if the parameter is empty. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="SetDecisionPlanFieldsCC" qi="Sets the Decision Plan fields separated by comma">
+      <p name="DPFields" type="string" qi="Comma separated list of content field names to be extracted from the content classification decision plan. This parameter is required and cannot be empty." />
+      <h>
+        Sets the fields returned by Content Classification that are to be saved as DCO variables on the calling object.<br/><br/>
+        This action must be called before the actions RunDecisionPlanCC, RunDecisionPlanForBlocksCC, and RunDecisionPlanForTextCC.
+        <e>
+          <b>SetDecisionPlanFieldsCC("Title,Loan,Loan Type")</b>
+          <br/>
+        </e>
+      </h>
+      <lvl>All. </lvl>
+      <ret>
+        <b>False</b>, if the parameter is empty. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="ClassifyTextCC" qi="Classifies blocks on the page">
+      <p name="TextToClassify" type="string"/>
+      <ap><dl><dlentry><dt>TextToClassify</dt><dd>Text to be classified. Smart parameters supported.</dd></dlentry></dl>
+      </ap>
+      <h>
+        Classifies text using knowledge base <br/><br/>
+        This action must be called after the SetListenerURLCC, SetKnowledgeBaseICM actions. <br/><br/>
+
+        When classification is complete, a list of matches and their confidence values are stored in the <b>"MatchingCategoryX"</b> and <b>"MatchingCategoryConfX"</b> variables. The number of matches is stored in the variable <b>"MatchingCategoriesCount"</b>.<br/><br/>
+
+        <e>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          SetLanguageCC("English")<br/>
+          SetKnowledgeBaseCC("Mortgage")<br/>
+          SetProblemValueCC(0.9)<br/>
+          <b>ClassifyTextCC("Place Text to classify here")</b>
+          <br/>
+        </e>
+      </h>
+      <lvl>All. </lvl>
+      <ret>
+        <b>True,</b> if no problem occurs. Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+    <method name="RunDecisionPlanForBlocksCC" qi="Runs a previously set decision plan on selected block types of a layout xml file.">
+      <p name="blockTypes" type="string" qi="Comma separated values of block types to send to decision plan. Supported block types are Block, Table, Header , Footer, Title, H1, H2, H3, and Barcode. Smart parameters are supported."/>
+      <h>
+        Sends the specified block types in the layout XML to Content Classification so that Content Classification can choose which block types to compare text to a KB and which to use in DP rules.  For example only comparing paragraph text to a KB may produce a better match by excluding text not specific to the category.<br/>
+        The layout xml file can be created by the Recognize action in the <b>OCR_SR</b> or <b>RecognitionOCRA</b> action libraries. <br/><br/>
+        This action <b>must</b> be called after the SetListenerURLCC, SetDecisionPlanCC, SetDecisionPlanFieldsCC actions. <br/> <br/>
+
+        To run the decision plan without updating the page type, set the variable "UpdateDCOType" to "0" prior to calling this action. In this case classification will not update the page type, but the variables mentioned aboved will still be populated.<br/><br/>
+
+        When the action is complete, the Decision Plan field results are stored as variables in the calling object. The variables created are named after the names of the fields specified in SetDecisionPlanFieldsCC, if this action is used. If the decision plan uses a KB and returns a matched category, a variable <b>MatchingCategory</b> will be created as well. Under this same scenario, the type of the calling object will be set to the name of the matching category, unless the variable "UpdateDCOType" is set to "0" prior to calling this action. <br/><br/>
+
+        <b>Field mapping</b><br/>
+        <br/>
+        When block xml data is passed to a decision plan, corresponding fields and the extracted text are created in the decicion plan. Below is a list of the fields created for each block type:<br/>
+        <br/>
+        Block Type = Field Name in Decision Plan<br/>
+        --------------------------------------------<br/><br/>
+        Barcode = Barcode<br/>
+        Block = Block<br/>
+        Footer = Footer<br/>
+        H1 = Heading1<br/>
+        H2 = Heading2<br/>
+        H3 = Heading3<br/>
+        Header = Header<br/>
+        Para = Body<br/>
+        Table = Table (single value field containing all the text in the table), and Cell (multivalue field containing all cells of the table)<br/><br/>
+
+        To take advantage of these fields in a decision plan you must add input fields to your ICC solution.  See ICC documentation for adding input fields and mapping XML nodes to them.  Input fields can then be used in a decision plan rule or to include when performing a statistical comparison to a Knowledge Base.<br/>
+        <br/>
+        <b>Important!</b> Depending on the version of Content Classification installed, manual changes to the docFilterManager.xml file may be required in order to ensure proper data parsing of the blocks xml on the Content Classification server side. <br/><br/>
+        To determine if manual changes are required: <br/><br/>
+        1. Open the file %ContentClassificationInstallDir%\Filters\docFilterManager.xml in an xml or text editor.<br/>
+        2. Perform a search for the string "XPATH-DATACAP". If the string is present, there are no further steps to perform. If the string is not present, please follow the instructions under "Content Classification Configuration" below to manually add the necessary configuration to this file.<br/>
+        <br/>
+
+        <b>Content Classification configuration</b><br/>
+        <br/>
+        In order for Content Classification to successfully parse the block data sent by the action RunDecisionPlanForBlocksCC, it is necessary to make manual changes to the docFilterManager.xml file is installed by Content Classification. The steps for this manual process are listed below.<br/>
+        <br/>
+        1. Make a backup copy of the existing docFilterManager.xml file. Typically, this file is located in the %ContentClassificationInstallDir%\Filters directory, for example C:\IBM\ContentClassification\Filters.<br/>
+        2. Open docFilterManager.xml in a xml or text editor.<br/>
+        3. Locate the xml element <b>AllFilters</b>.<br/>
+        4. Add the following <b>Filter</b> element to the <b>AllFilters</b> node. <b>Note</b> make sure to replace <b>«</b> and <b>»</b> with the corresponding less than and greater than symbols.<br/>
+        <br/>
+
+        «Filter» <br/>
+        «FilterName»XPATH-DATACAP«/FilterName» <br/>
+        «Timeout»30«/Timeout» <br/>
+        «NvpMapping» <br/>
+        «Property» <br/>
+        «PropName»/P/Block/«/PropName» <br/>
+        «NvpName»Block«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/Header/«/PropName» <br/>
+        «NvpName»Header«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/Footer/«/PropName» <br/>
+        «NvpName»Footer«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/Title/«/PropName» <br/>
+        «NvpName»Title«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/H1/«/PropName» <br/>
+        «NvpName»Heading1«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/H2/«/PropName» <br/>
+        «NvpName»Heading2«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/H3/«/PropName» <br/>
+        «NvpName»Heading3«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/Barcode/«/PropName» <br/>
+        «NvpName»Barcode«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/Table//«/PropName» <br/>
+        «NvpName»Table«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/Table/Row/Cell«/PropName» <br/>
+        «NvpName»Cell«/NvpName» <br/>
+        «/Property» <br/>
+        «Property» <br/>
+        «PropName»/P/Para/«/PropName» <br/>
+        «NvpName»Body«/NvpName» <br/>
+        «/Property» <br/>
+        «/NvpMapping» <br/>
+        «/Filter» <br/>
+        <br/>
+        5. Locate the xml element <b>AllWorkflows</b>.<br/>
+        6. Add the following <b>Workflows</b> element to the <b>AllWorkflows</b> node.<br/>
+        <br/>
+        «WorkFlows» <br/>
+        «AllMetaData» <br/>
+        «TP_Extension»xmldc«/TP_Extension» <br/>
+        «/AllMetaData» <br/>
+        «FilterName»XPATH-DATACAP«/FilterName» <br/>
+        «/WorkFlows» <br/>
+        <br/>
+        7. Save and close the docFilterManager.xml file.<br/>
+        <br/>
+        <br/>
+        <e>
+          Recognize()<br/>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          SetDecisionPlanCC("Mortage")<br/>
+          SetDecisionPlanFieldsCC("Title,Loan,Loan Type")<br/>
+          <b>RunDecisionPlanForBlocksCC("Table,Block")</b>
+          <br/>
+        </e>
+      </h>
+      <lvl>Page. </lvl>
+      <ret>
+        <b>False,</b> if a decision plan name is not specified, or the action is not called at the page level, or a connection to the Content Classification server cannot be established. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="RunDecisionPlanForTextCC" qi="Classifies blocks on the page">
+      <p name="TextToClassify" type="string" qi="Text to be classified. Smart parameters supported."/>
+      <h>
+        Classifies text using decision plans <br/><br/>
+        This action must be called after the SetListenerURLCC, SetKnowledgeBaseICMCC, SetDecisionPlanCC, SetDecisionPlanFieldsCC, actions.
+        <br/><br/>
+        To run the decicion plan without updating the page type, set the variable "UpdateDCOType" to "0" prior to calling this action. In this case classification will not update the page type, but the variables mentioned aboved will still be populated.<br/><br/>
+        <br/>
+        <e>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          SetDecisionPlanCC("Mortgage")<br/>
+          SetDecisionPlanFieldsCC("Title,Loan,Loan Type")<br/>
+          <b>RunDecisionPlanForTextCC(@F)</b>
+          <br/>
+        </e>
+      </h>
+      <lvl>All. </lvl>
+      <ret>
+        <b>False,</b> if a decision plan name is not specified, or the action is not called at the page level, or a connection to the Content Classification server cannot be established. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="ClassifySeparateBlocksCC" qi="Classifies blocks on the page" access="private">
+      <ap>
+        Very similar method to the RunDecisionPlanCC one, but this one is prepared for the use with blocks
+        already on the DCO level. Runs each block separately through the content classification
+        decision plan and saves extracted values as field variables.
+      </ap>
+      <h>
+        Runs each block separately through the content classification
+        decision plan and saves extracted values as field variables. <br/><br/>
+        This action must be called after the SetListenerURLCC, SetDecisionPlanCC, SetDecisionPlanFieldsCC actions.
+
+        ParseXML actions have to be called prior calling this action.
+        <e>
+          <b>ClassifySeparateBlocksCC()</b>
+          <br/>
+        </e>
+      </h>
+      <lvl>All. </lvl>
+      <ret>
+        <b>True,</b> if no problem occurs. Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+    <method name="RunDecisionPlanCC" qi="Runs decision plan on top of the page">
+
+      <h>
+        Used to run the current page against the content classification decision plan specified in the <b>SetDecisionPlanCC</b> action, and
+        extract the content fields specified in the <b>SetDecisionPlanFieldsCC</b> action. This action uses the recognition data located in layout xml, cco, or txt files associated to the calling dco page object.<br/><br/>
+        This action must be called after the SetListenerURLCC, SetDecisionPlanCC, SetDecisionPlanFieldsCC actions.<br/><br/>
+        To run the decision plan without updating the page type, set the variable "UpdateDCOType" to "0" prior to calling this action. In this case classification will not update the page type, but the variables mentioned aboved will still be populated.<br/><br/>
+        <br/>
+
+        Because the matching relies on a page's full text, a full page recognition action must be called
+        prior to using the RunDecisionPlanCC action.
+        <e>
+          Recognize() <br/>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          SetDecisionPlanCC("MortgageDp")<br/>
+          SetDecisionPlanFieldsCC("EmployeeId,Date")<br/>
+          <b>RunDecisionPlanCC()</b>
+          <br/>
+        </e>
+      </h>
+      <lvl>Page level. </lvl>
+      <ret>
+        <b>False,</b> if a decision plan name is not specified, or the action is not called at the page level, or a connection to the Content Classification server cannot be established. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="RunDecisionPlanForFileInVariableCC" qi="Classifies blocks on the page" access="private">
+      <p name="VariableName" type="string" qi="Variable name with the file for decision plan" />
+      <p name="Extension" type="string" qi="Extension of the file for decision plan" />
+      <ap>
+        Very similar method to the RunDecisionPlanCC one, but this one is prepared for the use with
+        any text file with specified extension.
+      </ap>
+      <h>
+        Runs the document trough the content classification decision plan. <br/><br/>
+        This action must be called after the SetListenerURLCC, SetDecisionPlanCC, SetDecisionPlanFieldsCC actions.
+
+        Variable Name default value is "XML"
+        Extension default value is "xml"
+        <e>
+          <b>RunDecisionPlanForFileInVariableCC("XML","xml")</b>
+          <br/>
+        </e>
+      </h>
+      <lvl>Page level. </lvl>
+      <ret>
+        <b>True,</b> if no problem occurs. Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+    <method name="UpdateKnowledgeBaseCC" qi="Updates the CC Knowledge Base.">
+      <ap>None.</ap>
+      <h>
+
+        Provides classification feedback to the Content Clasification server.
+
+        <b>Important:</b> this method is to be used to provide feedback to a previously trained knowledge base, and not to be used as the primary method for training a knowledge base from scratch. <br/><br/>
+
+        Although training via feedback is not recommended to build the knowledge base, it is recommended that it is used to submit feedback on classification data returned on a "trained" category. <br/>
+        For instance, let us use a knowledge base that contains 5 categories, 4 of which have been trained. When <i> ClassifyCC</i> runs, it will either return a match or no match. When a match is found, it is recommended to provide feedback (using UpdateKnowledgeBaseCC) to the knowledge base to assert that the classification was correct.<br/>
+        When there is no match (no category returned) or there is a mismatch (wrong category returned), the recommended process is to export a copy of the document to a folder and train the knowledge base with these new documents via the Classification Workbench. After the new documents have been added, the knowledge based should be exported, and documents processed in Taskmaster to provide feedback. The training should be done in a non Production system, then moved to Production after testing. <br/>
+
+        Although it is recommended that this procedure is used to submit feedback on trained categories, it should be done for a period of time, and not indefinetely, since this can cause the knowledge base to grow very large. <br/>
+
+        In conclusion, this action should be used only for documents where the classification result was correct, and should only be used during a period of time until the training on the knowledge base is complete.
+
+        <e>
+          SetListenerURLCC("http://localhost:18087")<br/>
+          ClassifyCC()<br/>
+          <b>UpdateKnowledgeBaseCC()</b>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True</b> if the IBM Content Classification Knowledge Base is successfully updated.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    
+    
+  </com>
+  
+  </rrx>

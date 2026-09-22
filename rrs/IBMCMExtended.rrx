@@ -1,0 +1,1195 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="IBMCMExtended" v="8.1.0.0">
+  <g>
+    <![CDATA[
+'************************************************************************
+' IBM Content Manager Actions
+
+' Licensed Materials - Property of IBM
+' “Restricted Materials of IBM”
+' 5725-C15 5725-C69
+'
+' © Copyright IBM Corp. 1994, 2011 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+
+'Version = "5.00.04" 
+' Updated 6/24/05 NSK
+'   - repaired error in document TIF upload 
+
+' Version = "7.5.4" 
+' Updated 11/22/10 NSK
+'   - RRX help added, updated GetSpecial to use standard Smart Parameters (MetaWord)
+'   - doc updated for TM7.6 and consistency
+
+' Version = "7.5.5" 
+' Updated 11/22/10 AGorbunov
+'   - Fixed two syntax errors that prevented the code to compile in IBMCM_CreateItemVar and GetSpecialVariable
+
+' Version = "7.5.6" 
+' Updated 12/09/10 DTanikawa
+'   - 30192 Depricated IBMCM_CreateItemVar, additionally added smart parameter support
+'   - Added Support for Smart Parameters to IBMCM_CreateItem
+'   - Updated CreateItem to address failed updates to CM Item Types that have required fields
+
+'Version = "8.0.1.6" 
+' Updated 12/13/10 AGorbunov
+'   - Updated version
+
+'Version = "8.0.1.7" 
+' Updated 12/14/10 DTanikawa
+'   - Removed the call to UpdateItem(0) inside of SetAttribute this will prevent errors with Item Types with more than one required field
+' - Moved the call to UpdateItem to the Upload Procedure, the means that all the all attributes set will not persisted until IBMCM_UploadDCO_Page or IBMCM_UploadDCO_DOC is called
+
+'Version = "8.0.1.8"
+' Updated 01/07/2011 PHofle
+' * Removed file extension name (extn) from <i ref="namespace.extn"> tags, just uses namespace for use
+'   with TM8.01 locale RRS. Now looks like <i ref="namespace">.
+'
+'Version = "8.0.1.9"
+' Updated 02/10/2011 PHofle
+' * Enabled smartparameters for action IBMCM_Logon. SPR 31013 
+'
+'Version = "8.1.0.0"
+' Updated 08/01/2011 DTanikawa
+' * Moved the IBMCMExtended Actions to .NET Actions Datacap.Libraries.IBMCMExtended.cs
+'
+'Version = "9.0.0.0"
+' Updated 02/25/2014 Thomas Bui
+' * Added new actions IBMCM_CreateFolder, IBMCM_SetDestinationFolder, IBMCM_SearchItem.
+' * Updated the IBMCM_SetAttributeValue and IBMCM_StoreItemIDinDCO to work with folder.
+' Updated 03/06/2014 Thomas Bui
+' * Added new actions IBMCM_AddPages, IBMCM_DeletePages, IBMCM_ReplacePage.
+' Updated 03/11/2014 Thomas Bui
+' * Added the code change for new action IBMCM_SetMimeType
+
+'Version = "9.0.0.1"
+' Updated 05/06/2014 RFerin
+' * 78759 Help updates.
+'Version = "9.0.0.2"
+' Updated 06/05/2014 Thomas Bui
+' * Fix defect 78759
+
+'Version = "9.0.0.3"
+' Updated 03/22/2019 dabhekar
+' * 185922 Created 64 bit IBMCMExtended action from 32 bit IBMCM action. Updated the help to add detailed description of the Action Library.
+' * 185922 Added support for smart variables in IBMCM_AddPages, IBMCM_DeletePages and IBMCM_ReplacePage. Changed the argument types of these functions to string.
+'**************************************************************************************************
+    ]]>
+  </g>
+  <net ref="Datacap.Libraries.IBMCMExtended.Actions"  qi=": Actions that integrate Datacap applications with the IBM Content Manager repository.">
+	<h>
+	Use these actions to upload documents and index fields into an IBM Content Manager repository.<br/><br/>
+	You can configure the IBM Content Manager Connector actions for the tasks like below:<br/>
+		1) Log in to the IBM Content Manager server.<br/>
+		2) Search for an item in the IBM Content Manager repository based on an attribute and value or item ID that is provided.<br/>
+		3) Create a IBM Content Manager document that is based on the type in the Document Hierarchy as a document or a page.<br/>
+		4) Add, delete, or replace pages in the IBM Content Manager document as needed.<br/>
+		5) Set the attribute value on the IBM Content Manager document.<br/>
+		6) Set the MIME type for the IBM Content Manager document that you are uploading.<br/>
+		7) Create an IBM Content Manager folder in the parent folder where you can upload documents.<br/>
+		8) Set the attribute value on the IBM Content Manager folder.<br/>
+		9) Set the path to the IBM Content Manager folder where you are uploading documents.<br/>
+		10) Upload the document, page, or directory to the IBM Content Manager server.<br/>
+		11) Store the item ID of the uploaded IBM Content Manager document or page in the DCO.<br/>
+		12) Store the ID of the most recently created IBM Content Manager folder into a variable of the Document Hierarchy.<br/>
+		13) Search and download the existing IBM Content Manager documents.<br/>
+		14) After the files are downloaded, you can process them in Datacap application to find any additional data in the content.<br/><br/>
+	</h>
+    <method name="IBMCM_Logon" qi="Logs on to a IBM Content Manager server.">
+      <p name="connectioninfo" type="string" qi="A comma-separated string consisting of three values:
+          1) the ID of the IBM Content Manager server
+          2) a valid Content Manager User ID
+          3) the user’s Password"
+          />
+      <ap>
+        A comma-separated string consisting of three values: <br></br>
+        
+        1) the ID of the IBM Content Manager server.<br/>
+        2) a valid Content Manager User ID.<br/>
+        3) the user’s Password.<br/>
+        
+        Smart parameters are supported for each parameter.
+      </ap>
+      <h>       
+        Performs the logon to the IBM Content Manager system.  This action must be called prior to the
+        actions that communicate with the Content Manager repository.  Connectivity, based on
+        the requirements of the IBM Content Manager server, needs to be
+        setup on the machine which is running the Datacap rules.
+        <br></br>        
+        <e>
+          <b>IBMCM_Logon("IBMCMserver,user1,password")</b><br/><br/>
+
+          <b>IBMCM_Logon("IBMCMserver,user1,+@APPVAR(values/adv/MyPassword)")</b><br/>
+          This example uses the smart parameter @APPVAR to obtain the password from the
+          advanced value section of the application manager.  The custom value name is "MyPassword".<br/>
+        </e>
+      </h>
+      <lvl>
+        Any level. Usually used at the Batch level.
+      </lvl>
+      <ret>
+        Action returns <b>True</b> if the log on succeeds; <b>False</b> if the log on is unsuccessful.
+        The log on will be unsuccessful if the action cannot find the specified server, or if the user ID or password is invalid.
+      </ret>
+    </method>
+    
+    <method name="IBMCM_Logoff" qi="Logs off from the IBM Content Manager server.">
+      <ap>
+        None.
+      </ap>
+      <h>
+        Performs the logoff from the IBM Content Manager system. This action disconnects from the Content Manager datastore and destroys the reference to the datastore object.
+        <br></br>
+        <e>
+          IBMCM_Logon("IBMCMserver,user1,password")<br/>
+          <b>IBMCM_Logoff()</b>
+          <br/>
+          <br/>
+        </e>
+      </h>
+      <lvl>
+        Any level.
+      </lvl>
+      <ret>
+        Action returns <b>True</b> if the logoff succeeds; <b>False</b> if the logoff is unsuccessful.
+        The logoff will be unsuccessful if logon was not done and a datastore object does not exists.
+      </ret>
+    </method>
+    
+    <method name="IBMCM_CreateItem" qi="Creates a IBM CM document based on the item type.">
+      <p name="itemtype" type="string" qi="Creates a IBM CM document based on the item type."/>
+      <ap>
+        itemType is a string value of a valid IBM Content Manager Item Type – NOINDEX, for example. 
+        A IBM Content Manger Item Type is equivalent to a Document Class (Index Class).<br /><br />
+        
+        Smart parameters are supported, such as @BATCHID, @ID, @STATUS, @TYPE, @VALUE,
+        @JOBID, @JOBNAME, @OPERATOR, @STATION, @TASKID, @TASKNAME, etc.  Please refer to
+        the smart parameter documentation for more information and usage.<br /><br />
+      </ap>
+      <h>
+        Creates a IBM Content Manger document based on the item type.  This action needs to be called prior to the document
+        and page upload actions.
+        <e>
+          <b>IBMCM_CreateItem("NOINDEX")</b><br />
+          IBMCM_SetMimeType("image/tiff")<br/>
+          IBMCM_UploadDCO_DOC()<br/>          
+          This example will create an IBM Content Manager document based on the NOINDEX item type,
+          set the mime type of the uploaded document, then perform the upload.<br /><br />
+          
+          <b>IBMCM_CreateItem("@P.name")</b><br />
+          This example will create an IBM Content Manager document based on the value contained inside the Smart Parameter @P.name at the page level.          
+          <br></br>
+          
+          Typically, there is one item for each processed document represented by a Document object of the Document Hierarchy, 
+          or for a processed page represented by a Page object.
+        </e>
+      </h>
+      <lvl>Document or page level.</lvl>
+      <ret>
+        <b>True,</b> if the document is successfully created.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+    <method name="IBMCM_CreateChildItem" qi="Create a child component under the current document created using IBMCM_CreateItem">
+      <p name="Child Item Information" type="string" qi="A comma-separated string consisting of two values:
+          1) childItemName: Create a child component. Creates a child component specified by the childItemName, under the defined object type (IBMCM_CreateItem).
+          2) count: The number of child component attribute values that will be set."/>
+      <ap>
+        childItemName is a string value that contains the name of a valid child componet name of the item specified by IBMCM_CreateItem.<br /><br />
+        The count is the number of child component attributes values that will be set by IBMCM_SetChildAttributeValue.<br /><br />
+      </ap>
+      <h>
+        This action needs to be called after IBMCM_CreateItem.
+        <e>
+          <b>IBMCM_CreateItem("ABCInsPlc")</b><br />
+          <b>IBMCM_CreateChildItem("Automobiles,1")</b><br />
+          IBMCM_SetChildAttributeValue("Automobiles,ABCVIN,vin123")<br/>
+          IBMCM_UploadDCO_DOC()<br/>
+          This example will create an IBM Content Manager Child Item based on the name Automobiles.<br /><br />                
+        </e>
+      </h>
+      <lvl>Document or page level.</lvl>
+      <ret>
+        <b>True,</b> if the child item is created is successfully created.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    
+    <method name="IBMCM_CreateFolder" qi="Creates a IBM Content Manger folder in the parent folder, based on the specified item type.">
+      <p name="itemType" type="string" qi="The item type (classification) to create the IBM Content Manger folder.  This parameter is required."/>
+      <p name="attribute" type="string" qi="The attribute name."/>
+      <p name="attributeValue" type="string" qi="The unique attribute value or folder ID."/>
+      <p name="hasParent" type="bool" qi="If true then the new folder has a parent folder."/>
+      <ap>
+        If hasParent is False, the new folder will be created without a parent folder and the action will ignore attribute and attributeValue.<br />
+        If hasParent is true, then it is expected that this folder will be the child of an already existing
+        folder and that the attribute and attributeValue specify the parent.<br />
+        If hasParent is true and both attribute and attributeValue are not provided then parent folder will be set to the most recently created folder.<br />
+        If folder ID is used in the attributeValue parameter, leave the attribute parameter empty ("").<br />
+        Smart parameters are supported for the string type parameters.<br />
+      </ap>
+      <ret>
+        <b>True,</b> if the folder is successfully created.  Otherwise, <b>False.</b>
+        The action fails if a folder with the specified attribute or ID is not found.
+      </ret>
+      <lvl>All levels.</lvl>
+      <h>
+        Creates a folder in the IBM Content Manger repository.  IBMCM_SetAttributeValue can be called following this action
+        to set attributes of the newly created folder.<br />
+        <b>Important: If the new folder is based on an item type classfication that contains attributes that are required, an application should use the IBMCM_CreateFolderEx action instead.</b><br />
+        <b>IBMCM_CreateFolder will create and save the folder immediately to the repository</b><br />
+        <e>
+          <b>IBMCM_CreateFolder("NOINDEX", "", "", False)</b><br />
+          This example will create an IBM Content Manger folder based on the NOINDEX item type.<br />
+          The new folder has no parent and will be placed in the root directory.<br /><br />
+
+          <b>IBMCM_CreateFolder("NOINDEX", "", "A1001001A14B04B12546D00215", True)</b><br />
+          This example will create an IBM Content Manger folder based on the NOINDEX item type.<br />
+          The folder will be placed inside the parent folder with ID=A1001001A14B04B12546D00215.<br /><br />
+          
+          <b>IBMCM_CreateFolder(@B.MyItemtye, @B.MyAttribute, @B.MyAttributeValue, True)</b><br />
+          IBMCM_SetAttributeValue("Name,@BATCHID")<br/>
+          This example will create an IBM Content Manger folder based on the type identified by @B.MyItemType and
+          will be a child of the folder identified by values from
+          the batch level Smart Parameters @B.MyAttribute and @B.MyAttributeValue.<br /><br />
+
+          <b>IBMCM_CreateFolder(@B.MyItemtye, "", "", False)</b><br />
+          IBMCM_SetAttributeValue("Name,"MyFolder1")<br />
+          <b>IBMCM_CreateFolder(@B.MyItemtye, "", "", True)</b><br />
+          IBMCM_SetAttributeValue("Name,"MyFolder2")<br />
+          This example will create folder "MyFolder1" and folder "MyFolder2" based on the type identified by @B.MyItemType.<br />
+          The folder "MyFolder1" folder has no parent. The parent of folder "MyFolder2" is folder "MyFolder1".<br /><br />
+       
+        </e>
+      </h>
+    </method>
+
+    <method name="IBMCM_CreateFolderEx" qi="Creates a IBM Content Manger folder in the parent folder, based on the specified item type.">
+      <p name="itemType" type="string" qi="The item type (classification) to create the IBM Content Manager folder.  This parameter is required."/>
+      <p name="attribute" type="string" qi="The attribute name."/>
+      <p name="attributeValue" type="string" qi="The unique attribute value or folder ID."/>
+      <p name="hasParent" type="bool" qi="If true then the new folder has a parent folder."/>
+      <ap>
+        If hasParent is False, the new folder will be created without a parent folder and the action will ignore attribute and attributeValue.<br />
+        If hasParent is true, then it is expected that this folder will be the child of an already existing
+        folder and that the attribute and attributeValue specify the parent.<br />
+        If hasParent is true and both attribute and attributeValue are not provided then parent folder will be set to the most recently created folder.<br />
+        If folder ID is used in the attributeValue parameter, leave the attribute parameter empty ("").<br />
+        Smart parameters are supported for the string type parameters.<br />
+        <b>Important: Use this action when the new folder is based on an item type classfication that contains attributes that are required.</b><br />
+        <b>IBMCM_CreateFolderEx will create the folder in memory and the folder will be saved to the repository once the IBMCM_SaveFolder action has been called</b><br /> 
+      </ap>
+      <ret>
+        <b>True,</b> if the folder is successfully created.  Otherwise, <b>False.</b>
+        The action fails if a folder with the specified attribute or ID is not found.
+      </ret>
+      <lvl>All levels.</lvl>
+      <h>
+        Creates a folder in the IBM Content Manger repository.  IBMCM_SetAttributeValue can be called following this action
+        to set attributes of the newly created folder.<br />
+        <e>
+          <b>IBMCM_CreateFolderEx("NOINDEX", "", "", False)</b><br />
+          <b>IBMCM_SaveFolder()</b><br />
+          This example will create an IBM Content Manger folder based on the NOINDEX item type.<br />
+          The new folder has no parent and will be placed in the root directory.<br /><br />
+
+          <b>IBMCM_CreateFolderEx("NOINDEX", "", "A1001001A14B04B12546D00215", True)</b><br />
+          <b>IBMCM_SaveFolder()</b><br />
+          This example will create an IBM Content Manger folder based on the NOINDEX item type.<br />
+          The folder will be placed inside the parent folder with ID=A1001001A14B04B12546D00215.<br /><br />
+
+          <b>IBMCM_CreateFolderEx(@B.MyItemtye, @B.MyAttribute, @B.MyAttributeValue, True)</b><br />
+          IBMCM_SetAttributeValue("Name,@BATCHID")<br/>
+          <b>IBMCM_SaveFolder()</b><br />
+          This example will create an IBM Content Manger folder based on the type identified by @B.MyItemType and
+          will be a child of the folder identified by values from
+          the batch level Smart Parameters @B.MyAttribute and @B.MyAttributeValue.<br /><br />
+
+          <b>IBMCM_CreateFolderEx(@B.MyItemtye, "", "", False)</b><br />
+          IBMCM_SetAttributeValue("Name,"MyFolder1")<br />
+          <b>IBMCM_SaveFolder()</b><br />
+          
+          <b>IBMCM_CreateFolderEx(@B.MyItemtye, "", "", True)</b><br />
+          IBMCM_SetAttributeValue("Name,"MyFolder2")<br />
+          <b>IBMCM_SaveFolder()</b><br />
+          This example will create folder "MyFolder1" and folder "MyFolder2" based on the type identified by @B.MyItemType.<br />
+          The folder "MyFolder1" folder has no parent. The parent of folder "MyFolder2" is folder "MyFolder1".<br /><br />
+        </e>
+      </h>
+    </method>
+
+    <method name="IBMCM_SaveFolder" qi="Saves folder data from memory to IBM Content Manager.">
+      <ap>
+        None.
+      </ap>
+      <h>
+        IBMCM_SaveFolder is used to save folder creation data to IBM Content Manager that was produced by the call to the IBMCM_CreateFolderEx action.<br /><br />
+        <e>
+          IBMCM_CreateFolderEx("XYZ_ClaimFolder, "", "", False)<br />          
+          IBMCM_SetAttributeValue("XYZ_ClaimNumber, 12345")<br />
+          <b><b>IBMCM_SaveFolder()</b><br /></b><br />
+          The sequence creates a folder, assigns that folder with an attribute value of 12345 to the XYZ_ClaimNumber attribute
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> If the action successfully saves the folder<b>False</b> if the action is unable to save the folder.
+      </ret>
+    </method>
+
+    <method name="IBMCM_SetDestinationFolder" qi="Set the destination folder for uploading image files to IBM Content Manger repository.">
+       <p name="attribute" type="string" qi="The attribute name."/>
+       <p name="attributeValue" type="string" qi="The unique attribute value or folder ID."/>
+       <ap>         
+         If both parameters are not provided then destination folder will be set to the most recently created folder.<br />
+         If folder ID is used in the second parameter, leave the first parameter empty ("").<br />
+         Smart parameters are supported. <br />
+       </ap>
+       <ret>
+        <b>True,</b> if the destination folder is successfully set.  Otherwise, <b>False.</b>
+         The action fails if a folder with the specified attribute or ID is not found.
+       </ret>
+      <lvl>All levels.</lvl>
+      <h>
+        Sets the upload destination folder in IBM Content Manger repository.  To set the destination to a newly created
+        folder, first create the folder using IBMCM_CreateFolder and then call IBMCM_SetDestinationFolder
+        with empty ("") paramters.
+        <br />
+        <e>
+          <b>IBMCM_SetDestinationFolder("Department", "Human Resource")</b><br />
+          IBMCM_CreateItem("NOINDEX")<br />
+          IBMCM_SetMimeType("image/tiff")<br/>
+          IBMCM_UploadDCO_DOC()<br/>
+          This example will set the destination folder to the folder with attribute Department="Human Resource" to upload images to it.<br /><br />
+          
+          <b>IBMCM_SetDestinationFolder("", "A1001001A14B04B12546D00215")</b><br />
+          IBMCM_CreateItem("NOINDEX")<br />
+          IBMCM_SetMimeType("image/tiff")<br />
+          IBMCM_UploadDCO_DOC()<br />
+          This example will set the destination folder to the folder with folder ID=A1001001A14B04B12546D00215 to upload images to it. <br /><br />
+
+          IBMCM_CreateFolder("NOINDEX", "", "A1001001A14B04B12546D00215", true)<br />
+          <b>IBMCM_SetDestinationFolder("", "")</b><br />
+          IBMCM_CreateItem("NOINDEX")<br />
+          IBMCM_SetMimeType("image/tiff")<br />
+          IBMCM_UploadDCO_DOC()<br />
+          This example will set the destination folder to the most recently created folder to upload images to it. <br /><br />  
+ 
+        </e>
+      </h>
+    </method>
+
+    <method name="IBMCM_SetDestinationFolderEx" qi="Set the destination folder for uploading image files to IBM Content Manger repository.">
+      <p name="itemType" type="string" qi="The item type."/>
+      <p name="attribute" type="string" qi="The attribute name."/>
+      <p name="attributeValue" type="string" qi="The unique attribute value or folder ID."/>
+      <ap>
+        If all parameters are not provided then destination folder will be set to the most recently created folder.<br />
+        <br />
+      </ap>
+      <ret>
+        <b>True,</b> if the destination folder is successfully set.  Otherwise, <b>False.</b>
+        The action fails if a folder with the specified attribute or ID is not found.
+      </ret>
+      <lvl>All levels.</lvl>
+      <h>
+        Sets the upload destination folder in IBM Content Manger repository.  To set the destination to a newly created
+        folder, first create the folder using IBMCM_CreateFolder and then call IBMCM_SetDestinationFolderEx
+        with empty ("") paramters.
+
+        IBMCM_SetDestinationFolderEx allows the application to specify an Attribute, Attribute value combination associated with a specific item type, whereas IBMCM_SetDestinationFolder only
+        allowed an application to specify only an Attribute and Attribute value combination.
+
+        IBMCM_SetDestinationFolderEx does not support specifying just an item ID, use IBMCM_SetDestinationFolder instead.
+        <br />
+        <e>
+          <b>IBMCM_SetDestinationFolderEx("NOINDEX","SOURCE","Human Resource")</b><br />
+          IBMCM_CreateItem("NOINDEX")<br />
+          IBMCM_SetMimeType("image/tiff")<br/>
+          IBMCM_UploadDCO_DOC()<br/>
+          This example will set the destination folder to the folder with attribute Department="Human Resource" to upload images to it.<br /><br />          
+        </e>
+      </h>
+    </method>
+    
+    <method name="IBMCM_SetAttributeValue" qi="Sets the attribute value on an IBM Content Manager document or IBM Content Manager folder.">
+      <p name="attributesvalues" type="string" qi="Sets the attribute value on an IBM Content Manager document or IBM Content Manager folder."/>
+      <ap>
+        attributesvalues is a string value of two comma separated variables. <br/><br/>
+        
+        <b>Name :</b> The name of the attribute to set.<br/>
+        <b>Value :</b> The value of the attribute.<br/><br/>
+        
+        An IBM Content Manager Item Type is equivalent to a Document Class (Index Class).<br /><br/>
+
+        Smart parameters are supported, such as @BATCHID, @ID, @STATUS, @TYPE, @VALUE,
+        @JOBID, @JOBNAME, @OPERATOR, @STATION, @TASKID, @TASKNAME, etc.  Please refer to
+        the smart parameter documentation for more information and usage.
+      </ap>
+      <h>
+        Sets the attribute value on an IBM Content Manager document or folder.  The specified attribute must already
+        be defined on the IBM Content Manager server.  The attribute can be applied to a document or to a folder.
+        This action must follow a previous action that created or identified a folder or document.
+        This action can be called multiple times to set multiple attributes of the same document or folder.
+		After the last call to this action, you must call IBMCM_UploadDCO_DOC, IBMCM_UploadDCO_Page, or IBMCM_Update actions 
+		to persist the changes to the document item in the Content Manager server.<br />
+        <e>
+          IBMCM_CreateFolder("MyFolderItemType")<br/>
+          <b>IBMCM_SetAttributeValue("Name,@BATCHID")</b><br />
+          This example will create an IBM Content Manager folder and then set the "Name" 
+          property of the folder to the ID of the current batch.<br /><br/>
+
+          IBMCM_CreateItem("@B.name")<br/>
+          <b>IBMCM_SetAttributeValue("Author,@D.TheAuthor")</b><br />
+          <b>IBMCM_SetAttributeValue("Date,@DATE")</b><br />
+          Assuming this is running on the document level, this will create a new document using the batch
+          level value stored in the DCO variable "name" and set the "Author" attribute to the value stored
+          in the DCO document level variable named "TheAuthor", then it stores the current date in the
+          "Date" property.<br /><br />
+
+          IBMCM_SearchItem("EmployeeID", "3F1234D")<br />
+          <b>IBMCM_SetAttributeValue("FirstName,Thomas")</b><br />
+          This example will search the IBM Content Manager repository for an existing IBM Content Manager document with EmployeeID=3F1234D.
+          If the existing IBM Content Manager document is found then its attribute "FirstName" will be set to "Thomas".<br /><br />  
+        </e>
+        <br/>To set a DATE attribute, make sure the date value is in one of the date formats accepted by IBM Content Manager. 
+        The valid date formats include: 
+        <ul>
+        <li>"yyyy-MM-dd"</li>
+        <li>"yyyy/MM/dd"</li>
+        <li>"MM-dd-yyyy"</li>
+        <li>"MM/dd/yyyy"</li>
+        </ul>
+        You can reformat a date field by calling Validations.IsFieldDateWithReformat on the current field.
+        Note that the smart parameter @DATE defaults to using the "MM/dd/yyyy" format and does not need to be reformatted.
+        <e>
+            <b>IsFieldDateWithReformat("yyyy/MM/dd")</b><br />
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> if the attribute is successfully updated.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+    <method name="IBMCM_SetChildAttributeValue" qi="Assigns a child attribute value for a child item. (child component attribute value)">
+      <p name="Child Attribute Information" type="string" qi="A comma-separated string consisting of three values:
+        1) childItemName: Create a child component. Creates a child component specified by the childItemName, under the defined object type (IBMCM_CreateItem).
+        2) attributeName: The attribute name of the child
+        3) attributeValue: The attribute value "/>      
+      <ap>
+        IBMCM_CreateChildItem must be called prior.<br />
+        IBMCM_SetChildAttributeValue must be called the same number of times that is specified in IBMCM_CreateChildItem otherwise the child attributes will not be saved<br />
+        Smart parameters are supported. <br />
+      </ap>
+      <h>
+        This action needs to be called after IBMCM_CreateItem.
+        <e>
+          <b>IBMCM_CreateItem("ABCInsPlc")</b><br />
+          <b>IBMCM_CreateChildItem("Automobiles,2")</b><br />
+          IBMCM_SetChildAttributeValue("Automobiles,ABCVIN,vin123")<br/>
+          IBMCM_SetChildAttributeValue("Automobiles,ABCLicensePlate,carlic123")<br/>
+          IBMCM_UploadDCO_DOC()<br/>
+          This example will create an IBM Content Manager Child Item based on the name Automobiles and assigns two attributes<br /><br />
+        </e>        
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> if the child attribute value is set successfully.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+    
+    <method name="IBMCM_UploadDCO_Page" qi="Uploads Image files associated with the current Page object of the Document Hierarchy to IBM Content Manager.">
+      <ap>
+        None.
+      </ap>
+      <h>
+        Uploads the Image file associated with current Page object of the Document Hierarchy to the IBM Content Manager server. 
+        Additionally, all attributes set using IBMCM_SetAttributeValue will also be persisted.<br /><br />        
+        <e>
+          IBMCM_Logon("cmserver,adminPWD,adminUID")<br />
+          IBMCM_CreateItem("NOINDEX")<br />
+          IBMCM_SetAttributeValue("USERID, @OPERATOR")<br />
+          <b>IBMCM_UploadDCO_Page()</b><br />
+          This sequence uploads Image files associated with the current Page object of the Document Hierarchy 
+          to IBM Content Manager, and assigns the name of the object – the value of its Type property.
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True,</b> If the action successfully sends the image to the server; <b>False</b> if the action is unable to save the image.
+      </ret>
+    </method>
+    
+    <method name="IBMCM_UploadDCO_DOC" qi="Uploads the set of Images files associated with the current document object of the Document Hierarchy to the IBM Content Manager server.">
+      <ap>
+        None.
+      </ap>
+      <h>
+        Uploads the Image file(s) associated with current Document object of the Document Hierarchy to IBM Content Manager server.<b></b>
+        <br/>
+        <e>
+          IBMCM_Logon("cmserver,adminPWD,adminUID")<br />
+          IBMCM_CreateItem("NOINDEX")<br />
+          IBMCM_SetAttributeValue("USERID, @OPERATOR")<br />
+          IBMCM_SetMimeType("image/tiff")<br />
+          <b>IBMCM_UploadDCO_DOC()</b><br /><br />
+          
+          This sequence uploads the set of Images files associated with the current document object 
+          of the Document Hierarchy to the IBM Content Manager server.           
+          Additionally, all attributes set using IBMCM_SetAttributeValue will also be persisted.
+          <br/>
+        </e>
+      </h>
+      <lvl>Document level.</lvl>
+      <ret>
+        <b>True,</b> if the document is successfully created.  Otherwise, <b>False.</b>
+      </ret>
+    </method>
+
+	  <method name="IBMCM_Update" qi="Updates the current document object to the IBM Content Manager server.">
+		  <ap>
+			  None.
+		  </ap>
+		  <h>
+			  Updates the current document object and its attributes to IBM Content Manager server. 
+			  All attributes set using IBMCM_SetAttributeValue will be persisted into the latest version of the document item.
+			  If the document item type has enabled versioning to 'always create new version', then a new version will be create with the changes.
+			  The document item was checked out by the <b>IBMCM_SetAttributeValue</b>, and will be checked in by this action.
+			  <br/>
+			  <e>
+				  IBMCM_Logon("cmserver,adminPWD,adminUID")<br />
+				  IBMCM_SearchItem("", "A1001001A14B04B12546D00215")<br />
+				  IBMCM_SetAttributeValue("USERID, @OPERATOR")<br />
+				  IBMCM_SetAttributeValue("SOURCE, DATACAP")<br />
+				  <b>IBMCM_Update()</b><br /><br />
+
+				 
+				  <br/>
+			  </e>
+		  </h>
+		  <lvl>Page level or the field level.</lvl>
+		  <ret>
+			  <b>True,</b> if the document is successfully updated.  Otherwise, <b>False.</b>
+		  </ret>
+	  </method>
+	  
+    <method name="IBMCM_StoreItemIDinDCO" qi="Stores the Item ID of the most recently created folder or most recently uploaded IBM Content Manager item into a variable of the current object of the Document Hierarchy.">
+      <p name="itemID" type="string" qi="Sets the attribute value on a CM document or folder."/>
+      <h>
+        Stores the Item ID of the most recently created folder or most recently uploaded 
+        IBM Content Manager document into a variable of the current object of the DCO Hierarchy.
+        If the variable does not exist, it will be created on the current DCO Hierarchy object.<br/><br/>
+        It may be useful to store the item ID if the object needs to be referenced in following action, 
+        such as setting the upload destination directory.<br/>
+        <e>
+        IBMCM_CreateFolder("NOINDEX", "", "", False)<br />  
+        <b>IBMCM_StoreItemIDinDCO("ItemID")</b><br />
+        The action above stores the ID of the new IBM Content Manger folder in a variable called “ItemID” in the current object of the DCO Hierarchy.<br /><br/>
+     
+        IBMCM_CreateItem("NOINDEX")<br />
+        IBMCM_SetMimeType("image/tiff")<br />
+        IBMCM_UploadDCO_DOC()<br/>
+        <b>IBMCM_StoreItemIDinDCO("ItemID")</b><br />
+        The action above stores the ID of the new IBM Content Manger document in a variable called “ItemID” in the current object of the DCO Hierarchy.<br /><br/>
+
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> if the Item ID is returned successfully, otherwise <b>False.</b>
+      </ret>
+    </method>
+    
+    <method name="IBMCM_SearchItem" qi="Search for the existing item in IBM Content Manger repository.">
+      <p name="attribute" type="string" qi="The attribute name."/>
+      <p name="attributeValue" type="string" qi="The unique attribute value or item ID."/>
+      <ap>
+        Both attribute and attributeValue are required parameters.
+        If item ID is used in the second parameter, leave the first parameter empty ("").<br />
+        Smart parameters are supported.
+      </ap>
+      <ret>
+        <b>True,</b> if the item is found.  Otherwise, <b>False.</b>
+      </ret>
+      <lvl>All levels.</lvl>
+      <h>
+        Searches for the existing item in IBM Content Manger repository that matches the specified attribute and value.
+        If an item is found, the current item will be set to it.  Otherwise the current item will be set to NULL.<br /><br />
+        
+        See <B>IBMCM_SetSearchOnlyFolderItems</B> action to specify whether to search for folder items only. 
+        By default, <b>IBMCM_SearchItem</b> searches only folder items.<br /><br/>
+
+        IBMCM_SearchItem is used to retrieve a existing IBM Content Manger item before calling other actions to update its attributes
+        or its content such as IBMCM_AddPages, IBMCM_DeletePages, IBMCM_ReplacePage, IBMCM_SetAttributeValue....<br /><br />
+        <e>
+          <b>IBMCM_SearchItem("Department", "Human Resource")</b><br />
+          IBMCM_SetAttributeValue("Department", "Operations")<br />
+          This example will search for a folder item with attribute Department="Human Resource" and change to "Operations".<br /><br />
+
+          IBMCM_SetSearchOnlyFolderItems("False")<br/>
+          <b>IBMCM_SearchItem("", "A1001001A14B04B12546D00215")</b><br />
+          This example will search for a folder item or a non-folder item with the item ID: A1001001A14B04B12546D00215. <br />
+          <br></br>
+
+          IBMCM_SetSearchOnlyFolderItems("True")<br />
+          <b>IBMCM_SearchItem("", "@P.PageName")</b><br />
+          This example will search only for a folder item with item ID derived from a predefined smart parameter, @P.PageName.
+          The <B>VScan.Scan</B> action populates <b>@P.PageName</b> to be the filename of the image file without the file extension.
+          For example, the image file A1001001A17E08B00210C00000.tif will have a PageName of "A1001001A17E08B00210C00000".
+          This smart parameter can be used to identify the CM8 item ID if the image file name conforms to the convention.
+        </e>
+      </h>
+    </method>
+
+      <method name="IBMCM_SearchAndDownload" qi="Search and download item content from IBM Content Manger repository.">
+          <ret>
+              <b>False,</b> if any error occurred during parameter validation or searching or downloading.
+              Otherwise, <b>True</b>.
+          </ret>
+          <lvl>All levels.</lvl>
+          <h>
+              Searches for items in IBM Content Manger repository that matches the specified search criteria from the 
+              <b>IBMCM_SetSearchAndDownloadCriteria</b> action.
+              For each matching item found, if the corresponding ICMBase parts have content, 
+              the content file will be written to the directory set from <b>IBMCM_SetSearchAndDownloadDirectory</b>.
+              The output file name will be the CM8 item ID, and the file extension will be the same as the original file extension.
+              If the original file did not have a file extension, the default extension will be ".tif". 
+              If the file already exists, it will be overwritten.
+              <br /><br />
+              To limit the number of downloads for each IBMCM_SearchAndDownload action, you can set a limit with 
+              <b>IBMCM_SetSearchAndDownloadMaximum</b> action. The default maximum is 1000. <br/><br/>
+              To add sorting, call <b>IBMCM_SetSearchAndDownloadSort</b>.
+              <br /><br />
+              To update a download status attribute for the downloaded item, call <b>IBMCM_SetSearchAndDownloadStatusAttribute</b> action.
+              <br /><br />
+              After <b>IBMCM_SearchAndDownload</b> has downloaded the CM8 content files, <b>scan()</b> action can be called 
+              to read the files from the same directory.
+              <br/><br/>
+              <b>Important:</b> to prevent downloading duplicate item content, the task that calls IBMCM_SetSearchAndDownload action should not
+              be run in a multi-threaded configuration. Instead, use single-threaded tasks. 
+              For information about configuring threads in Rulerunner, see Configuring Rulerunner to run tasks.
+              <br /><br />
+              <e>
+                      IBMCM_SetSearchAndDownloadCriteria("APT",,,,)<br />
+                      IBMCM_SetSearchAndDownloadMaximum("100")<br />
+                      IBMCM_SetSearchAndDownloadDirectory("C:\datacap\APT\images\input")<br />
+                      IBMCM_SetSearchAndDownloadSort("True","Date","ASCENDING")<br />
+                      IBMCM_SetSearchAndDownloadStatusAttribute("DCStatus")<br />
+                      <b>IBMCM_SearchAndDownload()</b><br />
+                      SetSourceDirectory("C:\datacap\APT\images\input")<br/>
+                      Scan()<br/>
+              </e>
+              This example will search and download up to 100 APT CM items' content to the directory, C:\datacap\APT\images\input. 
+              The CM query syntax is "/APT [ICMPARTS AND (@DCStatus IS NULL OR @DCStatus=0)] SORTBY(@Date ASCENDING)". 
+              Each item content will have the item ID as the file name. For example, A1001001A17E08B00210C00000.tif. 
+              When the scan() action runs, it will see the populated image directory and process as usual.<br /><br />
+          </h>
+          <see>
+              IBMCM_SetSearchAndDownloadCriteria<br/>
+              IBMCM_SetSearchAndDownloadDirectory<br/>
+              IBMCM_SetSearchAndDownloadMaximum<br/>
+              IBMCM_SetSearchAndDownloadSort<br/>
+              IBMCM_SetSearchAndDownloadStatusAttribute<br/>
+              Scan<br/>
+          </see>
+      </method>
+      
+    <method name="IBMCM_AddPages" qi="Add new page(s) to the existing document in IBM Content Manger repository. The new page(s) will be appended to the existing page(s) in the IBM Content Manger document.">
+      <p name="newPage" type="string" qi="The new page to add."/>
+      <ap>
+        newPage is required when calling the action at document level.<br/>
+        If newPage = 0, all new pages in the runtime DCO will be added to the existing IBM Content Manger document.<br/>
+        If newPage > 0, only the new page specified by newPage is added.
+       </ap>
+      <ret>
+        <b>True,</b> if the new page(s) is added.  Otherwise, <b>False.</b>
+      </ret>
+      <lvl>Doc and page level.</lvl>
+      <h>
+        Need to retrieve the existing IBM Content Manger document from IBM Content Manger repository before calling this action to add new page(s) to it.<br />
+        The IBMCM_SearchItem action can be used to retrieve the existing IBM Content Manger document. <br />
+        <e>
+          IBMCM_SearchItem("", "A1001001A14B04B12546D00215")<br />
+          <b>IBMCM_AddPages("2")</b><br />
+          This example will search the IBM Content Manger repository for the existing IBM Content Manger document with unique ID=A1001001A14B04B12546D00215.<br />
+          If the existing IBM Content Manger document is found, it will add the second page (TM000002) in the runtime Document DCO to the existing IBM Content Manger document.<br /><br/>
+
+          IBMCM_SearchItem("EmployeeID", "14B04B12")<br />
+          <b>IBMCM_AddPages("0")</b><br />
+          This example will search the IBM Content Manger repository for the existing IBM Content Manger document with unique attribute EmployeeID=14B04B12.<br />
+          If the existing IBM Content Manger document is found, it will add all new pages in the runtime Document DCO to the existing IBM Content Manger document. <br />
+          <br></br>
+        </e>
+      </h>
+    </method>
+
+    <method name="IBMCM_DeletePages" qi="Delete page(s) from an existing document in IBM Content Manger repository.">
+      <p name="existingPage" type="string" qi="The existing page to be deleted.  This parameter is required."/>
+      <ap>
+        existingPage is required when calling the action at document level.<br/>
+        If existingPage = 0, all existing pages in the IBM Content Manger document will be deleted.  Otherwise, only the existing page specified by existingPage will be deleted.<br />
+      </ap>
+      <ret>
+        <b>True,</b> if the page(s) is deleted.  Otherwise, <b>False.</b>
+      </ret>
+      <lvl>All levels.</lvl>
+      <h>
+        Need to retrieve the existing IBM Content Manger document from IBM Content Manger repository before calling this action to delete page(s) from it.<br />
+        The IBMCM_SearchItem action can be used to retrieve the existing IBM Content Manger document. <br /> <br />
+
+        <b>Important Notes:</b><br />
+        Be careful with this destructive action.  It should be used at the batch level to make sure it will be executed once per batch.
+        If you need to use it at the document or page level, make sure you set filters/conditions to avoid this action being called repeatly.<br />  
+        <e>
+          IBMCM_SearchItem("EmployeeID", "14B04B12")<br />
+          <b>IBMCM_DeletePages("2")</b><br />
+          This example will search the IBM Content Manger repository for the existing IBM Content Manger document with unique attribute EmployeeID=14B04B12.<br />
+          If the existing IBM Content Manger document is found, it will delete the second page from the IBM Content Manger document. <br /><br />
+
+          IBMCM_SearchItem("EmployeeID", "14B04B12")<br />
+          <b>IBMCM_DeletePages("0")</b><br />
+          This example will search the IBM Content Manger repository for the existing IBM Content Manger document with unique attribute EmployeeID=14B04B12.<br />
+          If the existing IBM Content Manger document is found, it will delete all existing pages from the IBM Content Manger document. <br /><br />           
+        </e>
+      </h>
+    </method>
+
+    <method name="IBMCM_ReplacePage" qi="Replace an existing page in the IBM Content Manger document with a new page in the runtime DCO hierarchy.">
+      <p name="existingPage" type="string" qi="The existing page in IBM Content Manger document."/>
+      <p name="newPage" type="string" qi="The new page in runtime DCO hierarchy."/>
+      <ap>
+        When calling at document level, both existingPage and newPage parameter are required.<br />
+        When calling at page level, the newPage parameter is ignored.<br />
+      </ap>
+      <ret>
+        <b>True,</b> if the existing page in IBM Content Manger document is replaced with the new page in runtime DCO.  Otherwise, <b>False.</b>
+      </ret>
+      <lvl>Document and page level.</lvl>
+      <h>
+        Need to retrieve the existing IBM Content Manger document from IBM Content Manger repository before calling this action.<br />
+        The IBMCM_SearchItem action can be used to retrieve the existing IBM Content Manger document. <br />
+        <e>
+          IBMCM_SearchItem("EmployeeID", "14B04B12")<br />
+          <b>IBMCM_ReplacePage("2","3")</b><br />
+          This example will search the IBM Content Manger repository for the existing IBM Content Manger document with unique attribute EmployeeID=14B04B12. <br />
+          If the existing IBM Content Manger document is found, it will replace the second page in the existing IBM Content Manger document with the third page (TM000003) in the runtime Document DCO.<br /><br />
+        </e>
+      </h>
+    </method>
+
+    <method name="IBMCM_SetMimeType" qi="Set mime type for upload document.">
+      <p name="mimeType" type="string" qi="Mime type."/>
+      <ap>
+        Smart parameter is supported.<br />
+      </ap>
+      <ret>
+        <b>True,</b> if the mime type is successfully set.  Otherwise, <b>False.</b>
+      </ret>
+      <lvl>All levels.</lvl>
+      <h>
+        Set the mime type for upload document.  This action is needed when uploading non-tiff files.<br />
+        When calling at batch/document level, the same mime type will be applied to all files in the batch/document DCO. <br />
+        This action needs to be called prior to the document and page upload actions.<br />
+        <e>          
+          <br></br>
+          <table>
+            <tr>
+              <th>MIME Types</th>
+              <th>File Extensions</th>
+            </tr>
+            <tr>
+              <td>application/msword</td>
+              <td>doc, dot, rtf</td>
+            </tr>
+            <tr>
+              <td>application/octet-stream</td>
+              <td>bin, dms, lha, lzh, exe, class</td>
+            </tr>
+            <tr>
+              <td>application/pdf</td>
+              <td>pdf</td>
+            </tr>
+            <tr>
+              <td>application/rtf</td>
+              <td>rtf</td>
+            </tr>
+            <tr>
+              <td>application/lotus-1-2-3</td>
+              <td>123, wk4, wk3, wk1, wks, wg1</td>
+            </tr>
+            <tr>
+              <td>application/lotus-freelance</td>
+              <td>prz, pre</td>
+            </tr>
+            <tr>
+              <td>application/vnd.ms-excel</td>
+              <td>xls, xlt, xlm, xld, xla, xlc, xlw, xll</td>
+            </tr>
+            <tr>
+              <td>application/vnd.ms-powerpoint</td>
+              <td>ppt, pot, ppa, pps, pwz</td>
+            </tr>
+            <tr>
+              <td>application/vnd.visio</td>
+              <td>vsd</td>
+            </tr>
+            <tr>
+              <td>audio/basic</td>
+              <td>au, snd, ulw</td>
+            </tr>
+            <tr>
+              <td>audio/mpeg</td>
+              <td>mpeg, mpg, m1s, m1a, mp2, mp3, mpm, mpa, mpga</td>
+            </tr>
+            <tr>
+              <td>audio/x-aiff</td>
+              <td>aif, aiff, aifc</td>
+            </tr>
+            <tr>
+              <td>audio/x-midi</td>
+              <td>midi, mid, smf, kar</td>
+            </tr>
+            <tr>
+              <td>audio/x-wav</td>
+              <td>wav</td>
+            </tr>
+            <tr>
+              <td>image/bmp</td>
+              <td>bmp, dib</td>
+            </tr>
+            <tr>
+              <td>image/gif</td>
+              <td>gif</td>
+            </tr>
+            <tr>
+              <td>image/jpeg</td>
+              <td>jpeg, jpg, jpe, jfif, pjpeg, pjp</td>
+            </tr>
+            <tr>
+              <td>image/gif</td>
+              <td>gif</td>
+            </tr>
+            <tr>
+              <td>image/tiff</td>
+              <td>tiff, tif</td>
+            </tr>
+            <tr>
+              <td>text/html</td>
+              <td>html, htm, shtml, plg</td>
+            </tr>
+            <tr>
+              <td>text/plain</td>
+              <td>txt, text</td>
+            </tr>
+            <tr>
+              <td>text/xml</td>
+              <td>xml, dtd</td>
+            </tr>
+            <tr>
+              <td>video/mpeg</td>
+              <td>mpeg, mpg, mpe, m1s, m1v, m1a, m75, m15, mp2</td>
+            </tr>
+            <tr>
+              <td>video/quicktime</td>
+              <td>mov, qt</td>
+            </tr>
+          </table>
+          <b>            
+         </b><br />
+          <b>IBMCM_SetMimeType("image/tiff")</b><br />
+          This example will set mime type to "image/tiff".<br /><br />
+        </e>
+      </h>
+    </method>
+
+      <method name="IBMCM_SetSearchOnlyFolderItems" qi="Prepares the IBMCM_SearchItem action whether to limit the searches to only folder items.">
+          <p name="strParam" type="string" qi="True or False"/>
+          <ap>
+              A string or smart parameter value "True" or "False" whether the subsequent IBMCM_SearchItem actions 
+              will limit the result to folder items. Smart parameters are supported.
+          </ap>
+          <ret>
+              <b>False,</b> if parameter is not a string. Otherwise, <b>True.</b>
+          </ret>
+          <lvl>All levels.</lvl>
+          <h>
+              If "True", the subsequent IBMCM_SearchItem actions will only search for folder items.
+              If "False", the subsequent IBMCM_SearchItem actions will search for all items that match the search criteria.
+              <br/><br/>
+              If this action is not called or the parameter is not "True" or "False", the default value of "True" will be used, and IBMCM_SearchItem actions will only return folder items. This action should be called before IBMCM_SearchItem.
+              <br />
+              <e>
+                  <b>IBMCM_SetSearchOnlyFolderItems("False")</b><br />
+                  IBMCM_SearchItem("", "A1001001A17E08B00210C00000")<br />
+              </e>
+              This example will search for an item with item ID A1001001A17E08B00210C00000.
+              If an item is found, regardless of whether it is a folder item or not,
+              the current item will be set to it. 
+              Otherwise if the item is not found, 
+              the current item will be set to NULL. <br /><br />
+              <e>
+                  <b>IBMCM_SetSearchOnlyFolderItems("True")</b><br />
+                  IBMCM_SearchItem("", "@P.PageName")<br />
+              </e>
+              This example will search only for a folder item.
+              If a folder item is found, the current item will be set to it.
+              Otherwise if the item is not found or the item is not a folder item,
+              the current item will be set to NULL. <br /><br />
+              This example also demonstrates the use of the predefined smart parameter @PageName. 
+              The VScan.Scan action populates @P.PageName to be the filename of the image file without the file extension. 
+              For example, the image file A1001001A17E08B00210C00000.tif will have a PageName of "A1001001A17E08B00210C00000". This smart parameter can be used to identify the CM8 item ID if the image file name conforms to the convention.
+              
+          </h>
+      </method>
+
+    <method name="IBMCM_SetSearchAndDownloadCriteria" qi="Sets the search criteria for IBMCM_SearchAndDownload action.">
+      <p name="itemType" type="string" qi="Name of the item type"/>
+      <p name="attributeName" type="string" qi="Name of the attribute"/>
+      <p name="comparisonOperator" type="string" qi="Comparison operator"/>
+      <p name="attributeValue" type="string" qi="Comparison value of the attribute"/>
+      <p name="dataType" type="string" qi="Data type of the attribute"/>
+      <ap>
+        <b>Item type name</b> is mandatory. The search will be limited to the specified item type.
+        The rest of the parameters are optional. If they are not provided, 
+        then the search will return all items from the specified item type.
+        <br/><br/>
+        If the <b>attribute name</b> is specified, the item attribute must exist in the IBM Content Manager repository schema.
+        <br/><br/>
+        If the <b>comparison operator</b> is not specified, but the attribute name and value are specified,
+          then the comparisonOperator defaults to the equal operator, "=". Supported comparison operators are:
+          "=","&lt;","&lt;=","&gt;","&gt;=","!=","LIKE","NOT LIKE","IS NULL","IS NOT NULL","IN","NOT IN".
+          <br/><br/>
+        The <b>comparison value of the attribute</b> is mandatory if the <b>attribute name</b> is specified.
+        For "IS NULL" and "IS NOT NULL" operations, the attribute value and the data type are ignored. 
+        For "LIKE" and "NOT LIKE" operations, the attribute value should include the wildcard character "%".
+        For "IN" and "NOT IN" operations, the attribute value should be enclosed in parentheses "()" and delimited by commas. See examples below.
+        <br/><br/>
+        The <b>data type of the attribute</b> is optional. Supported data types are: "STRING", "DATE", "NUMBER".
+        The default is "STRING".<br/><br/>
+        Smart parameters are supported for all parameters.
+      </ap>
+      <ret>
+        <b>False,</b> if parameters are not strings or parameter validations failed. Otherwise, <b>True.</b> 
+          Some parameter validations are done in this action, others are done in the IBMCM_SearchAndDownload() action.
+      </ret>
+      <lvl>All levels.</lvl>
+      <h>
+        The parameters will be used in IBMCM_SearchAndDownload action to construct the IBM Content Manager query. 
+        <br/><br/>
+        If this action is not called and the search criteria has not been set before IBMCM_SearchAndDownload(), 
+        IBMCM_SearchAndDownload() will return False. This action should be called before IBMCM_SearchAndDownload.
+        <br />
+        <e>
+          <b>IBMCM_SetSearchAndDownloadCriteria("APT",,,,)</b><br />
+          IBMCM_SetSearchAndDownloadMaximum("100")<br />
+          IBMCM_SetSearchAndDownloadDirectory("C:\datacap\APT\images\input")<br />
+          IBMCM_SearchAndDownload()<br />
+        </e>
+        This example will search and download up to 100 APT CM items' content to the directory, C:\datacap\APT\images\input, with no sorting.
+        The CM query syntax is "/APT [ICMPARTS]". Each item content will have the item ID as the file name. 
+        For example, A1001001A17E08B00210C00000.tif<br /><br />
+        <e>
+        <b>IBMCM_SetSearchAndDownloadCriteria("APT", "APT_Flag","=","NA",)</b><br />
+          IBMCM_SetSearchAndDownloadDirectory("@APPPATH(vscanimagedir)")<br />
+          IBMCM_SetSearchAndDownloadSort("False",,)<br />
+          IBMCM_SearchAndDownload()<br />
+        </e>
+        This example will search and download up to the default maximum number of APT CM items' 
+        content that have not been processed by Datacap into the Smart Parameter VScan image directory. 
+        The CM query syntax is "/APT[ICMPARTS AND @APT_Flag="NA"]". Each item content will have the item ID as the file name. 
+        The file extension will be the same as the file extension of the original file.
+        For example, A1001001A17E08B00210C00000.jpg<br /><br />
+        <e>
+        <b>IBMCM_SetSearchAndDownloadCriteria("APT", "Quantity",">","5", "NUMBER")</b><br />
+        <b>IBMCM_SetSearchAndDownloadCriteria("APT", "DCStatus","IS NULL",,)</b><br />
+        <b>IBMCM_SetSearchAndDownloadCriteria("APT", "DCStatus","LIKE","start%",)</b><br />
+        <b>IBMCM_SetSearchAndDownloadCriteria("APT", "DCStatus","IN","("started","stopped")",)</b><br />
+        <b>IBMCM_SetSearchAndDownloadCriteria("APT", "Date",">","2017-01-01","DATE")</b><br />
+        <br />
+        </e>
+          These are usage examples of the supported data type and comparison operators.
+      </h>
+    </method>
+
+    <method name="IBMCM_SetSearchAndDownloadDirectory" qi="Sets the download directory for SearchAndDownload action.">
+      <p name="path" type="string" qi="The directory where the downloaded files will reside"/>
+      <ap>
+        The parameter will be used as the download directory in <B>IBMCM_SearchAndDownload</B> action. 
+        The output directory is mandatory. You must verify that the directory is valid and has write permissions.
+        Smart parameters are supported.
+      </ap>
+        <ret>
+            <b>True,</b> if parameter is a string. Otherwise, <b>False.</b> The directory will not be verified until the 
+            <b>IBMCM_SearchAndDownload</b> attempts to write to the directory.
+        </ret>
+        <lvl>All levels.</lvl>
+        <h>
+        If this action is not called and the download directory has not been set before IBMCM_SearchAndDownload(), 
+        IBMCM_SearchAndDownload() will return False. This action must be called before IBMCM_SearchAndDownload to set the output directory.
+        <br />
+        <e>
+          IBMCM_SetSearchAndDownloadCriteria("APT",,,)<br />
+          IBMCM_SetSearchAndDownloadMaximum("100")<br />
+          <b>IBMCM_SetSearchAndDownloadDirectory("C:\datacap\APT\images\input")</b><br />
+          IBMCM_SearchAndDownload()<br />
+        </e>
+        This example will search and download up to 100 APT CM items' content to the directory, C:\datacap\APT\images\input.
+        The CM query syntax is "/APT [ICMPARTS] SORTBY(@ITEMID ASCENDING)". Each item content will have the item ID as the file name. 
+        For example, A1001001A17E08B00210C00000.tif<br /><br />
+        <e>
+          IBMCM_SetSearchAndDownloadCriteria("APT", "APT_Flag","=","NA")<br />
+          <b>IBMCM_SetSearchAndDownloadDirectory("@APPPATH(vscanimagedir)")</b><br />
+          IBMCM_SetSearchAndDownloadSort("True","Date","ASCENDING")<br/>
+          IBMCM_SearchAndDownload()<br />
+        </e>
+        This example will search and download up to the default maximum number of APT CM items' 
+        content that have not been processed by Datacap into the Smart Parameter VScan image directory. 
+        The CM query syntax is "/APT[ICMPARTS AND @APT_Flag="NA"] SORTBY(@Date ASCENDING)". Each item content will have the item ID as the file name. The file extension will be the same as the file extension of the original file.
+        For example, A1001001A17E08B00210C00000.jpg<br /><br />  
+        </h>
+    </method> 
+      
+     <method name="IBMCM_SetSearchAndDownloadMaximum" qi="Sets the maximum number of downloads for SearchAndDownload action.">
+      <p name="strParm" type="string" qi="The maximum number of downloads"/>
+      <ap>
+        The strParm sets the maximum number of downloads in the <b>IBMCM_SearchAndDownload</b> action. 
+        Smart parameters are supported.
+      </ap>
+         <ret>
+             <b>True,</b> if parameter is a number. Otherwise, <b>False.</b>
+         </ret>
+         <lvl>All levels.</lvl>
+        <h>
+        If this action is not called and the download maximum has not been set before IBMCM_SearchAndDownload(), 
+        IBMCM_SearchAndDownload() will use the default maximum, which is 1000. Specify a number less than 1 to have no maximum, and IBMCM_SearchAndDownload() will return all matching items.
+        This action should be called before IBMCM_SearchAndDownload to change the maximum download.
+        <br /><br/>
+        <e>
+          IBMCM_SetSearchAndDownloadCriteria("APT",,,)<br />
+          <b>IBMCM_SetSearchAndDownloadMaximum("100")</b><br />
+          IBMCM_SetSearchAndDownloadDirectory("C:\datacap\APT\images\input")<br />
+          IBMCM_SearchAndDownload()<br />
+        </e>
+        This example will search and download up to 100 APT CM items' content to the directory, C:\datacap\APT\images\input.
+        <br /><br />
+        <e>
+          IBMCM_SearchAndDownload()<br />
+        </e>
+        Since this action was not called, the default maximum will be used. This example will search and download up to 1000 of content matching the IBMCM_SetSearchAndDownloadCriteria parameters. 
+        <br /><br />
+        <e>
+            <b>IBMCM_SetSearchAndDownloadMaximum("0")</b><br />
+            IBMCM_SearchAndDownload()<br />
+        </e>
+            Since the maximum is zero, there will not be a limit to the search. This example will search and download all
+            content matching the IBMCM_SetSearchAndDownloadCriteria parameters.
+            <br /><br />
+        </h>
+    </method>
+      <method name="IBMCM_SetSearchAndDownloadSort" qi="Sets the sortby and sort order for SearchAndDownload action.">
+          <p name="doSort" type="string" qi="True or False to sort"/>
+          <p name="sortBy" type="string" qi="Item attribute name to sort by"/>
+          <p name="sortOrder" type="string" qi="Sort order ASCENDING or DESCENDING"/>
+          <ap>
+              The <b>doSort</b> parameter takes "True" or "False" and determines whether to sort the search results 
+              during the <b>IBMCM_SearchAndDownload</b> action.<br/><br/>
+              The <b>sortBy</b> parameter is the name of the item attribute to sort by. The item attribute must exist in the CM8 repository schema.<br/><br/>
+              The <b>sortOrder</b> parameter takes "ASCENDING" or "DESCENDING" and determines the sort order of the sort by attribute.<br/><br/>
+              Smart parameters are supported for all parameters.
+          </ap>
+          <ret>
+              <b>False,</b> if parameters are missing or invalid. Otherwise, <b>True.</b>
+          </ret>
+          <lvl>All levels.</lvl>
+          <h>
+              If this action is not called and the sort information has not been set before IBMCM_SearchAndDownload(),
+              IBMCM_SearchAndDownload() will not sort the returned results.
+              <br/><br/>
+              This action should be called before IBMCM_SearchAndDownload to change the sort information.
+              <br /><br/>              
+              <e>
+                  IBMCM_SetSearchAndDownloadCriteria("APT","Date","IS NULL",)<br />
+                  IBMCM_SetSearchAndDownloadMaximum("100")<br />
+                  IBMCM_SetSearchAndDownloadDirectory("C:\datacap\APT\images\input")<br />
+                  <b>IBMCM_SetSearchAndDownloadSort("True","Date","ASCENDING")</b><br />
+                  IBMCM_SearchAndDownload()<br />
+              </e>
+              This example will search and download up to 100 APT CM items' content to the directory, C:\datacap\APT\images\input, sorted by the "Date" attribute in ascending order.
+              <br /><br />
+              <e>
+                  IBMCM_SearchAndDownload()<br />
+              </e>
+              Since this action was not called, no sorting will be done. This example will search and download
+              content matching the IBMCM_SetSearchAndDownloadCriteria parameters.
+              <br /><br />           
+          </h>
+      </method>
+
+      <method name="IBMCM_SetSearchAndDownloadStatusAttribute" qi="Sets the status attribute to update after a successful SearchAndDownload action.">
+          <p name="checkStatus" type="string" qi="True or False whehter to add checking for download status"/>
+          <p name="attributeName" type="string" qi="The Datacap download status attribute name"/>
+          <ap>
+              The <b>checkStatus</b> parameter takes "True" or "False" and determines whether to check the download status
+              of an item during the <b>IBMCM_SearchAndDownload</b> action.
+              <br/><br/>
+              The <b>attribute</b> must exist and must be defined for the SearchAndDownload item type as a short integer, 
+              with no default. The attribute name is case-sensitive and must be the same as defined in the CM8 System Administration Client.
+              <br/><br/>
+              The default behavior is <b>IBMCM_SetSearchAndDownloadStatusAttribute("False",).</b>              
+              Setting a status attribute is not required for the <B>IBMCM_SearchAndDownload</B> action.
+              <br/><br/>
+              Smart parameters are supported.
+          </ap>
+          <ret>
+              <b>True,</b> if parameters are string. Otherwise, <b>False.</b> The attribute will not be verified until the
+              <b>IBMCM_SearchAndDownload</b> attempts to update the status attribute value.
+          </ret>
+          <lvl>All levels.</lvl>
+          <h>
+              The status attribute will be used two times during the <B>IBMCM_SearchAndDownload</B> action. 
+              First, the search criteria will be appended to search for the attribute being 0 or NULL. 
+              Second, when an item has been downloaded, the attribute will be updated to 1. Note that
+			  if the document item type has enabled versioning to 'always create new version', 
+			  then a new version will be create with the changes.
+              <br/><br/>
+              Having a status attribute for the download is beneficial to avoid downloading duplicates with the
+              same search criteria between batches.
+              <br /><br/>
+              <e>
+                  IBMCM_SetSearchAndDownloadCriteria("APT",,,,)<br />
+                  IBMCM_SetSearchAndDownloadMaximum("100")<br />
+                  IBMCM_SetSearchAndDownloadDirectory("C:\datacap\APT\images\input")<br />
+                  <b>IBMCM_SetSearchAndDownloadStatusAttribute("True", "DCStatus")</b><br/>
+                  IBMCM_SearchAndDownload()<br />
+              </e>
+              In this example, the CM query syntax is "/APT [ICMPARTS AND (@DCStatus IS NULL OR @DCStatus=0)] ".
+              During each bach, 100 items will be downloaded and their attributes changed to @DCStatus=1.
+              Subsequent batches using the <b>IBMCM_SearchAndDownload</b> action will not return any items that have already been downloaded, since
+              the DCStatus is no longer null.
+              <br /><br />              
+              <e>
+                  IBMCM_SetSearchAndDownloadCriteria("APT","Date","&lt;","2017-01-01","DATE")<br />
+                  <b>IBMCM_SetSearchAndDownloadStatusAttribute("True","DCStatus")</b><br/>
+                  IBMCM_SearchAndDownload()<br />
+              </e>
+              In this example, the CM query syntax is "/APT [ICMPARTS AND @Date &lt; "2017-01-01" AND (@DCStatus IS NULL OR @DCStatus=0)] ".
+              <br /><br />
+              <e>
+                  IBMCM_SetSearchAndDownloadCriteria("APT","APT_Date","&lt;","2017-01-01","DATE")<br />
+                  <b>IBMCM_SetSearchAndDownloadStatusAttribute("False",)</b><br/>
+                  IBMCM_SearchAndDownload()<br />
+              </e>
+              In this example, the CM query syntax is "/APT [ICMPARTS AND @APT_Date &lt; "2017-01-01"] ".
+              No checking is done whether the item has been downloaded by Datacap before. Unless you do want to be able to download items
+              that have been downloaded by Datacap before, we recommend that the application
+              call <b>IBMCM_SetAttributeValue()</b> to update the @APT_Date value to prevent the item from matching the criteria 
+              next time.
+      </h>
+      </method>
+  </net>
+</rrx>
+
+

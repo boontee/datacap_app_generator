@@ -1,0 +1,818 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="FileIO" v="9.1.9.17">
+
+  <g>
+  <![CDATA[
+'**************************************************************************************************
+' File I/O Actions
+
+' Licensed Materials - Property of IBM
+' “Restricted Materials of IBM”
+' 5725-C15 5725-C69
+'
+' © Copyright IBM Corp. 1994, 2025 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+'
+'**************************************************************************************************
+   ]]>
+  </g>
+
+  <com ref="Datacap.Libraries.FileIO.Actions"  qi=" : File and directory manipulation actions.">
+    <h>
+      The FileIO action library provides a set of actions that are oriented to directory and file
+      manipulation.  They allow an application to test that a directory exists, a file exists,
+      copy files, rename files, delete files, etc.  The actions also have the ability to parse out
+      file names and directories from a string to allow manipulation of the file names and
+      the files themselves.  The actions can also read values out of an INI file
+      and store them in DCO variables or write new values into an INI file.<br/><br/>
+
+      The files manipulated can be within the current batch directory or external to the
+      batch, as long as the Windows user that is running the rules has access to the
+      required directories.<br/><br/>
+
+      The actions support smart parameters that allow the value of a parameter to
+      be determined at runtime.  For example, the batch directory name will be unique
+      per batch so if manipulating a file within a batch directory, smart parameters are
+      the mechanism to access the proper path.  Many of the actions
+      have examples that include smart parameters accessing files within the
+      batch directory.  It is recommended that the smart parameter
+      guide is reviewed to understand the capabilities and how to use them.<br/><br/>
+
+      <b>Common Uses</b><br/><br/>
+
+      There could be many different use cases that require the application to
+      copy a file or rename a file.  The following are some common use cases.
+
+      It is common that images from a scanned page require image enhancement.
+      The image enhancement may remove lines from the page, change the image
+      color depth, deskew the page, etc. These steps can improve accuracy of
+      text and barcode recognition.  However, it may be a requirement to store the
+      original images when the batch has completed, causing a reluctance to change the
+      image because the original needs to be retained.<br/><br/>
+
+      When image enhancement actions process an image, they will always save the original
+      version of the image under a different name.  Depending on the action, the new name
+      may be configurable or it may not, but it typically involves keeping the same file
+      name but will change the file extension to something unique.<br/><br/>
+
+      The application designer can easily use the FileIO actions to take the original
+      file that was saved, and rename it or move it for storage at the end of the batch.
+      If desired, both the manipulated image and the original image can be exported
+      at the end of the batch.  It is up to the specific use case and how the application
+      designer wants to retain the final processed files.<br/><br/>
+
+      Another similar use case is where the image required enhancement to get good quality
+      text or barcode recognition, but then show the unprocessed image to the user for verification.
+      For example, deskewing an image is a common task and is generally required for applications
+      that use fields.  Additional enhancements like line removal can help text recognition.
+      When recognition is complete, the designer may rather show the deskewed image to
+      the user but not the image that has had lines removed.  This can be achieved with the
+      FileIO actions by restoring the image that was created after deskew but before line removal.
+      In the Verify panel the verify operator will see the deskewed page with all of the fields
+      properly aligned, but the page will still have the lines so the page still looks as it should.
+      Just because removing the lines, or other enhancements improve recognition, it doesn't mean
+      that is the what must be shown to the user.  The deskewed image can be renamed back to the
+      primary image name so it will be shown in the Verify panel.  The image that has its lines
+      removed for recognition could be deleted or given a new name to back it up for safety.<br/><br/>
+      
+      When manipulating these files, it is also common to use the SplitFileName action
+      to get just the file name without the extension, or just parts of the file
+      path, store those values into DCO variables, and then use those variables
+      to build a new file name or file path.<br/><br/>
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+    </h>
+
+      <method name="CCOBackup" qi="Makes a copy of the CCO of the first document page.">
+          <ap>
+              None<br/>
+          </ap>
+          <h>             
+              Copies the CCO file of the first document page to a file of the same name with a CC1 extension.
+              This can be used prior to merging CCOs, if it is necessary to restore the CCO later.
+              If a CCO file does not exist, no files will be copied and the action will still return true.
+          </h>
+          <lvl>
+              Document Level only.
+          </lvl>
+          <ret>
+              Always True.<br/>
+          </ret>
+          <see>
+              CCORestore
+          </see>
+      </method>
+
+
+      <method name="CCORestore" qi="Copies the saved CCO file over the existing CCO file for the first page of the document.">
+          <ap>
+              None<br/>
+          </ap>
+          <h>
+              Restores the CC1 file (if it exists) of the first document page to a file of the same name with a CCO extension.
+              This can be used after merging CCOs, if it is necessary to restore the CCO later.
+              If a CCO file does not exist, no files will be copied and the action will still return true.
+          </h>
+          <lvl>
+              Document Level only.
+          </lvl>
+          <ret>
+              Always True. <br/>
+          </ret>
+          <see>
+              CCOBackup
+          </see>
+      </method>
+      
+
+    <method name="CopyFile" qi="Copies a file.">
+      <p name="sourcefile" type="string" />
+      <p name="targetfile" type="string" />  
+      <p name="overwrite"  type="bool" />
+      <ap>
+        sourcefile : The name and path of the file to copy. Smart parameters are supported.<br/>
+        targetfile : The target path and filename.  Smart parameters are supported.<br/>
+        overwrite : if the target file exists, this determines if it should be overwritten. True will overwrite the target file.<br/>
+      </ap>
+      <h>
+        The file is copied from one location to the specified location.  If a file of the same target name
+        already exists in the target directory, the overwrite parameter will determine if that file will be overwritten by the new file.
+        The output directory must exist for this action to succeed.  You can use action IsDirectoryPresent to create
+        the target directory.<br/><br/>
+        
+        If target file ends with a backslash, meaning only the target directory is specified,
+        the same file name from the source string will be used as the target file.<br/><br/>
+
+        Because the target file name can be different from the source file, this action
+        allows the copied file to be renamed in one step.  If you want to perform a "move" operation,
+        call the DeleteFile to remove the source file.<br/><br/>
+        
+        Smart parameters are supported in the source and target file name parameters.  DOS * and ? wildcards are not supported.
+        <e>
+          <b>CopyFile("C:\MyFile.txt", "c:\temp\+@BATCHID+.txt", true)</b><br/>
+          This action will copy MyFile.txt to the temp directory and give it a new name of the current batch ID<br/><br/>
+
+          <b>CopyFile("@VAR(IMAGEFILE)", "c:\temp\", true)</b><br/>
+          This action will copy the file specified by the variable IMAGEFILE and copy it to the temp directory.<br/><br/>
+          
+          <b>CopyFile("@VAR(IMAGEFILE)", "@PILOT(BATCHDIR)+\+@ID+.backup", true)</b><br/>
+          Assuming this is called on a page node, this example will copy the current image 
+          file associated with the current page object to a new file that has a "backup" extension.<br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> if the file is successfully copied.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+
+    <method name="DeleteFile" qi="Deletes a file.">
+      <p name="filename" type="string" />
+      <ap>
+        filename : The name and path of the file to delete. Smart parameters are supported.
+      </ap>
+      <h>
+        Deletes the specified file.  DOS wildcards are permitted in the file name.
+        <e>
+          <b>DeleteFile("C:\Temp\DeleteThis.txt")</b><br/>
+          The above example deletes the specific file.<br/><br/>
+
+          <b>DeleteFile("C:\Temp\*.*")</b><br/>
+          The above example deletes all of the files in the 'Temp' directory.<br/><br/>
+
+          <b>DeleteFile("@PILOT(BATCHDIR)+\+@ID+.backup")</b><br/>
+          The above example deletes a file within the current batch that has the file name that is
+          the same as the current DCO node with an extension ".backup".<br/><br/>
+
+          <b>DeleteFile("C:\Temp\@BATCHID+.txt")</b><br/>
+          The above example deletes the file name that matches the current batch ID and has an extension of 'TXT'.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="ReadTextFile" qi="Reads a text file.">
+      <p name="filename" type="string" />
+      <p name="target" type="string" />
+      <ap>
+        <b>filename</b>: The name and path of the text file to read. Smart parameters are supported.<br/><br/>
+        <b>target</b>: The DCO node to store the value of the text file.<br/><br/>
+         Smart parameters are supported for each parameter.<br/>
+      </ap>
+      <h>
+        Reads the specified file and stores the entire contents of the file in a DCO variable.  Depending on the
+        file, this could potentially require a significant amount of memory and when running,
+        Datacap will retain the all of the DCO objects and all of their variables in memory.<br/><br/>
+        <e>
+          <b>ReadFile("C:\Temp\ReadThis.txt","@P.text")</b><br/>
+          The above example reads the specific file and saves the value to the parent page of the calling object's to a variable labeled 'text'.<br/><br/>
+
+          <b>ReadFile("C:\Temp\ReadThis.xml","@P\xmltext")</b><br/>
+          The above example reads the specific file and saves the value to the parent page of the calling object to a field named 'xmltext'.<br/><br/>
+
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True</b> if the text file exists and was successfully read, otherwise <b>False</b>.
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+  
+
+    <method name="DeleteDirectory" qi="Deletes a directory and optionally deletes subdirectories">
+      <p name="Directory" type="string"  />
+      <p name="Recursive" type="bool"  />
+      <p name="FailureReturnValue"  type="bool" />
+      <ap>
+        <b>Directory:</b> The path of the directory to delete.<br/><br/>
+        <b>Recursive:</b> True will delete the directory and all files and subdirectories.
+        False will only delete the directory and requires that the directory is empty.<br/><br/>
+        <b>FalureReturnValue:</b> True will cause the action to always return True, even if
+        the delete fails.  False will cause the action to return False if the directory delete fails.<br/><br/>
+        Smart parameters are supported for the directory path.<br/>
+      </ap>
+      <h>
+        Deletes the specified directory and can optionally delete subdirectories.
+        <e>
+          <b>DeleteDirectory("C:\MyDir1\MyDir2",True,True)</b><br/>
+          This example will delete MyDir2 and all files and subdirectories.
+          If the delete fails, the action will still return true.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        If the directory is deleted, the action always returns <b>True.</b><br/><br/>
+
+        If a failure occurs when deleting a directory, the action will return the value of FailureReturnValue.
+        This allows you to determine if the action should return True or False on a directory failure.
+        Depending on the application, it may make sense to ignore a delete failure so this action can be set to always return true.
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="CopyDirectory" qi="Copies a directory and its subdirectories">
+      <p name="SourceDirectory" type="string"  />
+      <p name="DestDirectory" type="string"  />
+      <p name="Recursive" type="bool"  />
+      <ap>
+        <b>SourceDirectory:</b> The path of the directory to copy.<br/><br/>
+        <b>DestDirectory:</b> The path to the destination directory.<br/><br/>
+        <b>Recursive:</b> True will copy the directory files and subdirectories.
+        False will only copy the files in the initial directory and requires that the directory is empty.<br/><br/>
+        Smart parameters are supported for the directory paths.<br/>
+      </ap>
+      <h>
+        Copies the source directory to the target directory.  If the target directory does not exist, it will be created, however
+        the parent directory does need to exist.
+        <e>
+          <b>CopyDirectory("C:\MyDir1\MyDir2","C:\MyNewDir",True)</b><br/>
+          This example will delete MyDir2 and all files and subdirectories to C:\MyNewDir.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        If a failure occurs when coping a directory, the action will return false.  If some of the files
+        have been copied prior to the failure, those files will remain.
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="CheckFreeDiskSpace" qi="Checks the size of the available disk space.">
+      <p name="DriveLetter" type="string"  />
+      <p name="Threshold" type="string"  />
+      <p name="TargetVariable" type="string"  />
+      <ap>
+        <b>DriveLetter:</b> The drive letter to test for available disk space. UNC paths are not supported.<br/><br/>
+        <b>Threshold:</b> Optional.  The minimum amount of required disk space in bytes.  If provided, this value
+        must be a positive integer.<br/><br/>
+        <b>TargetVariable:</b> Optional. The DCO variable to store the value of the available disk space.<br/><br/>
+        Smart parameters are supported for each parameter.<br/>
+      </ap>
+      <h>
+        Checks the available amount of free disk space in bytes.
+        <e>
+          <b>CheckFreeDiskSpace("D","1000","@P.FreeSpace")</b><br/>
+          Checks that the amount of available disk space on drive D is at least 1000 bytes.  
+          It also stores the amount of free space in the page level runtime DCO variable "FreeSpace".<br/><br/>
+
+          <b>CheckFreeDiskSpace("D","@B.MyLimit","")</b><br/>
+          Only checks that the amount of available disk space on drive D is at least as much
+          as the value specified in the batch level variable "MyLimit".<br/><br/>
+
+          <b>CheckFreeDiskSpace("D","","@P.FreeSpace")</b><br/>
+          Only stores the amount of free space in the page level runtime DCO variable "FreeSpace".<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Returns False if the threshold is specified and the amount of free disk space is less
+        than the specified value, if the target variable is provided but cannot be set, or
+        if the drive letter is invalid.  Otherwise True is returned.
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="GetFileSize" qi="Obtains the size of a file and stores it in the specified variable.">
+      <p name="filename" type="string" />
+      <p name="targetVariable" type="string" />
+      <ap>
+        filename : The name and path of the file.<br/>
+        targetVariable : The name of the variable to store the file size.  The variable level must be specified with a Smart Parameter.<br/><br/>
+
+        Smart parameters are supported for each of the input parameters.
+      </ap>
+      <h>
+        The size of the specified file will be stored into the specified variable.  This can be
+        helpful to test for problems, such as empty files.  Subsequent actions can
+        perform tests on the stored value and act upon it.<br/> <br/>
+        If the specified file is not found,
+        the action will return <b>true</b> and a size of 0 will be stored into the variable.
+        If any other kind of error occurs, the action will return false and the variable
+        may or may not be set to 0.
+        <e>
+          <b>GetFileSize("C:\Temp\MyFile.txt", "@B.MyVariable")</b><br/>
+          This example sets the file size in the variable 'MyVariable' at the batch level.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>False,</b> if the target variable is blank.  
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="GetProfileString" qi="Reads a key value from a settings file.">
+      <p name="filename" type="string"  />
+      <p name="section" type="string"  />  
+      <p name="key" type="string"  />  
+      <p name="targetVariable" type="string"  />  
+      <ap>
+        filename : The INI file name.<br/>
+        section : The section within the file.<br/>
+        key : The key within the section.<br/>
+        targetVariable : The variable where to store the value.  The variable level must be specified with a smart parameter.<br/><br/>
+
+        Smart parameters are supported for each of the input parameters.
+      </ap>
+      <h>
+        Reads the value from a settings file, typically a .INI file, and stores it into the variable specified.
+        If the variable does not exist, it will be created.
+        If the key does not exist but the file does exist, the action will still return true
+        and an empty string will be stored in the variable.  If you need to test for a blank
+        key value, you can use the IsProfilePresent action.<br/><br/>
+
+        If you are reading Unicode characters from an INI file, 
+        it is required that the file is in a format that supports Unicode.  
+        If the file is not a Unicode format, the Unicode characters may appear 
+        incorrectly when read by GetProfileString or displayed in an editor.  
+        Most file editors will let you chose the type of file encoding.  
+        See the help for your specific editor.
+        <e>
+          <b>GetProfileString("C:\Settings.ini", "MySection", "MyKey", "@B.MyVariable")</b><br/>
+          The value for 'MyKey' will be placed into the variable 'MyVariable'.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> if the settings file exists and the target variable is valid.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="IsDirectoryPresent" qi="Determines if the specified directory exists and optionally creates it.">
+      <p name="directoryName" type="string"  />
+      <p name="create"        type="bool"  />  
+      <p name="testExistence" type="bool"  />
+      <ap>
+        directoryName : The directory path to test.  Smart parameters are allowed.<br/><br/>
+        create : Specifies if the directory should be created.  True will create the directory, if it does not exist.<br/><br/>
+        testExistence : Determines if true should be returned if the directory exists or does not exist.
+      </ap>
+      <h>
+        Checks for the existence of a directory.  Depending on the input parameters,
+        if the directory does not exist, the action will create the directory.  The
+        meaning of the return value can be changed using the testExistence parameter.
+        This allows rules to continue if a directory exists or rules can continue if a directory does not exist.
+        <e>
+          <b>IsDirectoryPresent("c:\temp", true, true)</b><br/>
+          This example will create the directory C:\temp, if it does not exist, and return true
+          if the directory exists or was created successfully.<br/><br/>
+          
+          <b>IsDirectoryPresent("c:\temp", true, false)</b><br/>
+          This example will create the directory C:\temp, if it does not exist, and return false
+          if the directory exists or was created successfully.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        If testExistence is <b>True</b>, the action will return True if the directory exists or if the
+        directory did not exist but was successfully created.<br/>
+        If testExistence is <b>False</b>, the action will return True if the directory does not exist.  This allows you to perform
+        negative tests that will return true when a directory does not exist.<br/>
+        If an error occurs, the action will return false.<br/>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="IsFilePresent" qi="Determines if the specified file exists.">
+      <p name="filename"      type="string" />
+      <p name="testExistence" type="bool" />
+      <ap>
+        filename : The file name and path.  Smart parameters are allowed.<br/><br/>
+        testExistence : true tests that the file exists, false tests that the file does not exist.
+      </ap>
+      <h>
+        Checks for the existence of a file.  Depending on the testExistence parameter, 
+        the action can return true if a file exists or true if a file does not exist to 
+        provide flexibility when creating rules.
+        <e>
+          <b>IsFilePresent("C:\MyDir\MyFile.abc", false)</b><br/><br/>
+          In this example, if the file does not exist, the action will return 
+          <b>True</b> and any subsequent actions will be processed.<br/><br/>
+
+          <b>IsFilePresent("@PILOT(BATCHDIR)+\+@ID+.bak", true)</b><br/><br/>
+          This example is similar to the previous example.  It checks for the existence
+          of a file in the current batch that has the same name as the current DCO node ID
+          with the extension "bak". If it exists, then this action will
+          return true and the next action could
+          do something with that file, such as move it or delete it.<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        If testExistence is <b>True,</b> the action will return true if the file exists.<br/>
+        If testExistence is <b>false,</b> the action will return true if the file does not exist.<br/>
+        If an error occurs, the action will return false.<br/>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="IsFileReadOnly" qi="Tests the read only attribute of a file.">
+      <p name="filename" type="string"  />
+      <p name="testForReadOnly" type="bool" />
+      <ap>
+        filename : The file name and path of the file to test.  Smart parameters are allowed.<br/><br/>
+        testForReadOnly : Determines if the action should return true for read-only or read-write.
+      </ap>
+      <h>
+        This action will indicate if a file is set to read only.  
+        <e>
+          <b>IsFileReadOnly("c:\mydir\myfile.txt", true)</b><br/>
+          if the file "myfile.txt" is set to read only, the action will return <b>true</b>.<br/><br/>
+
+          <b>IsFileReadOnly("c:\mydir\myfile.txt", false)</b><br/>
+          if the file "myfile.txt" is not set to read only, the action will return <b>true</b>.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        If testForReadOnly is <b>true,</b> the action will return true if the file is read only.<br/>
+        If testForReadOnly is <b>false,</b> the action will return true if the file is not read only.<br/>
+        If an error occurs, or if the file does not exist, the action will return false.<br/>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="IsProfilePresent" qi="Tests that a profile exists and that a specific section and key exists within it.">
+      <p name="filename" type="string" />
+      <p name="section"  type="string" />  
+      <p name="key"      type="string" />
+      <p name="testExistence" type="bool" />
+      <ap>
+         filename : The INI file name.<br/>
+         section : The section within the file.<br/>
+         key : The key within the section.<br/>
+         testExistence : true tests that the it exists, false tests that it does not exist.<br/><br/>
+         The parameters "filename", "section" and "key" can accept smart parameters.
+      </ap>
+      <h>
+        Checks that a specific section and key exists within a settings file, typically an INI file.  It does not
+        test the value of the key, only that a value exists.
+        <e>
+          <b>IsProfilePresent("C:\MyDir\settings.ini", "mysection", "mykey", true)</b><br/><br/>
+          In this example, if settings.ini exists and contains "mysection", "mykey" and if "mykey" 
+          has a non-blank value, it will return <b>True.</b><br/><br/>
+
+          <b>IsProfilePresent("@PROCESSDIR+\+settings.ini", "mysection", "mykey", true)</b><br/><br/>
+          This example is similar to the above with the change that it reads the settings INI file from the
+          application's process directory, such as dco_APT for the APT application.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> if testExistence is true and the section and key is found within the profile and the key has an assigned value.
+        <b>True,</b> if testExistence is false and the section or key is not found within the profile or the key value is blank.
+        Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="RenameFile" qi="Renames or moves the specified file.">
+      <p name="oldName" type="string" />
+      <p name="newName" type="string" />  
+      <p name="overwrite" type="bool" />
+      <ap>
+       oldName : The source file name and path.  Allows smart parameters.<br/><br/>
+       newName : The destination file name and path. Allows smart parameters.<br/><br/>
+       overwrite : Specifies if the destination file should be overwritten. True will overwrite an existing file.
+      </ap>
+      <h>
+        Renames the specified file to the new name.  If the directories for the original 
+        and new file names are different, the file will be moved to the new directory.  
+        If the overwrite parameter is true, the file will overwrite an existing file.  
+        If overwrite is false, an existing file will not be overwritten.
+        <e>
+          <b>RenameFile("C:\MyDir\File1.txt", "C:\MyDir\File2.txt", true)</b>
+          <br/>
+          This example renames the file within the same directory, overwriting any existing file called "File2.txt".<br/><br/>
+          
+          <b>RenameFile("C:\MyDir\File1.txt", "C:\New\File1.txt", true)</b>
+          <br/>
+          This example moves the file from MyDir to New, overwriting any existing file called "File1.txt".<br/><br/>
+
+          <b>RenameFile("@PILOT(BATCHDIR)+\+@ID+.bak", "@PILOT(BATCHDIR)+\+@ID+.tif", true)</b><br/>
+          This example moves the file within the current batch directory that is the same name as the
+          current DCO ID with the "bak" extension to "tif".<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> if the file is successfully renamed or moved.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+      
+      
+    <method name="RenameImagesToStandardNames" qi="Renames images and page objects to the standard TMxxxxxxx convention">
+      <ap>
+        None.
+      </ap>
+      <h>
+          This action names all files in the batch to the standard TMxxxxxx.tif naming convention.
+          The standard naming convention is the preferred way to name the files in the batch.
+          The action updates the associated image file on disk, the DCO ID, and the associated image file name.
+          This action is only to be used immediately after a convert action has created new pages using the 0001010 naming scheme.
+          No other use is supported.<br/><br/>
+
+          When images and objects are renamed, the action operates on pages that are the immediate children of the batch object. 
+          Therefore, this action must be called before the CreateDocuments action is called, 
+          which creates the full document tree structure.<br/><br/>
+
+          New applications are required to use SetNamePattern("2") instead of using this action to rename files. 
+          RenameImagesToStandardNames is largely obsolete as the Convert actions are able to use the standard naming 
+          convention when creating single page images from a multi-page document. This action is provided as 
+          compatibility only for legacy applications that were created before the addition of the SetNamePattern("2") action. 
+          By default, the Convert action library does not use the standard naming convention. 
+          However, calling the action Common Convert action SetNamePattern("2") before a Convert action to separate pages, 
+          the created images use the standard naming convention. 
+          When SetNamePattern("2") is called before a convert action that generates files, this action is not necessary.<br/><br/>          
+          <e>
+          <b>RenameImagesToStandardNames()</b><br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+      
+
+    <method name="SetFileReadOnly" qi="Sets or removes the read only attribute from a file or set of files.">
+      <p name="readonly" type="bool"  />
+      <p name="filename" type="string"  />
+      <ap>
+       readonly : true turns on the read only attribute, false turns it off.<br/><br/>
+       filename : The path and filename.  Smart parameters and DOS wildcards are allowed.
+      </ap>
+      <h>
+        Sets a the read only attribute of a file, or a group of files.  The read only attribute can 
+        be set or cleared with this action.  Standard DOS * and ? wildcards can be used to affect a change
+        on multiple files at once.
+        <e>
+          <b>SetFileReadOnly(false, "C:\MyDir\*.*")</b>
+          <br/>
+          This example sets all of the files in MyDir as read-write.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    <method name="SetProfileString" qi="Writes a value to a profile file, typically called an INI file.">
+      <p name="filename" type="string"  />
+      <p name="section" type="string"  />  
+      <p name="key" type="string"  />  
+      <p name="value" type="string"  />  
+      <ap>
+        filename : The profile file name.<br/>
+        section : The section within the file.<br/>
+        key : specifies if the destination file should be overwritten.<br/>
+        value : The value to write.
+
+        Smart parameters are supported for each of the input parameters.
+      </ap>
+      <h>
+        Writes a value to a settings profile, typically a file with an INI
+        extension.  The value is stored in the variable proved as a parameter.
+        If the variable does not exist, it will be created.
+        If the variable does exist, the current value will be replaced with the new value.
+        If the file does not exist, the file will be created.<br/><br/>
+
+        If you are writing Unicode characters to the INI file, 
+        it is required that the file exist and that it is in Unicode format.  
+        If the file is not a Unicode format, the Unicode characters may appear 
+        incorrectly when read by GetProfileString or displayed in an editor.  
+        Most file editors will let you chose the type of file encoding.  
+        See the help for your specific editor.
+        <e>
+          <b>SetProfileString("C:\MyDir\config.ini","MySection","MyKey","Batch+@BATCHID")</b><br/>
+          This example will write the current batch ID to the INI file.<br/><br/>
+
+          <b>SetProfileString("@PROCESSDIR+\+config.ini","MySection","MyKey","Batch+@BATCHID")</b><br/>
+          This example is similar to the above example but will use the
+          ini file stored in the applications process directory, such as dco_APT for the APT application.<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>True,</b> if the value is written to the profile.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic for general information about this action library.
+      </see>
+    </method>
+
+    
+   <method name="SplitFileName" qi="Splits a file name into user specified variables.">
+    <p name="inputFilename"    type="string" />
+    <p name="rootPathVariable" type="string" />
+    <p name="pathVariable"     type="string" />
+    <p name="fileVariable"     type="string" />
+    <p name="extVariable"      type="string" />
+    <ap>
+      inputFilename : The input file name to break into its three logical parts.<br/>
+      rootPathVariable : The name of the variable to store the root path.<br/>
+      pathVariable : The name of the variable to store the file path.<br/>
+      fileVariable : The name of the variable to store the file name without the extension.<br/>
+      extVariable : The name of the variable to store the file extension.<br/><br/>
+
+      Smart parameters are supported for each of the input parameters.  For each of the
+      parameters that accept a variable, the level must be specified with a Smart Parameter.<br/><br/>
+
+      It is not necessary to specify a variable name for each part of the path that is split.
+      Only destination variables for the desired values need to be specified.
+      If you do not want to store a particular file name part, leave that parameter blank.
+    </ap>
+    <h>
+      This action will split the input file name into its root path, path, file name and the extension,
+      and place each of the parts into their own variables.  The file does not need to exist.<br/><br/>
+
+      If the file contains a file extension, the saved file extension will contain a preceding period.      
+      <e>
+        <b>SplitFileName("C:\Dir1\Dir2\MyFile.abc","@B.FROOT","@B.FPATH", "@B.FNAME","@B.FEXT")</b><br/>
+        This example splits the file and saves the information into 4 variables at the batch level:<br/>
+        FROOT = "C:\"<br/>
+        FPATH = "C:\Dir1\Dir2"<br/>
+        FNAME = "MyFile"<br/>
+        FEXT  = ".abc"<br/><br/>
+        
+        <b>SplitFileName("@VAR(IMAGEFILE)","","","","@B.EXT")</b><br/>
+        Assuming this is called on a page object, this example obtains 
+        the value stored in the variable IMAGE file and only saves the file extension into a variable called EXT.
+        The variable will be on the batch level DCO node and if the variable does not exist, it will
+        be created.<br/><br/>
+
+        <b>SplitFileName("@VAR(IMAGEFILE)","","","@X.FileName","@X.Ext")</b><br/>
+        Assuming this is called on a page object, this example obtains
+        the value stored in the variable IMAGE file and saves the file name without the extension to
+        a variable in the current DCO node called "FileName" and the extension
+        will also be saved in the current DCO node the the name "Ext". 
+        If the variables do not exist, they will be created.  If the variables do exist, the current
+        values will be overwritten.<br/><br/>
+      </e>
+    </h>
+    <lvl>All levels.</lvl>
+    <ret>
+      <b>False,</b> if the structure of the file name or path is invalid.  Otherwise, <b>True.</b>
+      The file does not need to exist for this action to succeed.
+    </ret>
+     <see>
+       Refer to the top-level help topic for general information about this action library.
+     </see>
+  </method>
+
+      <method name="SwapPageImages" qi="Swaps two files that correspond to the current page file.">
+          <p name="extention1" type="string" qi="The extension of the file to interchange." />
+          <p name="extension2" type="string" qi="The extension of the file to interchange." />
+          <ap>
+              Smart parameters are supported.
+          </ap>
+          <h>
+              During batch processing, some actions may create copies or backup of images that correspond to the current page.
+              If it is needed to revert the current page image, this action performs the task with one action compared to calling
+              the RenameFile action multiple times.<br/><br/>
+              
+              This action requires that the filename without the extension matches the current image file name.
+              If there is need to swap files that do not match the current image file name, then use the RenameFile action.<br/><br/>
+              <e>
+                  <b>SwapPageImages("TIO,TIF")</b><br/><br/>
+
+                  This image will swap the current page file with a TIF extension with the file that has a TIO extension.
+              </e>
+          </h>
+          <lvl>Page or field level.</lvl>
+          <ret>
+              <b>False,</b> if called at the wrong level, if the file cannot be found or if an error occurs.
+              <b>True,</b> if the file are interchanged.
+          </ret>
+      </method>
+
+
+      <method name="ZipOcrResults" qi="Creates a ZIP file containing recognition results for every page of the document.">
+      <h>
+        This action will create a ZIP file for the associated document. The Zip file name is based on the ID of the document object
+        in the format of DocumentID.ocr.zip.<br/>
+        This zip file will contain all of the files with recognition results from every page of the document.
+        
+        <br/><br/>
+        For example- if an action is called on document with ID "20160914.000000.01" which contains two pages,
+        then a zip file called 20160914.000000.01.ocr.zip will be created. The contents of the ZIP will
+        contain all of the recognition results associated with each page similar to this:　<br/><br/>
+   
+        tm000001.xml<br/>
+        tm000001_layout.xml<br/>      
+        tm000001c.xml<br/><br/>
+        tm000002.xml<br/>
+        tm000002_layout.xml<br/>
+        tm000002c.xml<br/>
+           
+      </h>
+      <lvl>Document level</lvl>
+      <ret>
+        <b>True,</b> if the zip file is created successfully otherwise <b>False.</b>
+      </ret>
+     <see>
+       Refer to the top-level help topic for general information about this action library.
+     </see>
+    </method>
+
+
+  </com>
+</rrx>

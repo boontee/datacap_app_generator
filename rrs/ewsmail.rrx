@@ -1,0 +1,920 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="Ewsmail" v="9.1.9.36">
+
+  <g>
+    <![CDATA[
+'**************************************************************************************************
+' EWSMail Actions
+
+' Licensed Materials - Property of IBM
+' “Restricted Materials of IBM”
+' 5725-C15
+'
+' © Copyright IBM Corp. 1994, 2025 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+
+' Version = "7.6.2"
+' Updated 01/13/2010 RFerin
+'  * SPR 27158 Added Datacap Studio help to the actions.
+'
+' Version = "7.6.6"
+' Updated 3/18/10 NSK
+' Added ex_EMLOption action declaration and help
+'
+' Version = "7.6.9"
+' Updated 5/17/2010 NSK
+' Added ex_ews_version to select Exchange Server version (if not 2010)
+'
+' Version = "7.6.10"
+' Updated 5/28/2010 RFerin
+' SPR 28371 - Update help to make it more consistent.
+'
+' Version = "7.6.11"
+' Updated 6/03/2010 RFerin
+' SPR 28371 - Update help for ex_scan.
+'
+' Version = "7.6.12"
+' Updated 6/21/2010 RFerin
+' SPR 28371 - Remove spaces from email variable names.  EmailCount added to ex_scan.
+' Adjusted help to match imail action help, where possible.
+'
+' Version = "7.6.13"
+' Updated 7/15/2010 RFerin
+' SPR 26932 - Updated help text in ex_ews_version, ex_login and ex_EMLOption.
+'
+' Version = "7.6.15"
+' Updated 7/16/2010 RFerin
+' SPR 26932 / 27158 - Updated help text in ex_login.
+'
+' Version = "8.0.1.16"
+' Updated 12/13/2010 RFerin
+' SPR 28909 Added information in the ex_scan help regarding the email processing method.
+' Also updated ex_max_docs to clarify that a batch can end up with more attachments than the value set in ex_max_docs.
+'
+' Version = "8.0.1.17"
+' Updated 02/10/2011 PHofle
+' * Enhanced action/method qi text for ex_login to say smartparameters are supported. SPR 31013
+'
+' Version = "8.1.0.18"
+' Updated 05/19/2011 RFerin
+' SPR 32145 31022 Removed use of SIT and removed use of qi parameters for help text.
+'
+' Version = "8.1.0.19"
+' Updated 07/13/2011 RFerin
+' SPR 31793 Added information regarding email subject lengths.
+'
+' Version = "8.1.0.20"
+' Updated 08/30/2013 MQureshi
+' Added ex_HTTP_timeout to specify Exchange HTTP request/response timeout
+'
+' Version = "8.1.0.21"
+' Updated 09/06/2013 MQureshi
+' Added ex_load_properties_option for loading additional properties at once
+'
+' Version = "9.1.8.34"
+' Updated 10/01/2020 MDeshman
+' Added ex_login_O365_OAuth_ClientSecret() action
+'
+' Version = "9.1.10.60"
+' Updated 02/02/2026 Pabitra Panda
+' Added ex_login_O365_OAuth_ClientSecret_Graph() action
+'**************************************************************************************************
+]]>
+  </g>
+
+  <com ref="ewsmail.CDCewsmail" qi="Exchange EWS main input actions - import image attachments from email messages">
+
+    <method name="ex_ews_version" qi="Select the Exchange Server version.">
+      <p name="version" type="int" />
+      <ap>
+        The value 0, 1 or 2, indicating the following:<br/>
+        1 = Exchange 2007 SP1<br/>
+        2 = Exchange 2010<br/>
+        3 = Office 365<br/>
+        0 = latest Exchange version (default)
+      </ap>
+      <h>
+        Each version of Exchange uses a slightly different communication protocol.  Use this action to set the expected version.<br/><br/>
+
+        In order to connect successfully with:<br/>
+        •	Exchange 2007 SP1, call this action with parameter "1" before ex_login.<br/>
+        •	Exchange 2010, call this action with parameter "2" before ex_login.<br/>
+        •	Office 365, call this action with parameter "3" before ex_login.<br/>
+        •	The latest version "known" by the .NET library in use (which is .NET 3.5 and is currently Exchange 2010), this action must be called with parameter "0".<br/><br/>
+
+        If this action is not called at all it uses the default "0", the latest Exchange version. (No Office 365 support.)
+        <e>
+          <b>ex_ews_version("3")</b><br/>
+          ex_login("https://outlook.office365.com/ews/exchange.asmx", "username@domain.com", "password")
+        </e>
+      </h>
+      <lvl>Batch level, Open event.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_login</see>
+    </method>
+
+    <method name="ex_HTTP_timeout" qi="Specifies the maximum time to wait for an HTTP request or response from Exchange Server.">
+      <p name="nSecs" type="int" />
+      <ap>
+        nSecs : The maximum number of seconds to wait.
+      </ap>
+      <h>
+        The maximum time to wait for an HTTP request or response from Exchange Server.
+        For example, this may be used by the ex_scan action while trying to ingest a very large email that
+        may otherwise result in import failing due to the operation timing out.  This timeout is in addition
+        to any server-side timeout configuration settings.<br/><br/>
+
+        If this action is not called, the timeout defaults to 100 seconds.
+        <e>
+          <b>ex_HTTP_timeout("60")</b><br/>
+          ex_scan()<br/><br/>
+
+          This example causes the timeout to be set to 60 seconds.  When ingesting emails, any response exceeding this value may fail.
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_login, ex_scan</see>
+    </method>
+	
+	<method name="ex_SortByDate" qi="Sort emails by received date">
+      <p name="bSort" type="bool" qi="A boolean value that enables or disables sorting of emails before ingestion"/>
+      <ap>
+        <b>True:</b> Causes ex_scan to sort email messages by date received and ingest the oldest messages first.
+        This is the default behavior if ex_SortByDate is never called. <br/>
+        <b>False:</b> Disables sorting of email messages.  This greatly increases performance of ex_scan when many emails are pending in the inbox.<br/>
+      </ap>
+      <h>
+        When sorting is enabled, all pending emails are sorted and the oldest is ingested first.  This can take a significant amount of time for each batch.  When the inbox may contain a large number of emails (e.g. more than 100), call ex_SortByDate(False) to speed up the process.  In this case, messages are processed in the order that the email server presents them to Taskmaster.
+		<e>
+          <b> ex_SortByDate(True)</b><br/>
+          ex_scan()<br/><br/>
+
+          This example causes ex_scan to sort email messages by date received and ingest older message first.
+		  Please Note: This action when used for larger mailbox may take significant amount of time and impact permformance.
+		 </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="ex_reject_types" qi="Specifies file extensions for attachments to reject."> 
+      <p name="extensions" type="string" />
+      <ap>
+        extensions : Comma-separated list of file image file extensions to ignore,
+        with or without period.  Use in conjunction with ex_AcceptMixedAttachments(True) to reject emails with specific attachment types.
+        Attachments specified in ex_types will be ingested, attachment types not specified in ex_types or ex_reject_types will be ignored.<br/><br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action specifies disallowed attachment types.<br/><br/>
+
+        <e>
+          ex_types("jpg,tif")<br/>
+          ex_AcceptMixedAttachments("True")<br/>
+          <b>ex_reject_types(".eml")</b><br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+
+
+    <method name="ex_load_properties_option" qi="Option to flag.">
+      <p name="nOption" type="int" />
+      <ap>
+        nOption : 0 to load base properties, 1 to load limited extended base properties, 2 to load extended properties
+      </ap>
+      <h>
+        Used to optionally load certain properties at once.<br/><br/>
+
+        If this action is not called, the default of 0 will be used to load base properties.
+        <e>
+          <b>ex_load_properties_option("1")</b><br/>
+          ex_scan()<br/><br/>
+
+          This example causes less trips to the Exchange Server as additional properties are loaded once.
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_scan</see>
+    </method>
+
+    <method name="ex_login" qi="Specifies the the Exchange Server and mail account">
+      <p name="hostname" type="string" qi="URL of Exchange Web Service, ends with /Exchange.asmx (Smartparameters are supported)" />
+      <p name="username" type="string" qi="Username@Org for mail account and organization (blank to use Windows Authentication, Smartparameters are supported)" />
+      <p name="password" type="string" qi="Password for mail account (blank if none or Windows Authentication, Smartparameters are supported )" />
+      <ap>
+        hostname : URL of Exchange Web Service, ends with /Exchange.asmx<br/>
+        username : Username@Org for mail account and organization (blank to use Windows Authentication)<br/>
+        password : Password for mail account (blank if none or Windows Authentication)<br/><br/>
+
+        All parameters support smart parameters.
+      </ap>
+      <h>
+        Connects to the mail server using the specified account information.
+        Login credentials are for a Microsoft Exchange mail server.<br/><br/>
+
+        The mail account must contain an Inbox folder and separate folders for messages imported (Done)
+        and errors (Problem).  The Done and Problem folders must be subfolders of the email account's Inbox.
+        The names of these folders can be specified using the ex_done_folder and ex_problem_folder actions.<br/><br/>
+
+        The Microsoft Exchange Email actions are designed to scan an email Inbox for incoming mail messages,
+        and place selected messages into a new batch.
+        It is possible to ignore all messages except those containing specific attachment types.
+        The actions are typically assigned to a Task that is executed by an unattended Taskmaster Rulerunner station.
+        Multiple Inboxes can be scanned by stringing together a set of
+        login/scan/logout actions for each Inbox, or by assigning an Inbox to each input task.
+        <e>
+          <b>ex_login("mymailserver/Exchange.asmx", "Username@Org", "password")</b>
+        </e>
+      </h>
+      <lvl>Batch level, open event.</lvl>
+      <ret>
+        <b>True,</b> if the login succeeds.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ex_logout</see>
+    </method>
+
+    <method name="ex_scan" qi="Poll the specified mail server for incoming email with image attachments">
+      <ap>None.</ap>
+      <h>
+        Scans emails in the Inbox for specified attachments, imports selected emails with attachments into the batch.
+        Call once for each batch.
+        A connection to the email server must have previously been established using the ex_login action.<br/><br/>
+
+        Each input email (document) will contain the following variables set in the document hierarchy:<br/>
+        <b>TYPE</b>: Always set to "Document".<br/>
+        <b>MessageID</b>: The email message ID.<br/>
+        <b>Subject</b>: The email subject.<br/>
+        <b>Body</b>: The text within the email.<br/>
+        <b>DateSent</b>: The sent date stamp on the email.<br/>
+        <b>From</b>: The email sender.<br/>
+        <b>To</b>: The email recipients.<br/>
+        <b>Priority</b>: The state of the email importance flag.<br/>
+        <b>DateReceived</b>: The received date stamp on the email.<br/><br/>
+
+        Each email attachment (page) will have the following variables set:<br/>
+        <b>TYPE</b>: Always set to "Other".<br/>
+        <b>IMAGEFILE</b>: The name of the attachment as saved on disk.<br/>
+        <b>ATTACHNAME</b>: The name of the attachment.<br/><br/>
+
+        The following batch level variable is created:<br/>
+        <b>EmailCount</b>: The number of emails scanned into the batch.<br/><br/>
+
+        Note: If the configured Done or Problem folders do not exist, the email will be moved to the Deleted Items folder.<br/><br/>
+
+        Waiting emails are processed in blocks.  The amount of emails processed in a block will be the number of
+        waiting emails, or the number of emails remaining from the value set in ex_max_docs, up to a maximum of 50.
+        After a block of emails are processed, the wait time
+        is checked.  If the wait time has not been reached and the maximum number of emails
+        has not been reached, then another block of emails are processed.
+        If the wait time has been reached, then no more emails are input to the batch.<br/><br/>
+
+        It is recommended that the subject line be no longer than 78 characters as this is a
+        common subject line length limitation.  Some systems may support even shorter lengths,
+        truncating the subject.  Our testing has been successful with lengths up to 255 characters.
+        It is recommended to test your settings and use lengths appropriate for your systems.<br/><br/>
+
+        Use ex_max_docs to configure the number of emails processed per batch.  The number of items
+        included in the batch can be different than this amount, see ex_max_docs for more details.<br/><br/>
+
+        Important: If any concurrently running threads might be using the same account,
+        your EWSMail-related tasks cannot be run in a multi-threaded configuration. Instead, use single-threaded tasks only.
+        For information about configuring threads in Rulerunner, see Configuring Rulerunner to run tasks.
+        For information about the account, see ex_login.
+        <e>
+          ex_wait_time("20")<br/>
+          ex_abort_time("40")<br/>
+          ex_max_docs("50")<br/>
+          ex_types("jpg, tif")<br/>
+          <b>ex_scan()</b>
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        Returns <b>False</b> if the operation fails, and the action will also pause before returning based on
+        the configured abort time configured by ex_abort_time.  Otherwise, <b>True.</b><br/>
+        If no selected emails were available, the action returns <b>True</b> and also pauses before returning based
+        on the wait time configured using ex_wait_time.
+      </ret>
+      <see>ex_login, ex_wait_time, ex_max_docs</see>
+    </method>
+
+<method name="ex_scan_graph" qi="Poll the specified mail server for incoming email with image attachments">
+      <ap>None.</ap>
+      <h>
+        Scans emails in the Inbox for specified attachments, imports selected emails with attachments into the batch.
+        Call once for each batch.
+        A connection to the email server must have previously been established using the ex_login_O365_OAuth_Graph action.<br/><br/>
+
+        Each input email (document) will contain the following variables set in the document hierarchy:<br/>
+        <b>TYPE</b>: Always set to "Document".<br/>
+        <b>MessageID</b>: The email message ID.<br/>
+        <b>Subject</b>: The email subject.<br/>
+        <b>Body</b>: The text within the email.<br/>
+        <b>DateSent</b>: The sent date stamp on the email.<br/>
+        <b>From</b>: The email sender.<br/>
+        <b>To</b>: The email recipients.<br/>
+        <b>Priority</b>: The state of the email importance flag.<br/>
+        <b>DateReceived</b>: The received date stamp on the email.<br/><br/>
+
+        Each email attachment (page) will have the following variables set:<br/>
+        <b>TYPE</b>: Always set to "Other".<br/>
+        <b>IMAGEFILE</b>: The name of the attachment as saved on disk.<br/>
+        <b>ATTACHNAME</b>: The name of the attachment.<br/><br/>
+
+        The following batch level variable is created:<br/>
+        <b>EmailCount</b>: The number of emails scanned into the batch.<br/><br/>
+
+        Note: If the configured Done or Problem folders do not exist, the email will be moved to the Deleted Items folder.<br/><br/>
+
+        Waiting emails are processed in blocks.  The amount of emails processed in a block will be the number of
+        waiting emails, or the number of emails remaining from the value set in ex_max_docs, up to a maximum of 50.
+        After a block of emails are processed, the wait time
+        is checked.  If the wait time has not been reached and the maximum number of emails
+        has not been reached, then another block of emails are processed.
+        If the wait time has been reached, then no more emails are input to the batch.<br/><br/>
+
+        It is recommended that the subject line be no longer than 78 characters as this is a
+        common subject line length limitation.  Some systems may support even shorter lengths,
+        truncating the subject.  Our testing has been successful with lengths up to 255 characters.
+        It is recommended to test your settings and use lengths appropriate for your systems.<br/><br/>
+
+        Use ex_max_docs to configure the number of emails processed per batch.  The number of items
+        included in the batch can be different than this amount, see ex_max_docs for more details.<br/><br/>
+
+        Important: If any concurrently running threads might be using the same account,
+        your EWSMail-related tasks cannot be run in a multi-threaded configuration. Instead, use single-threaded tasks only.
+        For information about configuring threads in Rulerunner, see Configuring Rulerunner to run tasks.
+        For information about the account, see ex_login_O365_OAuth_Graph.
+        <e>
+          ex_wait_time("20")<br/>
+          ex_abort_time("40")<br/>
+          ex_max_docs("50")<br/>
+          ex_types("jpg, tif")<br/>
+          <b>ex_scan_graph()</b>
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        Returns <b>False</b> if the operation fails, and the action will also pause before returning based on
+        the configured abort time configured by ex_abort_time.  Otherwise, <b>True.</b><br/>
+        If no selected emails were available, the action returns <b>True</b> and also pauses before returning based
+        on the wait time configured using ex_wait_time.
+      </ret>
+      <see>ex_login_O365_OAuth_Graph, ex_wait_time, ex_max_docs</see>
+    </method>
+
+    <method name="ex_logout" qi="Disconnect from the mail server">
+      <ap>None.</ap>
+      <h>
+        Closes the connection to the mail server.
+        Call once for each batch after ex_login and ex_scan have completed.
+        <e>
+          <b>ex_logout()</b>
+        </e>
+      </h>
+      <lvl>Batch level Open or Close event only.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+      <method name="ex_logout_graph" qi="Disconnect from the mail server">
+      <ap>None.</ap>
+      <h>
+        Closes the connection to the Graph server.
+        Call once for each batch after ex_login_O365_OAuth_Graph and ex_scan_graph have completed.
+        <e>
+          <b>ex_logout_graph()</b>
+        </e>
+      </h>
+      <lvl>Batch level Open or Close event only.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+	
+    <method name="ex_types" qi="Specifies valid image attachment extensions">
+      <p name="extensions" type="string"  />
+      <ap>
+        extensions : A comma-separated list of file image file attachment extensions to import,
+        with or without period. If a blank extension is supplied, ex_scan will import messages with no attachments.
+      </ap>
+      <h>
+        This action specifies the allowable email attachment types.<br/><br/>
+
+        If this action is not called, the default value of ".pdf" will be used.<br/><br/>
+
+        If this action is called and no attachment types are specified, all emails and any attachments are added to the batch.<br/><br/>
+
+        If attachment types are specified and the email contains:<br/>
+        • Only the specified attachment types, the email and attachments will be added to the batch<br/>
+        • Only unspecified attachment types, or if it contains a mix of specified and unspecified attachment types, the email is moved to the Problem folder<br/>
+        • No attachments, the email is moved to the Problem folder.<br/><br/>
+		
+		<b>Please Note:</b> ex_types() action support all the standard extension which Datacap supports listed few of them below <br/>
+		ex_types(pdf,png,jpeg,jpg,tif,tiff,eml,msg,doc,docx,gif,xls,zip,txt,html) and many more. <br/><br/>
+		
+        <e>
+          ex_wait_time("20")<br/>
+          ex_abort_time("40")<br/>
+          ex_max_docs("200")<br/>
+          <b>ex_types("jpg, tif")</b>
+		  ex_scan()<br/>
+		  
+		  This example will cause ex_scan() to scan/extract jpg and tif extension files from mails.
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="ex_wait_time" qi="Specifies the maximum time to wait for input emails for a single batch.">
+      <p name="nSecs" type="int" />
+      <ap>
+        nSecs : The maximum number of seconds to wait.
+      </ap>
+      <h>
+        The maximum time to wait for input files for a single batch.
+        Used by the ex_scan action after the first email has been processed to determine how long to
+        wait for the batch to fill up.<br/><br/>
+
+        The import of emails into the batch will stop when the
+        wait limit is reached or when the maximum emails per batch has been reached.
+        While waiting for new mail to arrive, the mailbox will be polled every two seconds to
+        check for waiting mail. The action will continue to include new emails into the batch
+        until this wait time is reached or the maximum number of emails per batch is reached.<br/><br/>
+
+        If this action is not called, the default wait time of 5 seconds will be used.
+        <e>
+          <b>ex_wait_time("20")</b><br/>
+          ex_scan()<br/><br/>
+
+          This example causes the scan operation to wait for 20 seconds for additional email,
+          after processing the first email, before finishing the scan operation.
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_scan</see>
+    </method>
+
+    <method name="ex_abort_time" qi="Specifies the delay time before returning when a batch aborts.">
+      <p name="nSecs" type="int" />
+      <ap>
+        nSecs : The number of seconds to wait.
+      </ap>
+      <h>
+        The action will wait the specified time before returning when an abort occurs.
+        This action can be useful to prevent a large number of aborted batches due to
+        an abort condition.  For example, if the email server should become unavailable
+        for a time, the abort timeout will limit the amount of aborted batches until
+        the mail server becomes available again.<br/><br/>
+
+        If this action is not called, the default value of 30 seconds will be used.
+        <e>
+          ex_wait_time("20")<br/>
+          <b>ex_abort_time("60")</b><br/>
+          ex_max_docs("200")<br/>
+          ex_scan
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_scan</see>
+    </method>
+
+    <method name="ex_max_docs" qi="Specifies maximum number of emails to include in a single batch.">
+      <p name="nDocs" type="int" qi="The maximum number of emails in a batch." />
+      <ap>
+        nDocs : The maximum number of emails in a batch.
+      </ap>
+      <h>
+        The import of emails into the batch will stop when this email limit is reached
+        or when the maximum wait time has been reached.  While waiting for new mail to arrive,
+        the configured mailbox will be polled every two seconds to check for waiting mail.<br/><br/>
+
+        If this action is not called, the default value of 100 will be used.
+        The actual amount of emails included in the batch could be less than this maximum.<br/><br/>
+
+        Note: The value indicates the number of emails with expected attachments that will be processed.
+        If a waiting email contains an unexpected attachment, it is not counted against the
+        total maximum count.<br/><br/>
+
+        It is also possible for an email to contain more than one valid attachment type.  When this happens,
+        it is possible for the number of items input to the batch can be greater than the number
+        of configured emails.  For example, if ex_max_docs is set to 5 and if there are 5 waiting
+        emails and each email has 2 attachments, the total number of attachments that will be
+        included in the batch will be 10.<br/>
+        <e>
+          <b>ex_max_docs("50")</b><br/>
+          ex_scan()<br/><br/>
+
+          This example causes the scan operation to limit the number of emails in a
+          batch to a maximum of 50.
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_scan</see>
+    </method>
+
+    <method name="ex_done_folder" qi="Specifies folder for successfully imported emails">
+      <p name="folder" type="string" qi="Destination folder for successfully imported emails" />
+      <ap>
+        folder : Destination folder for successfully imported emails
+      </ap>
+      <h>
+        Specifies the name of the email folder into which successfully imported emails are placed.
+        This folder must be a subfolder of the email account's Inbox.
+        When an email is processed and the attachment is imported, the email is moved
+        to the folder name specified by this action.<br/><br/>
+
+        If this action is not called, the default value of "Done" will be used.
+        <e>
+          <b>ex_done_folder("Imported")</b><br/>
+          ex_problem_folder("Failed")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_scan</see>
+    </method>
+
+    <method name="ex_problem_folder" qi="Specifies folder for problem emails">
+      <p name="folder" type="string" qi="Destination folder for problem email" />
+      <ap>
+        folder : Destination folder for problem email
+      </ap>
+      <h>
+        When an email is processed and the attachment is not one of the expected types,
+        the email is moved to the folder name specified by this action.<br/><br/>
+
+        This folder must be a subfolder of the email account's Inbox.<br/><br/>
+
+        If this action is not called, the default value of "Problem" will be used.
+        <e>
+          ex_done_folder("Imported")<br/>
+          <b>ex_problem_folder("Failed")</b>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_scan</see>
+    </method>
+
+    <method name="ex_EMLOption" qi="Creates a one page document per email containing an .eml file.">
+      <p name="folder" type="int" qi="Optional - use a nonzero value to store one .eml file per email." />
+      <ap>
+        folder : Optional - use a nonzero value to store one .eml file per email.
+      </ap>
+      <h>
+        If set, the ex_scan action creates a one page document containing the email and
+        attachments in an .eml file; no attachment pages are created.
+        When called with a non-zero parameter, the ex_scan function does
+        not create pages for each attachment, instead one page is created per email document,
+        containing an .eml file suitable for subsequent processing using eDocument Conversion actions.<br/><br/>
+
+        When you use this action, pages for attachments are not created, and variables for those attachments are not set.
+        <e>
+          <b>ex_EMLOption("1")</b><br/>
+          ex_scan()
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>ex_scan</see>
+    </method>
+
+    <method name="ex_AcceptMixedAttachments" qi="Ingest emails with selected attachment types, even if non-selected attachment types are included">
+      <p name="bMixedOK" type="bool" qi="A boolean value that enables ingestion of emails with both allowed and disallowed attachment types"/>
+      <ap>
+        <b>True:</b> An email message with an attachment type not specified by ex_types will be ingested as long as it contains some desired attachment.  But, only attachment type specified by ex_types will be extracted.<br/>
+        <b>False:</b> An email message with any disallowed attachment will be rejected.  This is the default process if this action is never called.<br/>
+      </ap>
+      <h>
+        If this action is never called, the presence of any attachment not specified by ex_types will cause ex_scan to treat that email message as a "Problem".
+        If this action is called with parameter True, messages with disallowed attachment types are ingested as long as they contain at least one allowed attachment.  From ingested, only allowed attachment types will be processed.
+        If ex_types is called with a blank parameter prior to ex_scan, all emails are ingested, so this action has no effect.
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="ex_AcceptNoAttachments" qi="Ingest emails without attachments, even if attachment types are specified">
+      <p name="bNoAttachOK" type="bool" qi="A boolean value that enables ingestion of emails with no attachments"/>
+      <ap>
+        <b>True:</b> An email message with no attachments will be ingested by ex_scan.<br/>
+        <b>False:</b> An email message no attachments will be rejected by ex_scan, unless ex_types has been called with a blank parameter.  This is the default behavoir if this action is never called.<br/>
+      </ap>
+      <h>
+        If this action is never called, the absence of an attachment will cause ex_scan to treat that email message as a "Problem".
+        If this action is called with parameter True, messages with no attachments are ingested.
+        If ex_types is called with a blank parameter prior to ex_scan, all emails are ingested, so this action has no effect.
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="ex_login_O365_OAuth" qi="Login to Office 365 with OAuth using EWS.">
+      <p name="clientId" type="string" />
+      <p name="tenantId" type="string" />
+      <p name="username" type="string" />
+      <p name="password" type="string" />
+      <ap>
+        clientId : Application (client) ID from Azure Active Directory - App registrations<br/>
+        tenantId : Directory (tenant) ID from Azure Active Directory - App registrations<br/>
+        username : Username of Office 365 account<br/>
+        password : Password of Office 365 account<br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+
+        Parameters (clientId, tenantId, username, password) can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.<br/>
+        To retrieve parameters that is stored in the Advanced section,
+        use a smart parameter for the action's parameters similar to
+        @APPVAR(values/adv/password) where password is the name entered for the value in the Application Manager.
+      </ap>
+      <h>
+        <b>*** This Action Is Deprecated ***</b><br/>
+        This action has been deprecated and is scheduled to be removed in a future release.
+        It is recommended that you no longer use this action.
+        <br/><br/>
+
+        To use OAuth authentication service provided by Azure Active Directory to enable EWS to access Exchange Online in Office 365, you will need to:<br/>
+        1) Register application with Azure Active Directory.<br/>
+        2) For Authentication, under "Default client type", set "Yes" to "Treat application as a public client."<br/>
+        3) For API permissions, add "Exchange - EWS.AccessAsUser.All" and grant consent.
+        <e>
+          <b>ex_login_O365_OAuth("00000000-0000-0000-0000-000000000000", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "user@organization.com", "@APPVAR(values/adv/password)")</b><br/>
+          ex_scan()<br/>
+          ex_logout()<br/><br/>
+
+          If more than one logins (ex_login, ex_login_O365_OAuth or ex_login_O365_OAuth_ClientSecret) are used, second action will be ignored unless authentication fails/expires or ex_logout() was used before the second action to disconnect.
+        </e>
+      </h>
+      <lvl>Batch level, open event.</lvl>
+      <ret>
+        <b>True,</b> if the login succeeds.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ex_login</see>
+    </method>
+
+ <method name="ex_login_O365_OAuth_Graph" qi="Login to Office 365 with OAuth using Microsoft Graph API.">
+      <p name="clientId" type="string" />
+      <p name="tenantId" type="string" />
+      <p name="username" type="string" />
+      <p name="password" type="string" />
+      <ap>
+        clientId : Application (client) ID from Azure Active Directory - App registrations<br/>
+        tenantId : Directory (tenant) ID from Azure Active Directory - App registrations<br/>
+        username : Username of Office 365 account<br/>
+        password : Password of Office 365 account<br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+
+        Parameters (clientId, tenantId, username, password) can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.<br/>
+        To retrieve parameters that is stored in the Advanced section,
+        use a smart parameter for the action's parameters similar to
+        @APPVAR(values/adv/password) where password is the name entered for the value in the Application Manager.
+      </ap>
+      <h>
+        To use OAuth authentication service provided by Azure Active Directory to enable Microsoft Graph, you will need to:<br/>
+        1) Register application with Azure Active Directory.<br/>
+        2) For Authentication, under "Default client type", set "Yes" to "Treat application as a public client."<br/>
+        3) For API permissions, add a request API permission for Microsoft Graph and Grant consent for Mail.ReadWrite".
+        <e>
+          <b>ex_login_O365_OAuth_Graph("00000000-0000-0000-0000-000000000000", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "user@organization.com", "@APPVAR(values/adv/password)")</b><br/>
+          ex_scan_graph()<br/>
+          ex_logout_graph()<br/><br/>
+
+          If more than one logins (ex_login_O365_OAuth_Graph) are used, second action will be ignored unless authentication fails/expires or ex_logout_graph() was used before the second action to disconnect.
+        </e>
+      </h>
+      <lvl>Batch level, open event.</lvl>
+      <ret>
+        <b>True,</b> if the login succeeds.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ex_login</see>
+    </method>
+
+    <method name="ex_login_O365_OAuth_ClientSecret" qi="Login to Office 365 with OAuth with Client Secret using EWS.">
+      <p name="clientId" type="string" />
+      <p name="tenantId" type="string" />
+      <p name="clientSecret" type="string" />
+      <p name="impersonatedUserId" type="string" />
+      <ap>
+        clientId : Application (client) ID from Azure Active Directory - App registrations<br/>
+        tenantId : Directory (tenant) ID from Azure Active Directory - App registrations<br/>
+        clientSecret : Client Secret from Azure Active Directory - App registrations<br/>
+        impersonatedUserId : User ID of Office 365 account to impersonate<br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+
+        Parameters (clientId, tenantId, clientSecret, impersonatedUserId) can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.<br/>
+        To retrieve parameters that is stored in the Advanced section,
+        use a smart parameter for the action's parameters similar to
+        @APPVAR(values/adv/clientSecret) where clientSecret is the name entered for the value in the Application Manager.
+      </ap>
+      <h>
+        <b>*** This Action Is Deprecated ***</b><br/>
+        This action has been deprecated and is scheduled to be removed in a future release.
+        It is recommended that you no longer use this action.
+        <br/><br/>
+
+        To use OAuth authentication service provided by Azure Active Directory to enable EWS to access Exchange Online in Office 365, you will need to:<br/>
+        1) Register application with Azure Active Directory.<br/>
+        2) For Certificates &amp; secrets, under "Client secrets", click "New client secret" to "Add" and get "Value."<br/>
+        3) For API permissions, add "full_access_as_app" and grant consent.
+        <e>
+          <b>ex_login_O365_OAuth_ClientSecret("00000000-0000-0000-0000-000000000000", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "@APPVAR(values/adv/clientSecret)", "user@organization.com")</b><br/>
+          ex_scan()<br/>
+          ex_logout()<br/><br/>
+
+          If more than one logins (ex_login, ex_login_O365_OAuth or ex_login_O365_OAuth_ClientSecret) are used, second action will be ignored unless authentication fails/expires or ex_logout() was used before the second action to disconnect.
+        </e>
+      </h>
+      <lvl>Batch level, open event.</lvl>
+      <ret>
+        <b>True,</b> if the login succeeds.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ex_login</see>
+    </method>
+	
+	<method name="ex_login_O365_OAuth_ClientSecret_Graph" qi="Login to Office 365 with OAuth using Microsoft Graph API.">
+      <p name="clientId" type="string" />
+      <p name="tenantId" type="string" />
+      <p name="clientSecret" type="string" />
+      <p name="impersonatedUserId" type="string" />
+      <ap>
+        clientId : Application (client) ID from Azure Active Directory - App registrations<br/>
+        tenantId : Directory (tenant) ID from Azure Active Directory - App registrations<br/>
+        clientSecret : Client Secret from Azure Active Directory - App registrations<br/>
+        impersonatedUserId : User ID of Office 365 account to impersonate<br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+
+        Parameters (clientId, tenantId, clientSecret, impersonatedUserId) can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.<br/>
+        To retrieve parameters that is stored in the Advanced section,
+        use a smart parameter for the action's parameters similar to
+        @APPVAR(values/adv/clientSecret) where clientSecret is the name entered for the value in the Application Manager.
+      </ap>
+      <h>
+        To use OAuth authentication service provided by Azure Active Directory to enable Microsoft Graph, you will need to:<br/>
+        1) Register application with Azure Active Directory.<br/>
+        2) For Certificates &amp; secrets, under "Client secrets", click "New client secret" to "Add" and get "Value."<br/>
+		3) For API permissions, add a request API permission for Microsoft Graph in application level and Grant consent for Mail.ReadWrite".
+        <e>
+          <b>ex_login_O365_OAuth_ClientSecret_Graph("00000000-0000-0000-0000-000000000000", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", "@APPVAR(values/adv/clientSecret)", "user@organization.com")</b><br/>
+          ex_scan()<br/>
+          ex_logout()<br/><br/>
+
+          If more than one logins ( ex_login_O365_OAuth_ClientSecret_Graph) are used, second action will be ignored unless authentication fails/expires or ex_logout() was used before the second action to disconnect.
+        </e>
+      </h>
+      <lvl>Batch level, open event.</lvl>
+      <ret>
+        <b>True,</b> if the login succeeds.  Otherwise, <b>False.</b>
+      </ret>
+      <see>ex_login</see>
+    </method>
+
+    <method name="ex_SetProxy" qi="Allows optional specification of proxy service settings.">
+      <p name="proxyURL" type="string" />
+      <p name="proxyPort" type="string" />
+      <p name="proxyUsername" type="string" />
+      <p name="proxyPassword" type="string" />
+      <ap>
+        proxyURL : URL or IP address of proxy service.<br/>
+        proxyPort : The proxy service connection port.<br/>
+        proxyUsername : Username for the proxy server.<br/>
+        proxyPassword : Password for the proxy server.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+
+        The password can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.
+        The URL and user name parameters can be stored in the General section of the Datacap Application Manager but they cannot be encrypted.
+        To retrieve the password that is stored in the Advanced section,
+        use a smart parameter for the action's password parameter similar to
+        @APPVAR(values/adv/mailProxyPassword) where mailProxyPassword is the name entered for the value in the Application Manager.
+      </ap>
+      <h>
+        Optionally sets the values to a proxy service that will be used to connect to the email server.
+        This action does not confirm that the connection to the proxy service is successful. Connection to the
+        proxy service will not occur until the ex_login action is called.<br/><br/>
+
+        If this action is used, it must be called prior to the ex_login action.  If this action is not
+        called, then no proxy service will be used.
+        <e>
+          <b>ex_SetProxy("https://proxyurl.com", "8080", "proxyusername", "@APPVAR(values/adv/mailProxyPassword)")</b><br/>
+          ex_login("https://mailserver.com/ews/exchange.asmx", "username@domain.com", "password")<br/><br/>
+
+          This example sets up the parameters to use a proxy and then performs the login.
+          The parameter for the password is an example smart parameter that obtains the password
+          from an advanced value in the application service.
+        </e>
+      </h>
+      <lvl>Any level, typically batch level.</lvl>
+      <ret>
+        <b>False,</b> if the proxyPort is not numeric, otherwise <b>True.</b>
+      </ret>
+      <see>ex_login</see>
+    </method>
+
+    <method name="ex_SetProxy_FullURL" qi="Allows optional specification of proxy service settings with Full URL.">
+      <p name="proxyFullURL" type="string" />
+      <p name="proxyUsername" type="string" />
+      <p name="proxyPassword" type="string" />
+      <ap>
+        proxyFullURL : Full URL of proxy service.<br/>
+        proxyUsername : Username for the proxy server.<br/>
+        proxyPassword : Password for the proxy server.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+
+        The password can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.
+        The URL and user name parameters can be stored in the General section of the Datacap Application Manager but they cannot be encrypted.
+        To retrieve the password that is stored in the Advanced section,
+        use a smart parameter for the action's password parameter similar to
+        @APPVAR(values/adv/mailProxyPassword) where mailProxyPassword is the name entered for the value in the Application Manager.
+      </ap>
+      <h>
+        Optionally sets the values to a proxy service that will be used to connect to the email server.
+        This action does not confirm that the connection to the proxy service is successful. Connection to the
+        proxy service will not occur until the ex_login action is called.<br/><br/>
+
+        If this action is used, it must be called prior to the ex_login action.  If this action is not
+        called, then no proxy service will be used.
+        <e>
+          <b>ex_SetProxy("https://proxyurl.com:8080/proxy.url", "proxyusername", "@APPVAR(values/adv/mailProxyPassword)")</b><br/>
+          ex_login("https://mailserver.com/ews/exchange.asmx", "username@domain.com", "password")<br/><br/>
+
+          This example sets up the parameters to use a proxy and then performs the login.
+          The parameter for the password is an example smart parameter that obtains the password
+          from an advanced value in the application service.
+        </e>
+      </h>
+      <lvl>Any level, typically batch level.</lvl>
+      <ret>
+        <b>False,</b> if proxy settings fails, otherwise <b>True.</b>
+      </ret>
+      <see>ex_login</see>
+    </method>
+
+    <method name="ex_SetTopFolder" qi="Sets the top folder where search would start">
+      <p name="root" type="bool" qi="A boolean value that sets the top folder to root"/>
+      <ap>
+        <b>True:</b> Searches done/problem folder from the root of the mailbox.<br/>
+        <b>False:</b> Searches done/problem folder from the Inbox folder.<br/>
+      </ap>
+      <h>
+        If this action is never called, ex_done_folder and ex_problem_folder search starts from the Inbox folder. (Default)
+        If this action is called with parameter True, ex_done_folder and ex_problem_folder search starts from the root of the mailbox.
+        <e>
+          <b>ex_SetTopFolder("true")</b><br/>
+          ex_done_folder("Imported")<br/>
+          ex_problem_folder("Failed")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+  </com>
+</rrx>

@@ -1,0 +1,196 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="VoteUsingComparativeText" v="9.1.7.1">
+  <com ref="Datacap.Libraries.VoteUsingComparativeText.Actions"  qi=": Actions that increase or decrease character confidence based on two sets of field data that should be identical.">
+
+    <h>
+      Voting is a method of comparing recognition results from two calls of recognition, or data entry from two different
+      users, and determine if the data entered is identical or if there is a mismatch.
+      Voting is used with field data or field recognition, not full page recognition.<br/><br/>
+      
+      When comparing results from two different recognition engines, or recognition from the same engine
+      with different settings, the results are compared.  If the characters are identical, then the read
+      is considered to be accurate and raises the character confidence to the highest level.  If
+      the characters do not match, then the confidence is lowered to the minimum confidence.
+      This can help confirm text is correct without a user verification, however if text confidence
+      is voted down, it would then be flagged for a verification operator.<br/><br/>
+      
+      Manual data entry can be compared in what is typically performed as a double-blind
+      data entry.  One user would enter verification data, then a second user would enter the validation
+      data.  If the data entered matches, then the data is considered to be accurate and move
+      on to the next step.  If not, the data would need to be re-entered by the second
+      verification operator for it to be accepted.<br/><br/>
+
+      Multiple values of recognized text are stored in a field using a
+      mechanism called "Alternate Text". The procedure allows a single field to store
+      multiple independent text strings, with confidence values stored for each
+      of the strings in the field DCO.<br/><br/>
+
+      The alternate text is accessed via indexes.  By default, alternate text is not used
+      and any text recognized, or entered by a user, is stored in the field along with the confidence.
+      Indexes can be provided to store additional data along side the original data.
+      Typically, once the first data has been recognized or entered, it will
+      be moved from the primary field text index to an alternate index using
+      the action PropagateToAlternateText<br/><br/>
+
+      Calling the action PropagateToAlternateText("1") will take the primary text
+      in the field and move it to another location within the field, giving it
+      an index value of "1".  The field can then be recognized again, or
+      entered by a secondary verification operator, so the field will then
+      contain two text strings.  The VoteField action will then compare
+      the two strings and change the confidence of the primary text
+      either up or down, depending on the characters that match or
+      do not match.<br/><br/>
+      
+      If necessary, multiple indexes can be used, meaning that
+      text can be moved to index 1, recognition can be performed again,
+      and that text can be stored in index 2, etc.  Allowing storage of
+      several different versions of the text that is expected to be
+      identical and then can be tested to confirm if the text matches
+      or not.<br/><br/>
+      
+      If performing double blind user entry, not ever verification panel may support double
+      blind entry.<br/><br/>
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+    </h>
+
+    <method name="ClearAlternateText" qi="Clears character and confidence values from the alternate text index specified by the parameter.">
+    <p name="Index" type="string" />
+    <ap>
+      The alternate text index in the current field to clear the character and confidence values.  
+      0 is the primary index, followed by 1, 2, etc. for storage of comparison text.<br/><br/>
+      Smart parameters are supported.<br/><br/>
+    </ap>
+    <h>
+      Clears character and confidence values from the Character Array position specified by the parameter.
+      When cleared, the confidence values are set to 10 (high confidence).<br/><br/>
+      
+      A field in the Data file can hold more than one representation of the field's value.
+      Values other than the current, visible value are accessed via an index number.
+      The primary field text value is at index 0, the next alternate value is at index 1.  Each additional
+      value also has corresponding character confidences.  Typically
+      only one alternate string is used for voting, however additional indexes can be
+      used as required.<br/><br/>
+
+      <b>Note:</b> Most actions only work with characters and confidence values 
+      located in the first position of the Character Array (position 0).<br/><br/>
+      
+      The ClearAlternateText action can be used with User Application Web's Advanced Index task, for "Double Blind" data entry.<br/><br/>
+      <e>
+        PropagateToAlternateText("1")<br/>
+        <b>ClearAlternateText("0")</b><br/><br/>
+
+        In this example, all characters at the primary index (0) of the Character Array will be copied to the second index (1).
+        The second action will then clear character and confidence values from the first index in the Character Array.
+        The field can then be recognized again and then call the voting action
+        or the batch can be routed to a second verification operator.<br/><br/>
+      </e>
+    </h>
+    <lvl>Field level.</lvl>
+    <ret>
+      Always <b>True.</b>
+    </ret>
+    <see>
+      PropagateToAlternateText<br/>
+      Refer to the top level help topic for this action library for more information about voting.
+    </see>
+    </method>
+    
+    
+    <method name="PropagateToAlternateText" qi="Copies the character and confidence values from the field's primary index to the index specified by the parameter.">
+      <p name="Index" type="string" />
+      <ap>
+        The alternate text index in the current field to clear the character and confidence values.
+        0 is the primary index, followed by 1, 2, etc. for storage of comparison text.<br/><br/>
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Copies the character and confidence values from the primary index of the field text (index 0)
+        to the index specified by the parameter. (The character "node" of a page's Data file is an array
+        that can hold many recognized character values, and their corresponding confidence values.)<br/><br/>
+
+        <b>Note:</b> Rules will only work with characters and confidence values located in the
+        first position of the Character Array (index 0).<br/><br/>
+
+        The PropagateToAlternateText action can be used with the User Application
+        Web's Advanced Index task, for "Double Blind" data entry.<br/><br/>
+        <e>
+          <b>PropagateToAltText("1")</b><br/>
+          <scr>ClearAlternateText("0")</scr><br/><br/>
+
+          All characters in the first index of the Character Array will be copied to the second index.
+          Then, the second action will clear the character and confidence values from the first index.
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        ClearAlternateText<br/>
+        Refer to the top level help topic for this action library for more information about voting.
+      </see>
+    </method>
+
+
+    <method name="VoteField" qi="Checks to see if the data entered for by the first Data Entry operator or recognition, matches the second value.">
+      <ap>None.</ap>
+      <h>
+        Checks to see if the data entered for by the first Data Entry operator, or recognized text, matches the
+        data enter by the second Data Entry operator or the second text recognition.
+        The text in the primary index 0 will be compared to the text in the alternate index 1.<br/><br/>
+
+        Failed (mismatched) values set the confidence for the invalid character to '1',
+        therefore flagging the field as Low Confidence.   Positive matches set the
+        character's confidence to '10' (High Confidence).<br/><br/>
+
+        When performing double blind verification, this action needs to run after the second Data Entry task has been completed.
+        This action is used for workflows using third pass data entry.<br/><br/>
+
+        Character confidence typically uses a range of 1 to 10. Some areas of the application
+        may interpret this range to 0 to 9.<br/><br/>
+        <e>
+          RecognizeFieldOCR_A()<br/>
+          PropagateToAlternateText("1")<br/>
+          ClearAlternateText("0")<br/>
+          RecognizeFieldOCR_S()<br/>
+          <b>VoteField()</b><br/><br/>
+          
+          This example compares the results of two different recognition engines.  First the field
+          is recognized using OCR/A.  The recognized text is stored in the alternate
+          index "1" location. The primary text is cleared and recognition is performed again
+          using OCR/S.  Lastly the VoteField action is used to compare the results
+          of the recognition.<br/><br/>
+          
+          If the text recognized by the first engine is "Hello Tom" and the text
+          of the second engine is "Hello Tim", then regardless of the original
+          confidence levels, the new confidence values of the text will be
+          10 for every character except the letter "i" in the primary
+          field location will have its confidence reduced to "1".<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False</b> if the values do not match.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help topic of this action library for more information on voting.
+      </see>
+    </method>
+    
+  </com>
+</rrx>

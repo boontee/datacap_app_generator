@@ -1,0 +1,165 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="Intellocate" v="9.1.6">
+  <com ref="Datacap.Libraries.Intellocate.Actions"  qi=": Actions that manipulates zones and assign page types">
+    <h>
+      <b>Intellocate action library</b>
+
+      <b>Details:</b>
+      The Intellocate action library actions focus on positions of fields and line items in a page's runtime DCO xml file.
+      This is in support of "Intellocate" functionality where zones positions can be assigned at runtime
+      to setup new page formats.<br/><br/>
+
+      The fields zoned positions are written in App.xml file e.g. APT.XML file.
+      The new position will saved in XML with POS and template Id, e.g. POS 556.
+      The Line Item zoned position are also written to APP.xml file which
+      is present in the application location App\DCO_App\App.xml, the application's
+      setup DCO. e.g. Datacap\APT\dco_APT\APT.xml.<br/><br/>
+
+      <b>Usage:</b> It will write Position corresponding of a new fingerprint's zoned fields and line items from a page's data file(xml)
+      to Pos properties of the corresponding Field object and line item objects in the Document hierarchy file(App.xml).<br/><br/>
+
+      <b>Smart parameters:</b> AssignPageType supports smart parameters. Rather than passing connection string hard-coded,
+      you can pass as a smart parameter, e.g.  @APPVAR(*/fingerprintconn:cs), it will read values from Application
+      .App file which is configured using the Application Service.
+      Smart parameters are special identifiers that are evaluated at runtime allowing action input parameters
+      to change based on the current state of the batch or environment.<br/><br/>
+
+    </h>
+
+    <method name="SetZones">
+      <ap>None.</ap>
+      <h>
+        Writes the position coordinates of a new fingerprint's zoned fields from a page's Data
+        file to the Pos properties of the corresponding Field objects in the Document Hierarchy file (.xml).
+        <e>
+          <b>SetZones()</b><br/>
+          This will set zones of the fields in App.xml file, also known as the setup DCO.
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if a fingerprint match has not occurred, or if the Document Hierarchy file
+        (.xml) cannot be saved.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library.
+      </see>
+    </method>
+
+    <method name ="SetDetailZone">
+      <ap>None.</ap>
+      <h>
+        Writes the position coordinates of a new fingerprint's Detail Line fields
+        from a page's Data file to the Pos properties of the corresponding Detail Line
+        Field objects of the application's Document Hierarchy.
+        <e>
+          <b>SetDetailZone()</b><br/>
+          It will write Detail Position coordinates to App.xml file.
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library.
+      </see>
+    </method>
+
+
+    <method name="AdjustZones">
+      <ap>None.</ap>
+      <h>
+        Updates the zoned field position on each respective fingerprint stored in database,
+        for all the fields of the page in App.XML file present
+        under APP_DCO folder.<br/>
+        In the format: <b> Pos templateId Position </b><br/>
+
+        Updates fingerprint-specific position coordinates for Field objects in the
+        Document Hierarchy based on the locations listed for the current source page's Data file (.xml)<br/><br/>
+        This action is designed to be used on existing fingerprints only.  It will only update fields
+        that do not have position information.  Existing fields will not be updated, even if the position
+        information for those fields has changed.<br/><br/>
+        <e>
+          <b>AdjustZones()</b><br/>
+          It will update the zones position of all the fields in the page in the APP.XML file as per the respective fingerprint coordinates.<br/>
+          e.g. Pos 1074(fingerprint) "Position".<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if a fingerprint match has not occurred and a Template ID
+        value has not been assigned to the current page, or if the Document
+        Hierarchy file cannot be saved. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="IsPageDataMissing">
+      <ap>None.</ap>
+      <h>
+        Checks to see that the current page data exists.
+        This action does not physically check for the existence of a data file.  It confirms
+        that a valid page data is loaded into memory.<br/>
+        It verifies whether the current page contains children field objects.<br/>
+        If it has no children it will return true. i.e. Page Data is missing, otherwise it will return false.<br/><br/>
+        <e>
+          <b>IsPageDataMissing()</b><br/>
+          This action will check whether there are any children on the current page.
+          If the page doesn't have any children then it will return true.
+          If the page does contain children it will return false and continue with the next function
+          in the rule.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>True</b> if the current page does not have page data. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library.
+      </see>
+    </method>
+
+    <method name="AssignPageType" >
+      <p name="PageType"/>
+      <p name ="ConnectionString"/>
+      <ap>
+        <b>PageType:</b> The value of the page type to assign to the current page.
+        PageType is stored in table in fingerprint Database.
+        It can be numeric value, which will be stored against particular pagetype.<br/>
+        It can also be a alpha-numeric value, which will be stored in table and a numeric id will be automatically generated.<br/><br/>
+
+        <b>ConnectionString:</b>The ConnectionString should be passed so that Connection to fingerprint happens
+        and it will write the new pagetype and update template in fingerprint database<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+
+      </ap>
+      <h>
+        Assigns a required Page Type value to a newly created fingerprint.
+        The assigned value corresponds to the values configured in the PageType table within the fingerprint database.
+        These values are custom defined for each application.
+        If the page type is non-numeric, this action will look up the corresponding numeric value within the database.<br/>
+        <e>
+          <b>AssignPageType("2", @APPVAR(*/fingerprintconn:cs))</b><br/>
+          This example assigns a page type of 2 to the new fingerprint.<br/>
+          It will read the fingerprint database connection string configured in the
+          Application Manager.<br/><br/>
+
+          <b>AssignPageType("PageSeparator", @APPVAR(*/fingerprintconn:cs))</b><br/>
+          This example assigns a page type of "PageSeparator" to the new fingerprint.<br/>
+          It will read the fingerprint database connection string configured in the
+          Application Manager.<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False</b> if the numeric value cannot be retrieved from the fingerprint database or if there is
+        no connection to the fingerprint database. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library.
+      </see>
+    </method>
+
+  </com>
+</rrx>

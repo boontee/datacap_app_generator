@@ -1,0 +1,203 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="LineItemPagination" v="9.1.0">
+  <com ref="Datacap.Libraries.LineItemPagination.Actions"  qi=": LineItemPagination Actions for Retrieval of large Number of Line Items">
+    <!-- Example action declaration -->
+    <h>
+      LineItemPagination Actions library focuses on the LineItemPagination of line items, dividing a large set of line items into multiple smaller chunks.
+      By creating smaller sets of line items, data can be retrieved faster, and performance is improved for a large set of line items when performing verification.
+      LineItemPagination is required when there are many pages within a single document that has than 50 contiguous line items.
+      When the number of line items is very large, the client application may perform poorly.
+      To overcome this issue, LineItemPagination can be enabled to provide smaller sets of line items for verification that can be easily reviewed.<br/><br/>
+
+      The number of line items to use for LineItemPagination is configured in the General section of the Application Manager for
+      the application.  The maximum size of line items to display at one time is controlled by the
+      DetailPageSize value in Application Manager.  This value would be pre-configured by the application administrator or developer.
+      For example, if the value of DetailPageSize is 50, and there are around 200 pages each with 50 line items.
+      that sums up to 10,000 line items. So, if user tries to validate all these 10,000 line items, it can cause
+      cause poor performance of the client application. A LineItemPagination size of 50 will cause these line items to be displayed
+      in sets of 50.  The number is configurable. The maximum recommended size is 150 line items.  It is recommended that
+      testing is performed to determine what number works best in your environment.<br/><br/>
+
+      The LineItemPagination action will adjust the runtime DCO, based on the value provided by user in DetailPageSize.
+      The end user will see the line item grid based on the configured value. Additional functionality is available such as the
+      ability to move to the next set of
+      line items, move back to previous set of lineitems, and jump to a set of lineitems.
+      At runtime, LineItemPagination will create Details_TMXXXXXX pages in batch directory, and the Image.xml(Datafile) will hold only
+      those set of line items which are displayed in the line item grid in the client.<br/><br/>
+
+      DetailPageSize Variable needs to be created in the General section of the Application Manager Custom Values tab.
+      The Value should be in range from
+      50 to 150 for faster retrieval of line items in the verify panel.
+      If the value of variable DetailPageSize is set to 0, it means LineItemPagination functionality is disabled and
+      the buttons on verify panel like Next Set, Previous Set and Jump To will be disabled.
+      For the <b>DetailPageSize</b> variable, Any value entered by User between 1 to 50 will be default to 50 and value entered greater
+      than 150, will be default to 150.<br/><br/>
+
+      Ideally LineItemPagination should be implemented and executed post batch profiler(recognition) as it takes input as DataFile.
+      DataFile will be generated post recognition, where it will have detail information about line items of all the pages,
+      its values as well as positions. LineItemPagination only works with line items and with panels that support line items.
+      So, it is recommended where ever there are more than 500 line items till 5000 line items, where user feels the traditional
+      DcDesktop verify panel is too slow to retrieve line items , user can use LineItemPagination feature.
+      LineItemPagination should be done before Manual Verification Task.<br/><br/>
+
+      By default the LineItemPagination feature will be turned off. If DetailPageSize Variable doesn't exist in Application Manager,
+      then LineItemPagination will be disabled. If there value in DetailPageSize is invalid, it will default to 50.
+      It is recommended to  use LineItemPagination Feature in Datacap Desktop Verify Panel. If LineItemPagination actions are called other in any other
+      task profile it may be lead to undesirable output.<br/><br/>
+    </h>
+
+
+    <method name="MoveDetailFilesIntoMain" qi=": Move all Detail files into Main file(datafile)">
+      <ap>None.</ap>
+
+      <h>
+        This action will merge all the separate Datafile_XXXX files into Main File. i.e ImageDatafile.<br/><br/>
+        <e>
+          <b>DivideDetailsIntoPages()</b><br/>
+          <b>MoveDetailFilesIntoMain()</b><br/>
+
+          This Action will merge all the Details_TMXXXXXX pages present in batch folder in TMXXXXXX.xml(Datafile), to execute
+          this action user needs to divide the line items first using DivideDetailsIntoPages action.<br/><br/>
+        </e>
+      </h>
+
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>True,</b> if the operation is successful, otherwise <b>False.</b><br/>
+      </ret>
+      <see>
+        Refer to the top-level action help for general information regarding the LineItemPagination actions along with available settings and
+        features.<br/><br/>
+      </see>
+    </method>
+
+    <method name="DivideDetailsIntoPages" qi=": Divide Detail LineItem Section into number of pages">
+      <ap>None.</ap>
+
+      <h>
+        This action will divide the Details LineItem into a number of Pages based on variable value set in the application manager.<br/><br/>
+
+        The number of lineitems to display is controlled by the variable DetailPageSize in the Datacap Application Manager -> Custom Variable -> General section.
+        Whatever value is set in DetailPageSize, that number of line items will be displayed in verify panel of the client.  Refer to the top-level
+        help for more information.
+
+        Note: For faster retrieval of Data, it is recommended to set value of DetailPageSize in range between 50-150.
+        <e>
+          <b>DivideDetailsIntoPages()</b><br/>
+          If DetailPageSize is set to 70 in the Application Manager Custom Values panel,
+          it will display 70 lineitems in detail section of verification panel.
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>True,</b> if the operation is successful, otherwise <b>False.</b><br/>
+      </ret>
+      <see>
+        Refer to the top-level action help for general information regarding the LineItemPagination actions along with available settings and
+        features.<br/><br/>
+      </see>
+    </method>
+
+    <method name="JumpToSetOfLineitems" qi=": Jump to a Particular Set of Lineitems">
+      <ap>None.</ap>
+
+      <h>
+        Post LineItemPagination, all pages whose total line items exceeds the configured value, will be divided into chunks of Datafile
+        depending upon value of DetailPageSize set in application manager.
+        If the verification user wants to see a particular set of line items, The JumpToSetOfLineitems action will move to the specified
+        set of line items and display them in the client. There will be a button on Verify Panel that allows the user to select the set to display.  Enter a numeric value for      the DataSet
+        the user wants to Jump to, if the value is negative or out of range then user will get a error popup.
+        <br/><br/>
+        <e>
+          <b>JumpToSetOfLineitems()</b><br/>
+
+          In DcDesktop Verify Panel User will get a textbox, there he can specify on which page he wants to jump.
+          If the user entered input is out of range or negative, it will popup error msg.
+          This action use DetailCurrentPage Variable to get details of current page number displayed in verify panel and PageJumpNumber Variable
+          holds the current page number of page.
+
+          In the above example, assume there are more than 5 Datafiles(Details_TMXXXXXX pages) are created post
+          LineItemPagination task, and user enters 5 in JumpToSetOfLineitems textbox, so it will display the 5th Set of Lineitems
+          in the verify Panel Detail Section.
+
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False,</b> if the number specified to Jump is invalid or out of range, otherwise <b>True.</b><br/>
+      </ret>
+      <see>
+        Refer to the top-level action help for general information regarding the LineItemPagination actions along with available settings and
+        features.<br/><br/>
+      </see>
+    </method>
+
+
+    <method name="DeleteAllDetailPaginations" qi=": Delete All of the Details_TMXXXXXX pages from the Batch folder">
+      <ap>None.</ap>
+
+      <h>
+        Deletes the additional, temporary, Datafiles created by LineItemPagination from the batch folder.<br/><br/>
+        <e>
+          <b>DivideDetailsIntoPages()</b><br/>
+          <b>MoveDetailFilesIntoMain()</b><br/>
+          <b>DeleteAllDetailPaginations()</b><br/>
+
+          It will delete all the Details_TMXXXXXX files created using action DivideDetailsIntoPages() from the batch folder.<br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>False,</b> if there are No Detail pages in batch, otherwise <b>True.</b><br/>
+      </ret>
+      <see>
+        Refer to the top-level action help for general information regarding the LineItemPagination actions along with available settings and
+        features.<br/><br/>
+      </see>
+    </method>
+
+    <method name="PreviousSetOfLineitems" qi=": Go To the Previous Set of Lineitems">
+      <ap>None.</ap>
+
+      <h>
+        Post LineItemPagination in verify panel based on DetailPageSize value, Datafile will be divided into smaller chuncks
+        of lineitems, X/Y where X is Previous set of lineitems and Y is current set of line items.
+        <e>
+          <b>PreviousSetOfLineitems()</b><br/><br/>
+
+          The action will swap current set of line items displayed in VerifyPanel with the previous set of line items.<br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>True,</b> if the operation is successful, otherwise <b>False.</b><br/>
+      </ret>
+      <see>
+        Refer to the top-level action help for general information regarding the LineItemPagination actions along with available settings and
+        features.<br/><br/>
+      </see>
+    </method>
+
+    <method name="NextSetOfLineitems" qi=": Go To the Next Set of Lineitems">
+      <ap>None.</ap>
+
+      <h>
+        Post LineItemPagination in verify panel based on DetailPageSize value, the Datafile will be divided into smaller chunks
+        of lineitems, X/Y where X is current set of line items and Y is next set of line items.<br/><br/>
+        <e>
+          <b>NextSetOfLineitems()</b><br/><br/>
+
+          It will swap current set of line items displayed in Verify panel with the next set of line items.<br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>True,</b> if the operation is successful, otherwise <b>False.</b><br/>
+      </ret>
+      <see>
+        Refer to the top-level action help for general information regarding the LineItemPagination actions along with available settings and
+        features.<br/><br/>
+      </see>
+    </method>
+  </com>
+</rrx>

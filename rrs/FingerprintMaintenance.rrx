@@ -1,0 +1,121 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="FingerprintMaintenance" v="8.0.1.2">
+<g>
+    <![CDATA[	
+'**************************************************************************************************
+'Fingerprint Maintenance Actions
+' Copyright Datacap Inc. 2009-2010, All Rights Reserved
+' Version = "8.0.0"
+' 11/8/2010 Michael Schlachter
+' Version = "8.0.1.0"
+' 12/9/2010 Michael Schlachter
+' Added support for smart parameters
+' Version = "8.0.1.2"
+' 12/16/2010 Michael Schlachter
+' Added smart paremter support to DeleteFingerprints and updated help indicating that smart parameters are supported
+' Version = "8.1.0.3"
+' 5/11/2011 Michael Schlachter
+' updated to Visual Studio 2010
+' Version = "8.1.0.4"
+' 5/11/2012 Michael Schlachter
+' added encryption
+'Licensed Materials - Property of IBM
+
+'"Restricted Materials of IBM”
+
+'5725-C15
+
+'© Copyright IBM Corp. 1994, 2011 All Rights Reserved
+
+'US Government Users Restricted Rights - Use, duplication or
+'disclosure restricted by GSA ADP Schedule Contract with
+'IBM Corp.
+
+'**************************************************************************************************
+   ]]>
+</g>
+	<h>These actions are used to automate the deletion of fingerprints in your application.  It is intended for applications
+	that create fingerprints automatically.  By periodically deleting fingerprints that are not used you can decrease the time
+	it takes to load them when the FindFingerprint action is called.
+	</h>
+  <com ref="Datacap.Libraries.FingerprintMaintenance.Actions"  qi="Actions to automate fingerprint deletion.">
+	  <method name="OpenDatabase" qi="Opens a connection to the fingerprint database.">
+		  <ap>Fingerprint database connection string.</ap>
+		  <h>
+			  Opens a connection to the fingerprint database using the connection string provided in the parameter.  A smart parameter may be used.
+			  <e>
+				  <b>OpenDatabase("provider=microsoft.jet.oledb.4.0;data source=c:\datacap\apt\APTFingerprint.mdb;persist security info=false")</b>
+          <br/><br/>
+          This example obtains the connection string set in the applicaiton manager.<br/>
+          <b>OpenDatabase("@APPVAR(*/dco_*[1]/fingerprintconn:cs)")</b>
+			  </e>
+		  </h>
+		  <lvl>Any level.</lvl>
+		  <ret>
+			  <b>True</b> if the connection is established.
+			  <b>False</b> if the connection is not established.
+		  </ret>
+		  <p name="ConnectionString" type="string" qi="Fingerprint database connection string."/>
+	  </method>
+	  <method name="SetFingerprintFolder" qi="Specifies the folder containing the fingerprint files.">
+		  <ap>Folder path where the fingerprints are located.</ap>
+		  <h>
+			  Specifies the folder containing the fingerprint files.  A smart parameter may be used.
+			  <e>
+				  <b>SetFingerprintFolder("C:\Datacap\APT\fingerprint")</b>
+          <br/><br/>
+          This example obtains the path set in the applicaiton manager.<br/>
+          <b>SetFingerprintFolder("@APPPATH(*/fingerprint)")</b>
+        </e>
+		  </h>
+		  <lvl>Any level.</lvl>
+		  <ret>
+			  Always <b>True.</b>
+		  </ret>
+		  <p name="Folder" type="string" qi="Folder containing the fingerprints."/>
+	  </method>
+	  <method name="DeleteFingerprint" qi="Deletes specified fingerprint.">
+		  <ap>The ID of the fingerprint to delete.</ap>
+		  <h>
+			  Deletes the CCO, TIFF and FPXML files for the specified fingerprint.  Also deletes the database record and position information from the DCO.  A smart parameter may be used.
+			  <e>
+				  <b>DeleteFingerprint("1002")</b>
+			  </e>
+		  </h>
+		  <lvl>Any level.</lvl>
+		  <ret>
+			  Always <b>True.</b>
+		  </ret>
+		<p name="ID" type="string" qi="ID of fingerprint to delete"/>
+	</method>
+	  <method name="DeleteFingerprints" qi="Deletes all fingerprints returned by the SQL statement in the parameter">
+		  <ap>SQL statement used to return a recordset of fingerprints that should be deleted.</ap>
+		  <h>
+			  Deletes all fingerprints returned by the query specified in the parameter.  A smart parameter may be used.
+			  <e>
+			  <b>Access</b> - DeleteFingerprints("SELECT * FROM Template WHERE tp_LastHit &lt; dateadd("d",-30,NOW)")<br /><br/>
+			  <b>SQL</b> - DeleteFingerprints("SELECT * FROM Template WHERE tp_LastHit &lt; dateadd(d,-2,GETDATE())")<br /><br/>
+        <b>Oracle</b> - DeleteFingerprints("SELECT * FROM Template WHERE tp_LastHit &lt; TRUNC(SYSDATE) - 30")<br /><br/>
+		  </e>
+		  </h>
+		  <lvl>Any level.</lvl>
+		  <ret>
+			  Always <b>True.</b>
+		  </ret>
+		  <p name="SQL" type="string" qi="SQL statement to return a recordset of fingerprints to be deleted"/>
+	  </method>
+	  <method name="CloseDatabase" qi="Closes connection to the fingerprint database and saves the Setup DCO.">
+		  <ap>None.</ap>
+		  <h>
+			  Closes the open database connection and saves the Setup DCO if position information was deleted.  The Setup DCO will not be modified if FPXML files are used, or if no fingerprints were deleted.
+			  <e>
+				  <b>CloseDatabase()</b>
+			  </e>
+		  </h>
+		  <lvl>Any level.</lvl>
+		  <ret>
+			  Always <b>True.</b>
+		  </ret>
+	  </method>
+  </com>
+</rrx>

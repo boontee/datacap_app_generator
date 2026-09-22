@@ -1,0 +1,1554 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="IBMFileNetP8" v="9.1.10.2">
+  <com ref="Datacap.Libraries.IBMFileNetP8.Actions"  qi=": Uploads and downloads documents from an IBM FileNet P8 repository.">
+    <!-- Example action declaration -->
+    <h>
+        The IBMFileNetP8 actions facilitate the uploading and downloading of files between a Datacap application and an IBM® FileNet® P8 repository. 
+        All the systems executing rules that utilize this action library must have both the IBM FileNet Content Engine .NET API 
+        and the Web Services Enhancements (WSE) 3.0 for Microsoft .NET packages installed. The system hosting the Rulerunner service executes 
+        rules and requires the necessary software to be installed. Additionally, rules can also be executed from other clients, 
+        such as Datacap Desktop or web services machines, which must have the appropriate supporting files available.<br/><br/>
+
+
+        The actions P8Login and P8SetTargetObjectID must be set prior to calling an action that interacts with
+        the FileNet P8 server. When the login action is performed, the login is valid for the current task profile.
+        When FileNet P8 actions are used across multiple task profiles, a separate login is required for each profile.<br/><br/>
+    </h>
+
+
+      <method name="P8AddRedactionsToP8Document" qi=": Adds redactions to a P8 document">
+          <ap>
+              None.  The page property "PageName" is used.
+          </ap>
+          <h>
+              Adds redactions to an existing FileNet P8 document. This action requires one or more fields to first be redacted using
+              the RedactFields action in the Redact action library.<br /><br />
+
+              This action requires that documents were previously downloaded by P8SearchAndDownload action, or files that have
+              filenames beginning with the P8 object ID and the same ID exists on the FileNet server.
+              The MVScan action Scan copies files from an input directory and
+              adds them to the current batch.  The MVscan Scan action also saves the base filename to a
+              page-level variable named "PageName".  The P8AddRedactionsToP8Document action uses the "PageName" variable as the object ID
+              to find the FileNet P8 document to be updated.  This page name must start with a valid FileNet document ID.<br/><br/>
+              
+              Example filename: "{3054025F-0000-CE12-B41A-7B2661D28802}.APT008.tif"<br /> <br />
+
+              <e>
+                  ....... <br />
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("@STRING(C:/mylocaldir)")<br />
+                  P8SetSearchWhereClause("DocumentTitle LIKE '2017-Invoices%'")<br />
+                  P8SearchAndDownload()<br />
+                  Scan()<br/><br/>
+                  
+                  ....... <br />
+                  RedactFields("CCPattern1", "Redact_CreditCard", "4,4,4,4", True)<br/>
+                  <b>P8AddRedactionsToP8Document()</b><br/><br/>
+                  
+                  The example configures search criteria then downloads documents.  The documents are
+                  added to the batch with the Scan action. Application specific processing is performed until
+                  there is a rule that adds redactions to the document.  The P8AddRedactionsToP8Document action
+                  then updates the existing document on the FileNet server with the redaction information.<br/><br/>
+              </e>
+          </h>
+          <lvl>Page level.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs or if the action is run on any level that is not page level.  Otherwise, <b>True.</b>
+          </ret>
+      </method>      
+      
+
+      <method name="P8CreateFolder" qi=": Creates a folder on the P8 repository.">
+          <p name="FolderPath" type="string" qi="The name of the folder to create on the P8 system. Do not include the folder path, only specify the folder name."/>
+          <ap>              
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              Creates a subfolder on a previously specified destination folder.  The newly created
+              folder is set as the new destination folder for uploaded files.
+              The new folder is created within the folder set by the P8SetDestinationFolder action.
+              If the destination folder has not been set, then the folder is created on the root of the FileNet repository.<br/><br/>
+
+              This action must be preceded by the P8Login and P8SetTargetObjectID actions.<br/><br/>
+              
+              <e>
+                  P8SetDestinationFolder("@STRING(\1040EZ\Export\)")<br/>
+                  <b>P8CreateFolder("@BATCHID")</b><br /><br />
+
+                  This example creates a subfolder under the \1040EZ\Export\ folder on the FileNet system and changes
+                  the destination folder to the newly created folder. For example:
+                  "\1040EZ\Export\20261009.000019".
+                  If the folder is created successfully, the action adds a DCO variable, “Folder_ID”,
+                  to the current DCO with the unique folder ID returned from FileNet Web Service.
+              </e>
+              <br/><br/>
+              <e>
+                  P8Login("FileNetURL", "P8User", "@APPVAR(values/adv/P8Login)")<br/>
+                  P8SetTargetClassID("ObjectStore")<br/>
+                  P8SetTargetObjectID("p8os1")<br/>
+                  P8SetDestinationFolder("@STRING(\DatacapFolder\)")<br/>
+                  <b>P8CreateFolder("@BATCHID")</b><br/><br/>
+
+                  This example demonstrates the logon actions on the same rule, typically a batch rule. 
+                  It creates a subfolder, whose name is based on the current batch ID, 
+                  under \DatacapFolder folder on the FileNet system and changes the destination folder to the newly created folder.
+                  For example: "\DatacapFolder\20251023.000000". If the folder is created successfully, 
+                  the action adds a DCO variable, “Folder_ID”, to the current DCO with the unique folder ID returned from FileNet Web Service.<br/>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if the parameter is invalid, the set up information is invalid,
+              or the folder cannot be created.  Otherwise, <b>True.</b><br /><br />
+              
+              Note: If the action returns False, the task is set to a status of “Aborted”.
+          </ret>
+      </method>
+      
+
+      <method name="P8Login" qi=": Provide the URL and login credentials for the P8 repository.">
+          <p name="FileNetURL" type="string" qi="The URL for the FileNet P8 repository server."/>
+          <p name="LoginName" type="string" qi="The user ID the application uses for the FileNet P8 connection."/>
+          <p name="Password" type="string" qi="The password for the specified login name."/>
+          <ap>
+              Smart parameters are supported for all parameters. To encrypt the password, it is recommended that
+              the password is placed into 
+              the Datacap Application Manager's "Advanced Values" section.  
+              The encrypted password location is specified in the parameter using smart parameter syntax.<br /><br />
+          </ap>
+          <h>
+              Creates the connection to the IBM FileNet P8 system.  Subsequent FileNet actions use
+              the connection for uploading and downloading files.<br/><br/>
+              <e>
+                  <b>P8Login("FileNetURL", "P8User", "@APPVAR(values/adv/FilenetPassword)")</b><br/>
+                  P8SetTargetObjectID("AP_ObjectStore")<br/>
+                  P8SetTargetObjectID("p8os1")<br/><br/>
+                  
+                  The example shows that the password is stored in the application manager in a variable called "FilenetPassword".
+                  This usage encrypts the password within the application manager and the password is obtained from the stored location at runtime.<br/>
+              </e>
+              <br/>
+              <e>
+                  <b>P8Login("FileNetURL", "P8User", "P8Password")</b><br/>
+                  P8SetTargetObjectID("ObjectStore")<br/>
+                  P8SetTargetObjectID("p8os1")<br/><br/>
+
+                  The example shows that the password is hard coded within the action rules.<br/>
+              </e>
+              <br/><br/>
+              <b>Instructions on Installing SSL Certificates for the Content Platform Engine</b><br/><br/>
+              
+              To ensure secure communication with the Content Platform Engine application server, install your SSL certificate into the appropriate certificate store:<br/><br/>
+
+              Standard SSL Certificate: Install the certificate into the "Trusted People" certificate store.<br/>
+              Chained SSL Certificate: Install the root certificate into the "Trusted Root Certification Authorities" certificate store.<br/><br/>
+
+              For example, if your FileNet URL is "https://˂ipaddress˃:9443/acce", open this link in a browser and
+              download the SSL certificate from the site. Then, import the certificate into the relevant store as described above.<br/>
+          </h>
+          <lvl>All, but generally at the Batch level.</lvl>
+          <ret>
+              <b>False,</b> the FileNet P8 client software is not installed, if the login credentials are incorrect,
+              or an error occurs.  Otherwise, <b>True.</b><br/>
+          </ret>
+          <see>
+              Refer to the top-level hop of this action library for information about this action library, including required
+              FileNetP8 connectivity software.<br/>
+          </see>
+      </method>
+
+
+
+
+      <method name="P8SearchAndDownload" qi=": Locates documents on the FileNet repository and downloads them to the batch or a directory.">
+          <ap>
+              None. The action uses the parameters set in the P8SetSearch* actions for executing the search against FileNet P8 repository.
+              First call the P8SetSearch* actions to configure the search then call P8SearchAndDownload to perform the search operation.
+          </ap>
+          <h>
+              Executes a search for documents in FileNet P8 and downloads the content of the documents returned by the search. 
+              If the documents are being downloaded for processing by a Datacap application, 
+              the downloaded documents can be ingested into the batch using the MVScan action library.<br /><br />
+
+              By default, the maximum number of search results are limited to 1000 documents.  Use the action <b>P8SetSearchMaximumItems</b> to set a different maximum.
+              <br /><br />
+
+              The user ID or process running the rules must have write permissions to the target directory.  If a file already exists in the directory
+              with the same name as the content being downloaded, the existing file is overwritten.
+              <br /><br />
+
+              After P8SearchAndDownload has downloaded the FileNet P8 content files, Scan() action can be called to read the files from the same directory,
+              bringing them into the currently running batch.
+              <br /><br />
+
+              <b>Important:</b> to prevent downloading duplicate item content, the task that calls P8SearchAndDownload action should not be run in a
+              multiple Rulerunner configuration.
+              Instead, use a single Rulerunner configured to run the vscan tasks that downloads from FileNet P8 and adds the files to the batch.
+              For information about configuring threads in Rulerunner, see the Knowledge Center
+              section: "Configuring Rulerunner to Run Tasks".
+              <br /><br />
+
+              <p>
+                  The following actions are <b>required</b> to be called prior to calling <b>P8SearchAndDownload</b>.  See the help for these actions for more details.
+                  <b>
+                      <ul>
+                          <li>P8SetURL</li>
+                          <li>P8Login</li>
+                          <li>P8SetTargetObjectID</li>
+                          <li>P8SetSearchClass</li>
+                          <li>P8SetSearchDownloadDirectory</li>
+                      </ul>
+                  </b>
+              </p>
+              <p>
+                  The following actions can optionally be called prior to calling <b>P8SearchAndDownload</b>.
+                  Use the actions below, as needed, to filter which documents are downloaded by the P8SearchAndDownload action.
+                  See the help for these actions for more details. <br /><br />
+                  
+                  <b>
+                      <ul>
+                          <li>P8SetSearchWhereClause</li>
+                          <li>P8SetSearchFolderRestriction</li>
+                          <li>P8SetSearchOrderBy</li>
+                          <li>P8SetSearchMaximumItems</li>
+                          <li>P8SetSearchCurrentVersionOnly</li>
+                          <li>P8SetSearchIncludeDocsWithoutContent</li>
+                          <li>P8SetSearchIncludeSubclasses</li>
+                          <li>P8SetSearchAndDownloadStatusProperty</li>
+                      </ul>
+                  </b>
+              </p>
+              <br/>
+              <e>
+                  P8SetURL("http://myp8server:9080/wsi/FNCEWS40MTOM/")<br />
+                  P8Login("User1,Password1")<br />
+                  P8SetTargetObjectID("AP_ObjectStore")<br />
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("@APPPATH(vscanimagedir)")<br />
+                  P8SetSearchWhereClause("DocumentTitle LIKE '2017-Invoices%'")<br />
+                  P8SetSearchMaximumItems(“100”)<br />
+                  P8SetSearchOrderBy("InvoiceDate ASC“)<br />
+                  <b>P8SearchAndDownload()</b><br />
+                  Scan()<br/>
+
+                  <br /><br />
+                  This example searches for documents of "Invoice" class which have property "DocumentTitle" matching the
+                  wildcard string '2017-Invoice%', sort the results in ascending order based on the InvoiceDate property,
+                  take the top 100 results and download the contents of those documents to the directory specified in the Smart Parameter
+                  for the MVScan image directory.
+                  <br /><br />
+
+                  The output file name is a concatenation of the FileNet P8 item ID and the original upload file name of
+                  the content (if it exists).  If the original upload file name does not exist, then the default file extension
+                  ".tif" is used when the mime type of the content is "image/tiff". <br /><br />
+
+                  <b>Example:  {3054025F-0000-CE12-B41A-7B2661D28802}.0.Flight1.tif.</b><br /><br />
+
+                  When the Scan() action runs, it ingests the files from the populated directory into the the batch,
+                  allowing the files to be processed by subsequent application rules.<br /><br />
+
+              </e><br /><br />
+              <e>
+                  P8SetURL("http://myp8server:9080/wsi/FNCEWS40MTOM/")<br />
+                  P8Login("User1,Password1")<br />
+                  P8SetTargetObjectID("AP_ObjectStore")<br />
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("@APPPATH(vscanimagedir)")<br />
+                  P8SetSearchWhereClause("DocumentTitle LIKE '2017-Invoices%'")<br />
+                  P8SetSearchMaximumItems(“100”)<br />
+                  P8SetSearchAndDownloadStatusProperty("myStatusProp")<br />
+                  <b>P8SearchAndDownload()</b><br />
+                  Scan()<br/><br />
+
+                  This example is similar to earlier one.  The main differences:<br />
+                  1. For each document downloaded, the property "myStatusProp" of the document is set to value of 1.<br />
+                  2. When searching for documents, any documents which have "myStatusProp=1" are excluded from the search.
+                  <br /><br />
+              </e><br />
+
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+
+      <method name="P8SetDefineSecurityParentage" qi=": Configures how a file's security is determined.">
+          <p name="Inherit" type="string" qi="Inherit parent security: True/False."/>
+          <ap>
+              <b>True:</b> Specifies that security is to be inherited from the parent folder.<br/><br/>
+
+              <b>False:</b> Specifies that security is not inherited from the parent folder.<br/><br/>
+
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Configures the document upload to inherit the security properties from the parent folder.<br/><br/>
+              
+              If this action is not called or if the parameter is not "True" or "False", the default value of "False" is used,
+              and the security is not inherited from the parent folder.<br/><br/>
+              
+              <e>
+                  P8SetDestinationFolder("@APPVAR(values/gen/P8Folder)")<br/>
+                  <b>P8SetDefineSecurityParentage("True")</b><br/>
+                  P8Upload()
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+      
+      <method name="P8SetDestinationFolder" qi=": Sets the destination folder for the documents being uploaded.">
+          <p name="Destination" type="string" qi ="An existing folder on the FileNet server."/>
+          <ap>
+              The path to the destination FileNet P8 folder in the selected Object Store where documents are uploaded.  For example: /MyApplication.<br/><br/>              
+              
+              Note: The trailing slash is optional. Folders that are children of the root folder are not required to have a slash
+              after the name. In some cases a main folder of the object store requires a trailing '\', if the 'object store' is configured for it.<br/><br/>
+
+              Providing the destination folder "Unfiled Documents" (case insensitive), sets the upload folder as FileNet's special "Unfiled Documents" folder.<br/><br/>
+
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Sets the destination folder for the documents being uploaded.  
+              If this action is not called, the default value is the root folder of the specified target object.<br/><br/>
+              
+              Note: The action P8CreateFolder also updates the destination folder.<br/><br/>              
+              
+              <e>
+                  <b>P8SetDestinationFolder("@STRING(\DatacapFolder\)")</b><br/><br/>
+
+                  In this example, DatacapFolder refers to an existing folder located under the Root Folder. 
+                  The path is enclosed within the @STRING smart parameter to ensure that the backslashes (\) are treated as literal characters, 
+                  rather than being interpreted as smart parameter delimiters.<br/><br/>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="P8SetDocumentClassAndTitle">
+          <p name="ClassID" type="string" qi="The P8 Document Class ID."/>
+          <p name="Title" type="string" qi="The document title."/>
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Sets the Document Class and Title to be used in FileNet P8 for the documents being uploaded in subsequent actions.
+              <e>
+                  <b>P8SetDocumentClassAndTitle("CarRental", "@BATCHID+-+@ID")</b>
+                  <br/><br/>
+                  
+                  This action would typically be run on a document or page DCO node.
+                  The example sets the ClassID to 'CarRental' and the Title is '20251023.000001-TM000001',
+                  which is current batch ID and current object ID, 
+                  separated by a "-". These values are applied to the documents uploaded to FileNet P8.<br/><br/>                  
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs. Otherwise, <b>True.</b>
+          </ret>
+      </method>      
+      
+
+      <method name="P8SetFileType" qi=": Identifies the type of files to upload to P8">
+          <p name="FileExtension" type="string" qi="The file type to upload to P8."/>
+          <ap>              
+              Valid types are "tif", "jpeg", "jpg", "jpe", "gif", "pdf", "xls", "doc", "msg", "docx", "xlsx","zip","mpp","vsd","ppt".<br/><br/>
+              
+              Smart parameters are supported.<br/>
+          </ap>
+          <h> 
+              This action sets the file type, and optionally, the MIME (Multipurpose Internet Mail Extensions) type, or content type,
+              for uploaded documents with matching file extensions.
+              
+              If the mime type is specified, it overrides the default mime type mapping and can specify the mime type
+              for files that do not have a default mime type.<br/><br/>
+
+              The list below are default mime types for various file types:<br/><br/>
+              
+              The following file type extensions have default MIME type mappings:<br/>
+              ai : application/illustrator<br/>
+              avi : video/x-msvideo<br/>
+              bmp : image/bmp<br/>
+              doc : application/msword<br/>
+              docx : application/vnd.openxmlformats-officedocument.wordprocessingml.document<br/>
+              dwg : image/vnd.dwg<br/>
+              dxf : image/vnd.dxf<br/>
+              gif : image/gif<br/>
+              htm : text/html<br/>
+              html : text/html<br/>
+              ico : image/x-icon<br/>
+              jpe : image/jpeg<br/>
+              jpeg : image/jpeg<br/>
+              jpg : image/jpeg<br/>
+              jpgv : video/jpeg<br/>
+              m4v : video/x-m4v<br/>
+              mov : video/quicktime<br/>
+              mp4 : video/mp4<br/>
+              mpeg : video/mpeg<br/>
+              mpg : video/mpeg<br/>
+              mpp : application/vnd.ms-project<br/>
+              mpv : video/mpv<br/>
+              msg : application/msoutlook<br/>
+              ogg : application/ogg<br/>
+              pcx : image/x-pcx<br/>
+              pdf : application/pdf<br/>
+              pic : image/x-pict<br/>
+              png : image/png<br/>
+              ppt : application/vnd.ms-powerpoint<br/>
+              pptx : application/vnd.openxmlformats-officedocument.presentationml.presentation<br/>
+              qt : video/quicktime<br/>
+              rgb : image/x-rgb<br/>
+              rtf : text/richtext<br/>
+              tif : image/tiff<br/>
+              tiff : image/tiff<br/>
+              txt : text/plain<br/>
+              vsd : application/vnd.visio<br/>
+              wmd : application/x-ms-wmd<br/>
+              wmv : video/x-ms-wmv<br/>
+              wmx : video/x-ms-wmx<br/>
+              xls : application/vnd.ms-excel<br/>
+              xlsx : application/vnd.openxmlformats-officedocument.spreadsheetml.sheet<br/>
+              xml : text/xml<br/><br/>
+
+              Other file types are mapped to the generic
+              'application/octet-stream' MIME type.<br/><br/>              
+              <e>
+                  <b>P8SetFileType(".tif")</b>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              Always returns <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="P8SetKeyProperty" qi=": Configures the value of the search property used by the P8UpdateProperties action.">
+          <p name="PropertyName" type="string" qi="The property name (symbolic name) of a document in FileNet P8 repository."/>
+          <p name="PropertyValue" type="string" qi="The corresponding value of the property."/>
+          <ap>
+              There should be 1 document in the destination P8 Object Store which has matching property with the corresponding value.<br/><br/>
+
+              Smart parameters are supported for all parameters.<br/>
+          </ap>
+          <h>
+              Sets the key that is used by the P8UpdateProperties action. The key is a FileNet document property name and
+              its corresponding value. The P8UpdateProperties action uses the key to search for an existing FileNet P8 document.
+              If the document is found, the properties on the document is updated with the values specified in the P8SetProperty
+              actions.<br /><br />
+              
+              Important: The P8UpdateProperties action only updates the first document returned which matches the criteria
+              specified by the parameters of this action.<br/><br/>
+              
+              <e>
+                  P8SetTargetObjectID("os1")<br/>
+                  <b>P8SetKeyProperty("DCKey", "@X.DCKey")</b><br/>
+                  P8SetProperty("FNProperty", "@X.SomeValue")<br/>
+                  P8UpdateProperties()<br/><br/>
+
+                  This example uses the parameters of P8SetKeyProperty("DCKey", "@X.DCKey") to search for a
+                  FileNet P8 document in an object store, with the property name "DCKey" and the property value
+                  of the variable "DCKey".     
+                  If the DCO variable DCKey had the value of "123", then the P8UpdateProperties action searches
+                  for a document that has the P8 property "DCKey" with the value "123".<br/><br/>
+                  
+                  If the FileNet document is found, it is assigned the
+                  values specified in the SetProperty action where the property "FNProperty" is
+                  updated with the value of the DCO variable "SomeValue", when the UpdateProperties action is called.
+                  The P8UpdateProperties action only updates on the first document that is returned from the P8SetKeyProperty
+                  action.
+                  If more than one document matches the criteria specified in the P8SetKeyProperty action,
+                  only the first document is updated.
+                  The P8Login action must be called in a previous ruleset within the current task.
+                  <br />
+              </e>
+              <br />
+              <e>
+                  P8SetTargetObjectID("os1")<br/>
+                  <b>P8SetKeyProperty("ID", "{7E2A4DB7-17D2-CFF2-8A95-96D458200000}")</b><br/>
+                  P8SetProperty("PickupLocation", "Lot 1")<br/>
+                  P8UpdateProperties()<br/><br/>
+
+                  This second example is similar to the previous example.  
+                  Here the example has explicit parameters to illustrate how a document could be found
+                  using the document ID, updated properties are set, then P8UpdateProperties
+                  performs the update operation.<br />
+              </e><br />
+          </h>
+          <lvl>
+              Batch, Document or Page level.
+          </lvl>
+          <ret>
+              <b>False,</b> if either parameter is blank or if the value parameter is invalid. Otherwise, <b>True.</b>
+          </ret>
+      </method>      
+      
+
+      <method name="P8SetLocale" qi=": Configures the locale for the P8 server.">
+          <p name="LocaleID" type="string" qi="Locale value accepted by the FileNet P8 Web Service."/>
+          <ap>
+              Locales are represented by 2-letter ISO 639 Language Codes and 2-letter ISO 3166 Country Codes
+              separated by a _ character. For example: en_US or de_DE.<br /><br />
+              
+              Please consult the ISO documents to determine your locale value.<br/><br/>
+              
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Sets the Locale (the language and language conventions such as date format) used on the P8 server.
+              This action is only required if the P8 repository uses a locale other than US English.
+              If this action is not called, the value defaults to "en_US".<br/><br/>
+              
+              <e>
+                  <b>P8SetLocale("en_US")</b>
+              </e>
+          </h>
+          <lvl>All, but generally at the Batch level.</lvl>
+          <ret>
+              <b>False,</b> an error occurs.  Otherwise, <b>True.</b><br/><br/>
+              
+              This action does not validate that the provided locale is valid or accepted by the P8 server.
+              Refer to the FileNet P8 documentation for information about supported locales.<br/>
+          </ret>
+      </method>
+
+
+
+      <method name="P8SetMultiplePageDocuments" qi=": Instructs the P8Upload action to create a single or multiple page P8 document.">
+          <p name="Enabled" type="string" qi="Enable multiple page documents when uploading: True/False."/>
+          <ap>
+              <b>True:</b> Enable multiple page documents for upload.<br/>
+              <b>False:</b> Disable multiple page documents for upload. This is the default value.<br/><br/>
+
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Indicates whether the upload actions should create one P8 document per page or not. <br /><br />
+              <e>
+                  P8SetMultiplePageDocuments("True")<br />
+                  P8Upload()<br /><br />
+
+                  Setting P8SetMultiplePageDococuments("True") instructs the P8Upload or P8UploadDirectory actions to create one P8 document that contains multiple pages.
+                  If P8SetMultiplePageDocuments
+                  is set to "True" then the P8Upload or P8UploadDirectory actions place all the pages listed the DCO into one, single, P8 document.
+                  The default behavior is for the P8Upload and P8UploadDirectory actions to create a P8 document for each individual page list in the document DCO object.
+              </e>
+              <br/><br/>
+              <e>
+                  P8SetMultiplePageDocuments("True")<br />
+                  P8UploadDir()<br /><br />
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs. Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+
+      <method name="P8SetMultipleValueProperty" qi=": Sets a P8 multiple value property.">
+          <p name="PropertyID" type="string" qi="The P8 identifier that supports multiple values."/>
+          <p name="PropertyValue" type="string" qi="A value enclosed within single quotes are treated as string literal."/>
+          <p name="PropertyType" type="string" qi="Optional property type, defaults to string."/>
+          <ap>              
+              Smart parameters are supported for all parameters.<br/>
+          </ap>
+          <h>
+              This action sets the value of a FileNet P8 multi-value property.  The action allows multiple
+              values separated by a configurable separator or the action can be called multiple times for the same property.<br/><br/>
+              
+              The property delimiter is obtained from the application service location: "values/gen/p8delimiter".
+              If a custom delimiter is not configured, a pipe '|' is used as the default delimiter.
+              If the property value contains a '|' then choose a separator character that is unique for the property value.<br/>
+
+              The property type is optional. If this parameter is not provided, the default value is a "String".
+              Refer to the FileNet P8 documentation for a list of Property Types.<br/><br/>
+              
+              <e>
+                  P8SetDocumentClassAndTitle("MyFilenetClass", "MyFilenetClass Documents")<br/>
+                  P8SetProperty("CustomerName", "@D.CustomerName", "")<br/>
+                  <b>P8SetMultipleValueProperty("PurchaseDates", "03/14/2025|04/14/2025|05/14/2025", "")</b><br/>
+                  P8SetProperty("ScanStation", "@STATION", "")<br/>
+                  P8SetProperty("ScanOperator", "@OPERATOR", "")<br/>
+                  P8SetFileType("pdf")<br/>
+                  P8Upload()<br/><br/>
+                  
+                  This example shows multiple values are passed in a single call to P8SetMultipleValueProperty.<br/>
+              </e>
+              <br/><br/>
+              <e>
+                  P8SetDocumentClassAndTitle("MyFilenetClass", "MyFilenetClass Documents")<br/>
+                  P8SetProperty("CustomerName", "@D.CustomerName", "")<br/>
+                  <b>P8SetMultipleValueProperty("PurchaseDates", "03/14/2025", "")</b><br/>
+                  <b>P8SetMultipleValueProperty("PurchaseDates", "04/14/2025", "")</b><br/>
+                  <b>P8SetMultipleValueProperty("PurchaseDates", "05/14/2025", "")</b><br/>
+                  P8SetProperty("ScanStation", "@STATION", "")<br/>
+                  P8SetProperty("ScanOperator", "@OPERATOR", "")<br/>
+                  P8SetFileType("pdf")<br/>
+                  P8Upload()<br/><br/>
+
+                  This example shows P8SetMultipleValueProperty called multiple times, each time a different value is added to a property.
+                  The example shows all of the calls being made in the same function and DCO object.  The action can be called from
+                  different DCO objects, such as Field1, Field2, etc., as long as all of the objects are processed
+                  before the upload is performed.<br/>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if the ID or Value parameters are missing or if the specified property
+              is not a multi-value property.  Otherwise <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="P8SetOverrideCheckoutOnUpdateContent"  qi=": Controls the behavior of the P8UpdateContent action.">
+          <p name="Override" type="string" qi="Checkout document for content update: True/False."/>
+          <ap>
+              <b>True:</b> Indicates to checkout P8 documents when the P8UpdateContent action is called.<br/><br/>
+              <b>False:</b> Instructs the P8UpdateContent action to not checkout documents.<br/><br/>
+
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              This action is optional. If used, it must be called prior to the action P8UpdateContent.<br/><br/>
+
+              Set to “True” to tell <b>P8UpdateContent</b> to try to check-in a P8 document, if it is already checked out.<br/><br/>
+
+              Set to “False” to tell <b>P8UpdateContent</b> to not update the content and to return false, if a P8 document is already checked out.<br/><br/>
+
+              If this action is not called, the default value is "False".<br/><br/>
+
+              <e>
+                  ......<br />
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("C:/mylocaldir")<br />
+                  P8SetSearchWhereClause("DocumentTitle LIKE '2017-Invoices%'")<br />
+                  P8SearchAndDownload()<br />
+                  Scan()<br/>
+                  ...... <br/>
+                  <b>P8SetOverrideCheckoutOnUpdateContent("True")</b><br />
+                  P8UpdateContent()<br /><br/>
+
+                  This example updates contents of the P8 document even if the document is already checked out. 
+                  The credentials used for the FileNet login action must have permission on the FileNet system to check out documents.
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>True,</b> if valid value ("True" or "False") is passed.  <b>False,</b> if invalid value is passed or if an error occurs.
+          </ret>
+      </method>      
+      
+      
+
+      <method name="P8SetProperty" qi=": Sets the specified P8 property ID to a value with an optional type.">
+          <p name="PropertyID" type="string" qi="The name of an existing document property in the FileNet library (equivalent to a document index field)."/>
+          <p name="PropertyValue" type="string" qi="The value to assign to the associated Property ID. A value enclosed within single quotes are treated as string literal."/>
+          <p name="PropertyType" type="string" qi="Optional property type, defaults to string."/>
+          <ap>              
+              Supported property types are: Binary, Boolean, DateTime, Float, ID, Integer, Object and String. <br /><br />
+              
+              Smart Parameters are supported for parameters.<br />           
+          </ap>
+          <h>
+              Sets the designated FileNet property to a specified value.
+              This is equivalent to setting an index value for a document in document management systems.
+              Only document properties can be set. Other properties, such as folder properties, cannot be set.<br/><br/>
+
+              Note: Any ruleset that calls the P8SetProperty action more than once, using the same Property ID as the opening parameter the
+              property value does not create a multi-value property, it replaces the existing property value that was set by any previous ruleset.<br/><br/>
+              
+              <e>
+                  <b>P8SetProperty("DocumentTitle, @ID")</b><br/>
+                  P8Upload()<br/>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if either parameter is blank or if the value parameter is invalid.  Otherwise <b>True.</b><br /><br />
+              
+              Note: If the action returns False, the action sets the task to finish
+              with a status of “Abort”.  Invalid property settings may not be detected or reported until P8Upload is run.<br/>
+          </ret>
+      </method>
+      
+
+      <method name="P8SetRetry" qi=": Sets the number of automatic upload retries for the P8Upload action.">
+          <p name="NumberOfRetries" type="string" qi="Number of attempts to upload files."/>
+          <ap>
+              Smart parameters are supported.<br/>
+          </ap>                   
+          <h>
+              Use this action to set the amount of retries for the FileNet P8 upload actions.  If the upload to FileNet fails, the
+              upload action retries the number of times specified by the P8SetRetry action.<br /><br />
+              
+              If this action is not called prior to a FileNet upload action, the default amount of retries is 0.<br/><br/>
+              
+              <e>
+                  <b>P8SetRetry("3")</b><br />
+                  P8Upload()<br/><br />
+                  
+                  The example configures the P8Upload action to retry 3 times, if the upload to FileNet fails.<br/>
+              </e>
+          </h>
+          <lvl>
+              Any level.
+          </lvl>
+          <ret>
+              <b>False,</b> if a non-numeric parameter specified or if an error occurs.  Otherwise <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="P8SetSearchAndDownloadStatusProperty" qi=": Indicates if a document has already been downloaded.">
+          <p name="Status" type="string" qi="FileNet property to use for download status tracking."/>
+          <ap>
+              A name (symbolic name) of an existing integer property of the FileNet P8 document class specified by the action "P8SetSearchClass".
+              The name of the property is not validated until the P8SearchAndDownload action is executed.<br/><br/>
+
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              Configures the P8 property on the document that is updated by P8SearchAndDownload, and set to 1, to indicate that the document has been downloaded.
+              Documents that have the property with a value of 1 are not downloaded again the next time P8SearchAndDownload is run.
+              The specified property must exist on the document and must be an integer type.
+              <br/><br/>
+
+              This action is optional. If used, this action must be called prior to the action P8SearchAndDownload.
+              If this action is not called, the default behavior is that no properties on the P8 document are updated by the "P8SearchAndDownload" action
+              when a P8 document is downloaded, and no status property are checked when searching for documents to download.<br/><br/>              
+
+              Set the parameter to an empty string "" to clear a previously set status property.<br/><br/>
+
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("C:/mylocaldir")<br />
+                  <b>P8SetSearchAndDownloadStatusProperty("myStatusProp")</b><br />
+                  P8SearchAndDownload()<br /><br />
+
+                  In this example, P8SearchAndDownload() downloads P8 documents of class "Invoice" and set the property "myStatusProp"
+                  to value of 1 for each document that is downloaded.  When P8SearchAndDownload performs its search, any documents
+                  with the property myStatusProp with a value of 1 are excluded from the search and are not downloaded.
+                  <br/>
+              </e>
+              <br/>
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("C:/mylocaldir")<br />
+                  <b>P8SetSearchAndDownloadStatusProperty("")</b><br />
+                  P8SearchAndDownload()<br /><br />
+
+                  In this example, P8SetSearchAndDownloadStatusProperty("") clears any previously set value for the download status
+                  property name.  "P8SearchAndDownload" downloads P8 documents of class "Invoice", but does <b>not</b> set a status
+                  property on documents that have been downloaded.  When "P8SearchAndDownload" actions performs its search, there is no
+                  check of a status property, so P8 documents that may have been previously been downloaded are included.
+                  <br/>
+              </e>
+
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b>  The existence of the property on the document class is not verified until
+              the action P8SearchAndDownload is called.
+          </ret>
+      </method>
+
+
+
+      <method name="P8SetSearchClass" qi=": Configures the document class for the P8SearchAndDownload action.">
+          <p name="ClassName" type="string" qi="The name (symbolic FileNet P8 name) of the class of document to search for in FileNet P8."/>
+          <ap>
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              Sets the P8 name of the document class used by a subsequent call to P8SearchAndDownload.
+              This action is required prior to calling action P8SearchAndDownload.
+              The name of the class is not validated until the P8SearchAndDownload action is executed.<br/><br/>
+                             
+               By default, subclasses of the specified class are included in the search results.<br/><br/>               
+              
+              <e>
+                  <b>P8SetSearchClass("Invoice")</b><br/>
+                  P8SetSearchDownloadDirectory("C:/mylocaldir")<br />
+                  P8SearchAndDownload()<br />
+                  Scan()<br/>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+          <see>
+              <b>P8SetSearchIncludeSubClasses</b> to control whether or not subclasses are included.<br/><br/>
+          </see>
+      </method>
+
+
+      <method name="P8SetSearchCurrentVersionOnly" qi=": Limits the P8SearchAndDownload action to the current document version only.">
+          <p name="CurrentVersionOnly" type="string" qi="Only include current document versions when searching: True/False."/>
+          <ap>
+              <b>True:</b> Limit the search results to only the current version of documents.<br/><br/>
+
+              <b>False:</b> Allow search results to include any version of documents.<br/><br/>
+              
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              The use of this action is optional prior to calling action <b>P8SearchAndDownload</b>.
+              If not set, the default value is "True".<br/><br/>
+
+              If an invalid value is given for the parameter, i.e. not "True" or "False", then the action has no effect on the setting and the setting stays the
+              same value as it was prior to the action.
+              <br/><br/>
+              
+              When set to "True", the search criteria used by the action "P8SearchAndDownload" includes the condition "IsCurrentVersion=True".<br/><br/>
+              
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("@STRING(C:/mylocaldir)")<br />
+                  <b>P8SetSearchCurrentVersionOnly("False")</b><br />
+                  P8SearchAndDownload()<br />
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>True</b>
+          </ret>
+      </method>      
+      
+
+      <method name="P8SetSearchDownloadDirectory" qi=": Sets the directory where files downloaded from P8 are placed by the P8SearchAndDownload action.">
+          <p name="DirectoryPath" type="string" qi="The full directory path indicating where to place the files downloaded from P8."/>
+          <ap>              
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>              
+              <p>
+                  Files downloaded from P8 are placed in the specified directory.  These files can be subsequently
+                  placed into a Datacap batch using the MVscan action library. This action is required prior to calling action <b>P8SearchAndDownload</b>
+                  as it configures the destination location for the download.
+              </p>
+              <p>
+                  The user or process running the P8SearchAndDownload action must have write permission to the directory specified by this action.
+                  P8SetSearchDownloadDirectory does not validate that the directory exists or that the process has permissions to write to this directory.
+              </p>
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  <b>P8SetSearchDownloadDirectory("@APPPATH(vscanimagedir)")</b><br />
+                  P8SearchAndDownload()<br />
+                  Scan()<br/> <br/>
+
+                  This example downloads the content of the search documents to the directory specified by the Smart Parameter for the VScan image directory.
+              </e>
+
+              <br /><br />
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  <b>P8SetSearchDownloadDirectory("@STRING(C:\mylocaldir"))</b><br />
+                  P8SearchAndDownload()<br />
+                  Scan()<br/>
+                  <br/>
+                  This example downloads the content of the search documents to the directory "C:\mylocaldir".
+              </e>
+              <br />
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if the parameter is blank or an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+
+
+      <method name="P8SetSearchFolderRestriction" qi=": Restricts the P8 folder used in a subsequent P8SearchAndDownload action.">
+          <p name="P8SearchFolderPath" type="string" qi="The path of the P8 folder where the search is performed by P8SearchAndDownload."/>
+          <ap>
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              <p>
+                  Narrows the search area of the P8SearchAndDownload action to a specific folder on the FileNet server.
+                  If this action is used to set a folder path, the action P8SearchAndDownload uses the folder restriction when searching the FileNet repository.
+                  The folder path is not validated until the P8SearchAndDownload action is performed. If the path does not
+                  start with a forward or reverse slash, P8SearchAndDownload generates an error.
+                  If the path is syntactically valid but does not exist on the P8 server, or if the search criteria is not matched,
+                  P8SearchAndDownload does not generate an error, it simply does not return any results.
+              </p>
+              <p>
+                  Sets a FileNet P8 folder path to restrict the search results. The search results do <b>not</b> include subfolders of the folder.  Set to empty an string
+                  to unset a previously set value.
+                  This action is optional and, if used, must be called prior to calling action <b>P8SearchAndDownload</b>.
+              </p>              
+              <p>
+                  NOTE: Setting the folder restriction may result in only document versions with version state value of "Released" being included in search result.  Refer to FileNet P8
+                  documentation to confirm the expected behavior.
+              </p>
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("@STRING(C:\mylocaldir)")<br />
+                  <b>P8SetSearchFolderRestriction("@STRING(/MyFolder/MySubfolderA)“)</b><br />
+                  P8SearchAndDownload()<br />
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b><br/><br/>
+              
+              The folder path is not validated by this action.
+          </ret>
+      </method>
+
+
+      <method name="P8SetSearchIncludeDocumentsWithoutContent" qi=": Indicates if documents without content are to be included in search results.">
+          <p name="Include" type="string" qi="Include empty documents in search results: True/False."/>
+          <ap>
+              <b>True:</b> documents without content are included in the search results.<br/><br/>
+
+              <b>False:</b> documents without content are not included in the search results. If the parameter is invalid, it is treated as False.<br/><br/>
+              
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              Configures the P8SearchAndDownload action to include empty documents.
+              This action is optional.  If used, it must be called prior to calling the action P8SearchAndDownload.<br/><br/>                            
+              
+              If this action is not called, the default value used by P8SearchAndDownload is False.<br/><br/>
+              
+              In general, it should not be necessary to change the default setting which filters out content-less documents from the search results since there
+              should be no content to download for those documents.  This action is only provided in case there is any unexpected behavior with the search clause used to
+              filter out content-less documents, and there is a need to turn off the filtering.<br/><br/>              
+              
+              When this setting is "False", the search criteria used by P8SearchAndDownload includes the condition "ContentSize > 0".<br/><br/>
+              
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("C:/mylocaldir")<br />
+                  <b>P8SetSearchIncludeDocumentsWithoutContent("True")</b><br />
+                  P8SearchAndDownload()<br />
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs. Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+
+      <method name="P8SetSearchIncludeSubClasses" qi=": Configures if subclasses should be included in search results.">
+          <p name="IncludeSubclasses" type="string" qi="Include subclasses in the document search: True/False."/>
+          <ap>
+              <b>True:</b> Include documents of the class specified by the action P8SetSearchClass and all the subclasses of the
+              search class in search results.<br/><br/>
+
+              <b>False:</b> Include documents only of the class specified by the action P8SetSearchClass in search results.<br/><br/>
+              
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              The value of this setting is used by the action "P8SearchAndDownload" to set the search behavior using the FileNet P8 API method "SQLSearch.SetFromClauseInitialValue".<br/><br/>
+
+              This action is optional prior to calling action <b>P8SearchAndDownload.</b> If not set, the default is True.<br/><br/>
+
+              If an invalid value is given for the parameter (i.e. not "True" or "False"), then the action has no effect on the setting and the setting stays the
+              same value as it was prior to the action.<br/><br/>              
+                        
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("C:/mylocaldir")<br />
+                  <b>P8SetSearchIncludeSubClasses("False")</b><br />
+                  P8SearchAndDownload()<br />
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>      
+      
+
+      <method name="P8SetSearchMaximumItems" qi=": Configures the maximum results returned from P8SearchAndDownload.">
+          <p name="MaximumSearchResults" type="string" qi="Maximum number of documents to download."/>
+          <ap>
+              An integer specifying the maximum number of items to return in search results.
+              A value of "0" indicates no limit.<br/><br/>
+              
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              The parameter limits the amount of results from the P8SearchAndDownload action.
+              This action is optional. If used, it must be called prior to the action P8SearchAndDownload.<br/><br/>
+              
+              If this action is not called, the default maximum is 1000.<br/><br/>              
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDir("C:/mylocaldir")<br />
+                  <b>P8SetSearchMaximumItems(“100”)</b><br />
+                  P8SearchAndDownload()<br />
+                  <br/>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if parameter is not an integer or if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+
+      <method name="P8SetSearchOrderBy" qi=": Configures the results order for the P8SearchAndDownload action.">
+          <p name="OrderBy" type="string" qi="Orders the search results, ASC/DESC."/>
+          <ap>
+              Configures the ORDERBY clause for sorting search results.
+              The parameter must have the P8 property name followed by a space with
+              the word "ASC", for an ascending order or the word "DESC", for a descending order.<br/><br/>
+              
+              Parameter format: PROPERTY_NAME ASC|DESC.<br/><br/>              
+              
+              Smart parameters are supported.
+          </ap>
+          <h>
+              This action changes the order of results returned by the action P8SearchAndDownload.
+              This action is optional.  If it is used, it must be called prior to P8SearchAndDownload
+              but within the same task profile.<br/><br/>              
+              
+              Set to empty string to clear a previously set value.<br/><br/>
+              
+              The parameter is not validated until the SearchAndDownload action is performed.<br/><br/>
+              <e>
+                  P8SetSearchClass("Invoice")<br/>
+                  P8SetSearchDownloadDir("C:/mylocaldir")<br/>
+                  <b>P8SetSearchOrderBy("DocumentTitle ASC“)</b><br/>
+                  P8SearchAndDownload()<br/><br/>
+
+                  In this example, the results are sorted by DocumentTitle in ascending order.<br/>
+              </e> <br/>              
+              <br/>
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDir("C:/mylocaldir")<br />
+                  <b>P8SetSearchOrderBy("DocumentTitle DESC“)</b><br/>
+                  P8SearchAndDownload()<br /><br/>
+                  
+                  In this example, the results are sorted by DocumentTitle in descending order. <br/>
+              </e><br/>              
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs. Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="P8SetSearchWhereClause" qi=": Sets the SQL where clause for the P8SearchAndDownload action.">
+          <p name="WhereClause" type="string" qi="The clause used in the search query by P8SearchAndDownload."/>
+          <ap>
+              The SQL search criteria (i.e. the WHERE clause).  The criteria should follow the standard used
+              by FileNet P8 query, which generally conforms to the SQL-92 standard.  Please reference the FileNet P8
+              Knowledge Center for a complete description.<br/><br/>
+              
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              This action sets the SQL search criteria (i.e. the WHERE clause).   
+              Set to empty string "" to clear a previously set WHERE clause.
+              Note that only parametric search is supported, not content-based (full-text) search.<br/><br/>
+
+              This action is optional prior to calling action P8SearchAndDownload.<br/><br/>
+
+              The syntax of the WHERE clause is not validated until the FNP8_SearchAndDownload action is executed.
+              The SQL search criteria must follow the IBM FileNet standard, which generally conforms to SQL-92,
+              with extensions for IBM FileNet specific constructs. For a complete description, see the
+              IBM Knowledge Center for IBM FileNet P8 Platform.<br/><br/>
+
+              The clause is not validated until the P8SearchAndDownload action is executed.<br/><br/>
+              <e>
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("C:/mylocaldir")<br />
+                  <b>P8SetSearchWhereClause("DocumentTitle LIKE '2017-Invoices%'")</b><br />
+                  P8SearchAndDownload()<br />
+                  <br/>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+
+      <method name="P8SetTargetClassID" qi=": Configures a target class of ObjectStore or FileStore.">
+          <p name="ObjectID" type="string" qi="Repository type: ObjectStore/FileStore."/>
+          <ap>
+              The valid values are "ObjectStore" and "FileStore".<br/><br/>
+              
+              Smart parameters are supported.<br/>
+          </ap>
+          <h>
+              Sets the top level repository type.
+              If this action is not called, the default value of "ObjectStore" is used.
+              FileStore is an alternative repository type.<br/><br/>
+              <e>
+                  <b>P8SetTargetClassID("ObjectStore")</b>
+              </e>
+          </h>
+          <lvl>All levels.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+      
+
+      <method name="P8SetTargetObjectID" qi=": Configures the P8 object ID for the P8Upload action.">
+          <p name="ObjectID" type="string" qi="The P8 Object Store name to use for uploads and downloads."/>
+          <ap>
+              Smart parameters are supported.<br/><br/>
+          </ap>
+          <h>
+              Configures the name of the Object Store on the FileNet server which is used
+              for searches and uploads. This action must be called after login and prior to any action that
+              interacts with the FileNet server.<br/><br/>
+              
+              <e>
+                  P8Login("TheURL", "User1", "@APPVAR(values/adv/FilenetPassword)")<br/>
+                  P8SetTargetClassID("ObjectStore")<br/>
+                  <b>P8SetTargetObjectID("AP_ObjectStore")</b><br/>
+              </e>
+          </h>
+          <lvl>All, but generally at the Batch level.</lvl>
+          <ret>
+              <b>False,</b> if an error occurs.  Otherwise, <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="P8SetTimeout" qi=": Configures the timeout for the P8Upload action.">
+          <p name="Timeout" type="string" qi="Upload timeout in milliseconds."/>
+          <ap>
+              A single parameter identifying the timeout in milliseconds for the FileNet P8 Web Service.
+              The default timeout is 600000 milliseconds (600 seconds).<br/><br/>
+              
+              Smart parameters are supported.
+          </ap>
+          <h>
+              This action sets the timeout in milliseconds for the FileNet P8 Web Service.
+              To take effect, this action must be called before the P8Upload action.<br/><br/>
+              
+              <e>
+                  <b>P8SetTimeout("90000")</b><br/>
+                  P8Upload()<br/>
+              </e>
+          </h>
+          <lvl>All, but generally at the Batch level.</lvl>
+          <ret>
+              <b>False,</b> if the parameter is not valid or if an error occurs.
+              Otherwise, <b>True.</b><br /><br />
+          </ret>
+      </method>
+
+
+      <method name="P8SetUploadFileNameVariable" qi=": Changes the P8Upload action to look for filenames in a specific variable instead of the associated page file.">
+          <p name="DCOVariable" type="string" qi="Name of DCO variable containing the upload file name."/>
+          <ap>
+              The name of the variable on the page object that contains the name of the file to upload.<br/><br/>
+              
+              Smart parameters are supported.  If you supply a smart parameter, it must resolve to the name
+              of the DCO variable that exists on the page object that contains the name of the file. It must not
+              resolve to the file name itself.<br/><br/>              
+          </ap>
+          <h>
+              Identifies the DCO variable used by P8Upload to identify the files to upload to a FileNet P8 repository.  
+              The name of the specified variable must exist on a page level object.                
+              <br/><br/>
+              
+              If the complete file path is specified in the variable, the full path is used as-is.
+              If the path is incomplete, the current batch directory is automatically added to the filename.
+              If the variable does not exist on the page, or if the variable is blank, then the page is skipped.<br/><br/>
+
+              If this action is not called, the value defaults to blank and the upload action uses the standard file
+              that is associated with each page as specified in the IMAGENAME variable.
+              Refer to the P8Upload action help for an explanation of the upload steps.<br/><br/>
+              <e>
+                  <b>P8SetUploadFileNameVariable("P8File")</b><br />
+                  P8Upload()<br/><br/>
+
+                  This example instructs the P8Upload action to obtain the name of the file to upload by looking
+                  in the variable called "P8File" on the page object. This variable must have been set earlier in the application rules.
+                  If the variable contains a file name with a full path specification, such as "C:\Upload\MyFile1.tif", then the specified file is uploaded
+                  instead of the page file associated with the page.  If the variable contains a file name without a path, such as
+                  "MyFile1.tif", then the upload action assumes the file is within the current batch directory.<br/>                  
+              </e>
+          </h>
+          <lvl>Batch, Document or Page level.</lvl>
+          <ret>
+              Always <b>True.</b>
+          </ret>
+      </method>
+
+
+      <method name="P8UpdateContent" qi=": Updates the content of a document in a FileNet P8 repository as a new version.">
+          <ap>
+              None.  The FileNet ID contained page DCO variable "PageName" is used to identify the file to update.
+          </ap>
+          <h>              
+              Checks in a file as a new version of an existing FileNet document.
+              If any fields have been redacted, this action also adds redactions to the existing FileNet P8 document.
+              To only add redactions without updating content, use the action P8AddRedactionsToP8Document.<br /><br />
+
+              The functionality is in contrast to P8Upload, where the P8Upload action creates a new document in the FileNet repository and
+              P8UpdateContent versions an existing document.<br/><br/>
+
+              <b>Important:</b> This action can only be used for documents that were downloaded by P8SearchAndDownload action, or that have
+              filenames beginning with the P8 object ID.<br/><br/>
+              
+              Example filename: "{3054025F-0000-CE12-B41A-7B2661D28802}.0.APT008.tif" <br /> <br />
+
+              The PageName variable is used to identify the Object ID of the FileNet document to update.              
+              The DCO level determines the location of the PageName variable.<br/><br/>
+              
+              <ul>
+                  <li>If run at page-level, the action uses the "PageName" variable on the current page.</li>
+                  <li>If run at document-level, the action uses the "PageName" variable on the first page of the current document.</li>
+              </ul><br />
+
+              The PageName variable must be properly set prior to using the P8UpdateContent action. The PageName variable
+              is created by the Scan action in the MVscan action library. If the PageName variable does not exist, or if the
+              value is not correct for the document to upload, then the PageName variable must be set prior to calling P8UpdateContent.<br/><br/>
+
+              <b>Important: Handling of P8 documents with multiple content elements </b><br />
+              A document in FileNet P8 can have one or more content elements. In order to update P8 documents with multiple content elements, the
+              P8UpdateContent action must be run at the Document-level and the content elements must correspond to pages of the
+              same document in the Datacap document hierarchy.  In addition, the action P8MultiPageDocuments("True") must be called prior to 
+              P8UpdateContent.  Do not use the P8UpdateContent action at Page-level for P8 documents with
+              multiple content elements.
+              <br /><br />
+
+              <b>Versioning</b><br />
+              If the FileNet P8 document class has <b>versioning-enabled</b>, then the new content is checked in as a new major version,
+              superseding the previous version.<br /><br />
+
+              If the FileNetP8 document class has <b>versioning-disabled</b>, then the action returns false to indicate the document
+              content cannot be updated.  (FileNet P8 does not allow the document content to be updated for documents with
+              versioning-disabled.)  See IBM FileNet P8 Knowledge Center for information about enabling/disabling versioning for
+              document classes.<br /><br />
+
+              <b>Handling of P8 documents that are already checked out</b><br />
+              By default, or if the Datacap action FNP8SetOverrideCheckoutOnUpdateContent("False") is called prior to
+              P8UpdateContent, then the action returns false if called for a P8 document that is already checked out.<br /><br />
+
+              If the action P8SetOverrideCheckoutOnUpdateContent("True") is called prior to P8UpdateContent and the P8 document
+              is already checked out, then the action skips the checkout process and attempts to check-in the document with the new content.
+              The P8 user must have permission to perform the check-in.<br /><br />
+
+              <b>When used with P8UpdateProperties</b><br />
+              If this action is used in the same application as the action P8UpdateProperties, it is recommended that P8UpdateProperties
+              is run before P8UpdateContent.  For example, if FNP8_UpdateProperties is run on page-level on "Open", then FNP8_UpdateContent
+              should be run on "Close" for page-level or document-level.  Doing this ensures that the property changes made by P8UpdateProperties are
+              included in the current version of the document which is created by P8UpdateContent.  <br />  <br />
+
+              <e>
+                  ......<br />
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDirectory("C:/mylocaldir")<br />
+                  P8SetSearchWhereClause("DocumentTitle LIKE '2017-Invoices%'")<br />
+                  P8SearchAndDownload()<br />
+                  Scan()<br/><br/>
+                  
+                  ...... run the actions below on the Document level ....<br/>                  
+                  RecognizeToPDFOCR_A()<br/>
+                  rrSet("@D.ID+.pdf", "@D.PDFFileName")<br/>
+                  P8SetFileType("pdf")<br/>
+                  P8SetUploadMode("PDFFileName")<br/>
+                  <b>P8sUpdateContent()</b><br/><br/>
+
+                  This example downloads Invoice documents from the P8 repository and ingests the documents into Datacap. It then converts the images to searchable PDF format files,
+                  and updates the content of the P8 documents with the new PDF files.
+
+              </e>  <br/>
+
+              <e>
+                  ......<br />
+                  P8SetSearchClass("Invoice")<br />
+                  P8SetSearchDownloadDir("C:/mylocaldir")<br />
+                  P8SetSearchWhereClause("DocumentTitle LIKE '2017-Invoices%'")<br />
+                  P8SearchAndDownload()<br />
+                  Scan()<br/><br/>
+                  
+                  ...... run the actions below on the Document level ....<br/>
+                  TifMerge_SetFileName("@BATCHID+@ID+@DATE(dd.mm.yyyy)")<br/>
+                  TifMerge_SetFilePath("@APPVAR(values/gen/MergeFileTempDir)")<br/>
+                  TifMerge_MergeImages("Rental_Agreement,Optional_Insurance")<br/>
+                  P8MultiPageDocuments("True")<br/>
+                  <b>FNP8_UpdateContent()</b><br/><br/>
+
+                  This example downloads Invoice documents from the P8 repository and ingests the documents into Datacap. It then merges the images (from the same document)
+                  into a multi-image Tiff file and updates the content of the P8 documents with the new TIFF file.<br/>
+
+              </e>
+          </h>
+          <lvl>Document and Page level.  To ensure proper handling of P8 documents with multiple content elements, this action must be run at Document level and with FNP8_MultiPageDocs("True").</lvl>
+          <ret>
+              <b>False,</b> if an error occurs, or if the action is run on any level that is not document or page level.  Otherwise, <b>True.</b>  
+              If successful, the DCO variable "Doc_ID" is created on each uploaded page with the value of the FileNet object identifier for the new version
+              of the document.              
+          </ret>
+      </method>
+
+
+
+      <method name="P8UpdateProperties" qi=": Updates an existing FileNet P8 document's properties values using the data passed into the SetProperty action.">
+          <ap>
+              None.
+          </ap>
+          <h>
+              Use this action to update an existing FileNet P8 document's properties.
+              The UpdateProperties action only updates properties for an existing document.
+              If a new document is created, use the Upload action. <br /><br/>
+
+              Uses the key specified in the P8SetKeyProperty action to search for an existing document
+              within a FileNet P8 Content Manager Object Store and updates the P8 document’s properties as specified by the P8SetProperty action.<br/><br/>
+              <e>
+                  P8SetKeyProperty("DCKey", "@X.DCKey)<br />
+                  P8SetProperty("AGIncome", "@P\AGIncomeField")<br />
+                  P8SetProperty("TaxYear", "@P\TaxYearField")<br />
+                  <b>P8UpdateProperties()</b><br /><br />
+                  
+                  The example first sets the key document property name "DCKey" and value to search
+                  for a document. The search value is obtained from the DCO variable called "DCKey" on the current object.
+                  There is no requirement for the DCO variable name, @X.DCKey, to match the property name being updated, it is shown
+                  here for clarity within the application.<br/><br/>
+                  
+                  The next two actions identify the properties and values to update on the found FileNet P8 document.
+                  P8UpdateProperties performs the transaction to the FileNet repository using the previously set values.                  
+                  If more than one document matches the criteria specified in the SetKeyProperty action, only the first document is updated.
+                  The example assumes that the actions are running on a page object.<br/>
+              </e>
+          </h>
+          <lvl>
+              Batch, Document or Page level.
+          </lvl>
+          <ret>
+              Action returns <b>True </b>if the update is successfully; False if the action is unable to update the document.
+          </ret>
+      </method>
+
+
+
+      <method name="P8Upload" qi=": Uploads images to P8 based on the previous configuration actions.">
+          <ap>
+              None.
+          </ap>
+          <h>
+              Creates new FileNet P8 documents in the specified destination folder with the image files from the Datacap batch.
+              The upload steps can vary based on the actions P8SetMultiplePageDocuments, which enables the upload of multi-page documents,
+              and P8SetUploadFileNameVariable, which changes how upload finds files to upload. The combinations of these actions
+              alter the FileNet upload steps.<br/><br/>
+
+              It is important that any required properties are set before calling P8Upload, such as P8SetDocumentClassAndTitle,
+              otherwise an upload error may occur.<br/><br/><br/>
+              
+
+              <b>⟸ Uploading in single-file / single-page mode ⟹</b><br/><br/>
+
+              The default upload mode is the single-file mode. Each file uploaded becomes a unique file in the FileNet repository.
+              The following steps illustrate how single-file upload is performed.<br/><br/>
+
+              <b>Single-file Page Level Operation</b><br/>
+              <ul>
+                  <li>
+                      If the batch contains a file named after the parent document object, i.e. documentid.type,
+                      that file is uploaded and the operation completes.
+                  </li>
+                  <li>
+                      If the batch contains a file named after the parent batch object, i.e. batchid.type,
+                      that file is uploaded and the operation completes.
+                  </li>
+                  <li>The file associated with the page is uploaded.</li>
+              </ul>
+              <br/>
+              <b>Single-file Document Level Operation</b><br/>
+              <ul>
+                  <li>
+                      If the batch contains a file named after the document object, i.e. documentid.type,
+                      that file is uploaded and the operation completes.
+                  </li>
+                  <li>
+                      If the batch contains a file named after the parent batch object, i.e. batchid.type,
+                      that file is uploaded and the operation completes.
+                  </li>
+                  <li>If a file has not been uploaded, then each child page is processed as stated in "Single-File Page Level Operation".</li>
+              </ul>
+
+              <b>Single-file Batch Level Operation</b><br/>
+              <ul>
+                  <li>
+                      If the batch contains a file named after the batch object, i.e. batchid.type,
+                      that file is uploaded and the operation completes.
+                  </li>
+                  <li>If a file has not been uploaded, then each child document is processed as stated in "Single-File Document Level Operation".</li>
+              </ul>
+              <br/><br/>
+
+              <b>⟸ Uploading in single-file / single-page mode with P8SetUploadFileNameVariable specified ⟹</b><br/><br/>
+
+              The following describes the upload when a file name variable is specified. Each file uploaded becomes a unique file in the FileNet repository.<br/><br/>
+
+              <b>Single-file Page Level Operation with Variable</b>
+              <ul>
+                  <li>If the file name variable contains a file name, it is uploaded.</li>
+                  <li>If the file name variable does not exist, or is blank, no file is uploaded for the page.</li>
+              </ul>
+              <br/>
+              <b>Single-file Document Level Operation with Variable</b><br/>
+              <ul>
+                  <li>Each of the document object's child pages is processed according to the "Single-file Page Level Operation with Variable" steps.</li>
+              </ul>
+              <br/>
+              <b>Single-file Batch Level Operation with Variable</b><br/>
+              <ul>
+                  <li>Each of the batch object's child document objects is processed according to the "Single-file Document Level Operation with Variable" steps.</li>
+              </ul>
+              <br/><br/>
+
+              <b>⟸ Uploading in multiple-file / multiple-page mode ⟹</b><br/><br/>
+
+              When uploading in multiple mode, first the current object is checked to see if the DCO variable MergedTiffFileName is set.  
+              If it is set, the file specified
+              is added to the upload. The operation then continues as described below based on the current DCO level.<br/><br/>
+
+              <b>Multiple-file Page Level Operation</b><br/>
+              <ul>
+                  <li>
+                      If the batch contains a file named after the parent document object, i.e. documentid.type,
+                      that file is added to the upload and the operation completes for this page.
+                  </li>
+                  <li>If the batch contains a file named after the parent batch object, i.e. batchid.type,
+                  that file is uploaded and the operation completes for this page.</li>
+                  <li>If a batch or document file has not been added, the associated page file is added to the upload.</li>
+              </ul>
+              <br/>
+              <b>Multiple-file Document Level Operation</b><br/>
+              <ul>
+                  <li>
+                      If the batch contains a file named after the parent document object, i.e. documentid.type,
+                      that file is added to the upload and the operation completes for this page.
+                  </li>
+                  <li>If the batch contains a file named after the parent batch object, i.e. batchid.type,
+                  that file is uploaded and the operation completes for this page.</li>
+                  <li>If no batch or document file is found, then each child page is processed as stated in "Multiple-file Page Level Operation".</li>
+              </ul>
+              <br/>
+              <b>Multiple-file Batch Level Operation</b><br/>
+              <ul>
+                  <li>
+                      If the batch contains a file named after the parent batch object, i.e. batchid.type,
+                      that file is uploaded and the operation completes for this page.
+                  </li>
+                  <li>If no batch file is found, then each child document is processed as stated in "Multiple-file Document Level Operation".</li>
+              </ul>
+              <br/><br/>
+
+              <b>⟸ Uploading in multiple-file / multiple-page mode with P8SetUploadFileNameVariable specified  ⟹</b><br/><br/>
+
+              When uploading in multiple mode, first the current object is checked to see if the DCO variable MergedTiffFileName is set.
+              If it is set, the file specified
+              is added to the upload. The operation then continues as described below based on the current DCO level.<br/><br/>
+
+              <b>Multiple-file Page Level Operation with Variable</b><br/>
+              <ul>
+                  <li>If the file name variable contains a file name, it is added to the upload.</li>
+                  <li>If the file name variable does not exist, or is blank, no file is added for the page.</li>
+              </ul>
+              <br/>
+              <b>Multiple-file Document Level Operation with Variable</b><br/>
+              <ul>
+                  <li>Each of the document object's child pages is processed according to the "Multiple-file Page Level Operation with Variable" steps.</li>
+              </ul>
+              <br/>
+              <b>Multiple-file Batch Level Operation with Variable</b><br/>
+              <ul>
+                  <li>Each of the batch object's child document objects is processed according to the "Multiple-file Document Level Operation with Variable" steps.</li>
+              </ul>
+              <br/>
+
+              <e>
+                  P8Login("http://server:port//wsi/FNCEWS40MTOM/", "user", "password")<br />
+                  P8SetLocale("en-us")<br />
+                  P8SetTargetObjectID("MyObjectStore")<br />
+                  P8SetDestinationFolder("/MyTargetFolder")<br />
+                  P8SetDocumentClassAndTitle("MyFilenetDocClass", "@D.ID")<br />                  
+                  P8SetProperty("CustomerName", "@D.CustomerName")<br />
+                  P8SetMultipleValueProperty("InvoiceList", "@D.InvoiceList")<br />
+                  P8SetProperty("ScanStation", "@STATION")<br />
+                  P8SetProperty("ScanOperator", "@OPERATOR")<br />
+                  P8SetFileType("pdf")<br />
+                  <b>P8Upload()</b><br/><br/>
+                  
+                  The example shows the actions required to perform an upload, all within a single function.
+                  There are use cases where all of the actions are called on a single DCO node is appropriate.
+                  In some instances, some of the actions may be called on different objects. 
+                  For example, the actions that would be called once, such as P8Login, may be called
+                  at the batch level and then document specific actions, such as P8SetProperty or P8Upload
+                  may be called on the a document or page object, depending on the needs of the specific application.<br/>
+              </e>
+          </h>
+          <lvl>Batch, Document or Page level.</lvl>
+          <ret>
+              <b>False,</b> if the upload is not successful, or the action was applied to the
+              Field level.  Otherwise, <b>True.</b><br/><br/>
+              
+              If successful, the DCO variable "Doc_ID" is created on each page uploaded and set
+              to the FileNet document identifier.<br /><br />
+              
+              Note: If the action returns False, the task to set to the status of “Aborted”.<br/>
+          </ret>
+      </method>
+
+
+      <method name="P8UploadDirectory" qi=": Uploads files that are external to the batch.">
+          <p name="SourceFolder" type="string" qi="The full path of the source folder that contains the images to be uploaded to FileNet."/>
+          <p name="DeleteAfterUpload" type="string" qi="Delete files from disk after upload: True/False."/>
+          <ap>
+              <b>DeleteAfterUpload:</b><br/>	
+              False: The files are not deleted from the source folder after they are uploaded and instead are moved to the "Uploaded" directory.<br />
+              True: The files are deleted from the source folder after they are uploaded.<br/><br/>
+              
+              Smart parameters are supported.
+          </ap>
+          <h>
+              Uploads all files in the folder configured by the action P8SetDestinationFolder.
+              This action is an alternative to P8Upload, allowing the upload of images 
+              that are not within a Datacap batch.<br/><br/>
+              
+              <e>
+                  <b>P8UploadDirectory("C:\images", "False")</b><br />
+                  This example leaves the files in the source folder after they are uploaded and
+                  the files are moved to the "Uploaded" directory.<br />
+              </e>
+              <br/>
+              <e>
+                  <b>FNP8_UploadDir("C:\images", "True")</b><br />
+                  This example deletes the images in the source folder after they are uploaded.
+              </e>
+          </h>
+          <lvl>Batch or Document level.</lvl>
+          <ret>
+              <b>False,</b> if the upload is not successful.  Otherwise, <b>True.</b><br /><br />
+              Note: If the action returns False, the action directs the Rulerunner task to finish
+              with a status of “Aborted”.
+          </ret>
+      </method>
+
+  </com>
+</rrx>

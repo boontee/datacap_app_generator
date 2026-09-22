@@ -5,11 +5,12 @@
 > Templates: `templates/`
 > All generated artifacts use the templates as the base; nothing is created from scratch.
 >
-> **Plan version: 1.3**
+> **Plan version: 1.4**
 > Changelog:
 > - v1.1: Fixed E1–E5 (flowchart path gaps, collection.xml custom-action entry, Numeric validation action, missing generation logic for `integrityBranch` and `batchSplit`). Added G1–G6 gaps (Extraction.rul, output directory creation, missing KB reference, resume logic). Added I3 (`CreateDocs` task question).
 > - v1.2: Added `templates/app-config/AppName.app`, `templates/gitignore.txt`. Added `knowledge-base/datacap-watsonx-ai-integration.md`. Plan template table + KB reference table updated.
 > - v1.3: Added Phase 3 — MCP-driven incremental and end-to-end testing using `mcp-datacap-server`. Flowchart extended, Execution Protocol STEP 6 and STEP 7 added, Deployment Checklist MCP Testing section added.
+> - v1.4: Added `knowledge-base/datacap_actions_kb.md` (598 actions, 29 libraries, extracted from RRX files). Grounded all ruleset generation and validation steps in the actions KB. Added action-lookup rules to Execution Protocol STEP 4, Validation Rules, and Notes on Template Usage.
 
 ---
 
@@ -606,6 +607,28 @@ Before generating any file, verify:
 | `type=rest_api` export but no `authType` set | 🟡 Warning | REST export will be generated without authentication headers |
 | `batchSplit=true` but `conditionFlags[]` has no split-routing flag | 🟡 Warning | Add a condition flag name for the split routing job router |
 
+### Action Name Validation (KB-grounded)
+
+Before writing any `.rul` file, every action name chosen by the generator **must** be verified against `knowledge-base/datacap_actions_kb.md`:
+
+1. Look up the action name in the KB — confirm it exists in the correct library section.
+2. Confirm the DCO **level** matches the rule attachment point (Batch / Document / Page / Field).
+3. Confirm all required **parameters** are supplied with valid values or smart parameter tokens.
+4. If an action is not found in the KB, do **not** emit it — substitute the nearest documented equivalent and add a `// TODO` comment in the generated ruleset.
+
+| Ruleset | Primary libraries to consult |
+|---------|------------------------------|
+| `PageID.rul` | `AutomaticDocumentFingerprinting`, `Barcode`, `RuleRunnerLogic` |
+| `Recognition.rul` | `ocr_sr`, `ZonesAndLineItems`, `AutomaticDocumentFingerprinting`, `RuleRunnerLogic` |
+| `Extraction.rul` | `ZonesAndLineItems`, `Intellocate`, `RuleRunnerLogic` |
+| `Validation.rul` | `ValidationsAndTextAdjustments`, `PictureCharacterValidation`, `RuleRunnerLogic`, `ApplicationObjects` |
+| `Export.rul` | `IBMFileNetP8`, `ExportToDatabase`, `ExportToXML`, `ExportToText`, `FileIO`, `RuleRunnerLogic` |
+| `Convert.rul` | `Convert` |
+| `ImageEnhance.rul` | `DCImageFix`, `ImageUtilities` |
+| `BatchSplit.rul` | `SplitBatch`, `RuleRunnerLogic` |
+| `ManualPageID.rul` | `ApplicationObjects`, `RuleRunnerLogic` |
+| Custom C# stubs | `ValidationsAndTextAdjustments`, `ApplicationObjects` (for IDCO patterns) |
+
 ---
 
 ## Execution Protocol (Step by Step)
@@ -636,24 +659,73 @@ STEP 3 — Create output directories
   New-Item -ItemType Directory output/<AppName>/CustomActions/ -Force (if customActions.required=true)
 
 STEP 4 — Generate files (in this order)
+
+  ⚠ ACTION GROUNDING RULE: Before emitting any action call in a .rul file, look up
+  the action name in knowledge-base/datacap_actions_kb.md. Verify:
+    (a) the action exists in the listed library
+    (b) the DCO level matches the rule's attachment point
+    (c) all parameters match the documented parameter list
+    (d) smart parameter tokens (@X, @P, @B, @D) are used at a valid level
+  If an action cannot be verified, substitute the nearest KB equivalent and emit a
+  // TODO: verify action — not found in datacap_actions_kb.md
+  comment on the line above it.
+
   1.  dco_<AppName>/<AppName>.xml
+        KB: datacap-app-structure.md (DCO XML schema)
+            datacap-sample-applications.md (document/page/field examples)
+
   2.  dco_<AppName>/rules/collection.xml
+        KB: datacap-ibm-docs-developing-applications.md (task profile registration)
+
   3.  dco_<AppName>/rules/PageID.rul
+        KB: datacap_actions_kb.md → AutomaticDocumentFingerprinting, Barcode, RuleRunnerLogic
+            datacap-application-development-guide-v9.md §24–§25
+
   4.  dco_<AppName>/rules/Recognition.rul
+        KB: datacap_actions_kb.md → ocr_sr, ZonesAndLineItems, AutomaticDocumentFingerprinting
+            datacap-application-development-guide-v9.md §26–§28
+
   5.  dco_<AppName>/rules/Extraction.rul
+        KB: datacap_actions_kb.md → ZonesAndLineItems, Intellocate, RuleRunnerLogic
+            datacap-application-development-guide-v9.md §29
+
   6.  dco_<AppName>/rules/Validation.rul
+        KB: datacap_actions_kb.md → ValidationsAndTextAdjustments, PictureCharacterValidation,
+                                     RuleRunnerLogic, ApplicationObjects
+            datacap-application-development-guide-v9.md §30–§32
+
   7.  dco_<AppName>/rules/Export.rul
+        KB: datacap_actions_kb.md → IBMFileNetP8, ExportToDatabase, ExportToXML,
+                                     ExportToText, FileIO, RuleRunnerLogic
+            datacap-application-development-guide-v9.md §33–§37
+
   8.  dco_<AppName>/rules/Convert.rul         (if inputMethod=pdf_convert)
+        KB: datacap_actions_kb.md → Convert
+
   9.  dco_<AppName>/rules/ImageEnhance.rul    (if imageEnhancement=true)
+        KB: datacap_actions_kb.md → DCImageFix, ImageUtilities
+
   10. dco_<AppName>/rules/ManualPageID.rul    (if manualPageID=true)
+        KB: datacap_actions_kb.md → ApplicationObjects, RuleRunnerLogic
+
   11. dco_<AppName>/rules/BatchSplit.rul      (if batchSplit=true)
+        KB: datacap_actions_kb.md → SplitBatch, RuleRunnerLogic
+
   12. <AppName>.app                           FROM templates/app-config/AppName.app;
                                                AppName token replaced; task profile <k> entries
                                                added per workflow.tasks[]; @APPVAR key stubs
                                                added per integrations.exports[] credentials
+        KB: datacap-app-structure.md (.app INI format)
+
   13. CustomActions/CustomActions.cs          (if customActions.required=true)
+        KB: datacap-ibm-docs-reference-9.1.8.md (IDCO API)
+            datacap_actions_kb.md → ValidationsAndTextAdjustments, ApplicationObjects
+                                     (for IDCO method patterns and level constants)
+
   14. CustomActions/CustomActions.csproj      (if customActions.required=true)
   15. CustomActions/CustomActions.rrx         (if customActions.required=true)
+        KB: datacap_actions_kb.md (action level and parameter schema for <Action> elements)
+
   16. README.md                               (if nfr.generateReadme=true)
   17. .gitignore                              (if nfr.sourceControl=true)
   For each file: load template (if applicable), apply transformations, write, log "✓ Generated <filename>"
@@ -817,16 +889,46 @@ The following checklist is always included in the generated README:
 
 ## Knowledge Base Reference
 
-| File | Used for |
-|------|---------|
-| `knowledge-base/datacap-application-development-guide-v9.md` | Primary action reference for all `.rul` generation (Sections §24–§37 for per-library detail) |
-| `knowledge-base/datacap-app-structure.md` | Canonical folder layout, `.app` INI format, source control matrix |
-| `knowledge-base/datacap-development-best-practices.md` | Coding standards, security, deployment pitfalls |
-| `knowledge-base/datacap-ibm-docs-reference-9.1.8.md` | IDCO API for C# custom action generation |
-| `knowledge-base/datacap-ibm-docs-developing-applications.md` | Workflow task configuration, web client setup, 9.1.10 specifics |
-| `knowledge-base/datacap-sample-applications.md` | Real-world DCO hierarchy examples for SetupDCO generation |
-| `knowledge-base/datacap-watsonx-ai-integration.md` | `net:watsonx_ai.Actions` — LLM classification, KVP extraction, redaction patterns |
+| File | Priority | Used for |
+|------|----------|---------|
+| `knowledge-base/datacap_actions_kb.md` | ⭐ Primary | **Action name validation** for all `.rul` generation — 598 actions across 29 libraries extracted from RRX files. Verify every action name, level, and parameter list here before emitting it in a ruleset. Authoritative for Datacap 9.1.10. |
+| `knowledge-base/datacap-application-development-guide-v9.md` | ⭐ Primary | Ruleset patterns, per-library usage examples (§24–§37), workflow task configuration |
+| `knowledge-base/datacap-app-structure.md` | ⭐ Primary | Canonical folder layout, `.app` INI format, source control matrix |
+| `knowledge-base/datacap-development-best-practices.md` | Secondary | Coding standards, security, deployment pitfalls |
+| `knowledge-base/datacap-ibm-docs-reference-9.1.8.md` | Secondary | IDCO API for C# custom action generation |
+| `knowledge-base/datacap-ibm-docs-developing-applications.md` | Secondary | Workflow task configuration, web client setup, 9.1.10 specifics |
+| `knowledge-base/datacap-sample-applications.md` | Secondary | Real-world DCO hierarchy examples for SetupDCO generation |
+| `knowledge-base/datacap-watsonx-ai-integration.md` | Conditional | `net:watsonx_ai.Actions` — LLM classification, KVP extraction, redaction patterns. Consult only when `recognition.engine=watsonx_ai` or `integrations.exports[].type=watsonx`. |
+
+### KB Lookup Order for Ruleset Generation
+
+When generating any `.rul` file, consult the knowledge base in this order:
+
+1. **`datacap_actions_kb.md`** — look up every action by name to confirm it exists, its level, and its parameters. This is the ground truth derived directly from the installed RRX files and takes precedence over all other references for action signatures.
+2. **`datacap-application-development-guide-v9.md`** — consult for higher-level ruleset structure patterns, sequencing guidance, and usage examples for each action library.
+3. **`datacap-sample-applications.md`** — consult for real-world DCO and ruleset patterns when the intake describes a document type similar to an existing sample (e.g. invoice, HR form, insurance claim).
+4. **`datacap-development-best-practices.md`** — consult for performance, security, and maintainability decisions (e.g. when to use `rrSet` vs `CopyZone`, when to log with `Nenu`).
+5. **`datacap-watsonx-ai-integration.md`** — consult only when watsonx AI actions are required.
+
+### Action Library → KB Section Quick Map
+
+| Ruleset | KB section(s) in `datacap_actions_kb.md` |
+|---------|------------------------------------------|
+| PageID | `## AutomaticDocumentFingerprinting`, `## Barcode`, `## RuleRunnerLogic` |
+| Recognition | `## ocr_sr`, `## ZonesAndLineItems`, `## AutomaticDocumentFingerprinting` |
+| Extraction | `## ZonesAndLineItems`, `## Intellocate`, `## RuleRunnerLogic` |
+| Validation | `## ValidationsAndTextAdjustments`, `## PictureCharacterValidation`, `## ApplicationObjects` |
+| Export (FileNet) | `## IBMFileNetP8` |
+| Export (DB) | `## ExportToDatabase` |
+| Export (XML/CSV) | `## ExportToXML`, `## ExportToText` |
+| Convert | `## Convert` |
+| ImageEnhance | `## DCImageFix`, `## ImageUtilities` |
+| BatchSplit | `## SplitBatch` |
+| Email input | `## Ewsmail`, `## Email.MSGraph`, `## Imail` |
+| Flow control (all) | `## RuleRunnerLogic`, `## ApplicationObjects` |
+| Line items | `## ZonesAndLineItems`, `## LineItemPagination` |
+| Logging | `## Nenu` |
 
 ---
 
-*Plan version: 1.2 — IBM Datacap 9.1.10 — Knowledge base: knowledge-base/ — Templates: templates/*
+*Plan version: 1.4 — IBM Datacap 9.1.10 — Knowledge base: knowledge-base/ — Templates: templates/*

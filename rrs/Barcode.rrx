@@ -1,0 +1,1043 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="Barcode" v="9.1.9.5">
+  <com ref="Datacap.Libraries.Barcode.Actions"  qi=": Reads barcodes from a page or field.">
+    <!-- Example action declaration -->
+    <h>
+      The Barcode action library performs recognition of barcodes on pages or in a field.  The page can
+      contain a single barcode or multiple barcodes.  The value of a barcode is stored and can
+      be used by subsequent actions. The value of a barcode can of course be stored with
+      a page as part of it's data. Barcodes can also be used for controlling the logic
+      flow of Datacap rules, as an separator page indicator or a mechanism to assign
+      a page type.<br/><br/>
+
+      The page must be a single page TIF, PNG, BMP or JPEG image. Other types of images or documents
+      are not supported. Document types such as PDF, DOC, multi-page TIF, etc., can be converted
+      to a TIF image using the Convert action library.  It is recommended that the best
+      practices guide is reviewed to understand what kind of images work well for recognition.<br/><br/>
+
+      <b>Action Summary</b><br/><br/>
+
+      GetAllBarcodes : Reads all of the barcodes on the page and returns them in a delimited string.<br/><br/>
+
+      GetBarcode : Reads the first barcode on a page.<br/><br/>
+
+      GetDataMatrixBarcode : Reads the first Data Matrix barcode on a page.<br/><br/>
+
+      GetPDF2DBarcode : Reads a the first PDF-417 barcode on a page.<br/><br/>
+
+      IdentifyPageByBarcode : Sets page types based on a barcode value.<br/><br/>
+
+      MatchAnyBarcode : Compares an expected value with all of the barcodes on the page.<br/><br/>
+
+      MatchBarcodePrefix : Compares an expected prefix value with all of the barcodes on the page.<br/><br/>
+
+      MatchFirstBarcode : Compares the first barcode read on the page with a value.<br/><br/>
+
+      SetBarcodeMinimumConfidence : Sets the minimum tolerance required to except a barcode read as accurate.<br/><br/>
+
+
+      <b>Setting The Expected Barcode Type</b><br/><br/>
+
+      By default, the barcode engine will consider the barcode type to be unknown. Unknown will automatically
+      attempt to detect 1D barcodes. The following barcode types must be specifically set to be
+      detected: PatchCodeBarcode, PostNetBarcode, GS1 DataBar, IntelligentMail, Royal Post Mail 4-State,
+      Australian Post 4-State, QR Code, PDF417Barcode, Aztec and DataMatrixBarcode.<br/><br/>
+
+      It may still be necessary to set the expected barcode type for the engine to find and recognize the barcode.
+      If a barcode is not being detected, set the proper barcode type to aid the barcode detection.
+      Multiple barcode types can be set.  It is recommended that the expected barcode types are specifically
+      configured.<br/><br/>
+
+      The expected barcode types can be easily set using the "BAR/P" tab property within the "Zones" tab of Datacap Studio.
+      This property can be set by selecting the target DCO node page or field that will have an associated
+      rule that calls barcode recognition, locking the DCO and selecting
+      the expected barcode types.  This will automatically calculate the correct value based on all of the selected types
+      and set the bp_tp variable for your application in the Setup DCO.  For best results, keep the expected types to a minimum.
+      When you use this property approach to setting the expected barcode type, it is not
+      necessary to separately set the bp_tp variable manually within the setup DCO or at runtime using actions.<br/><br/>
+
+      Alternatively, the expected barcode type can be set at runtime on the target field/page being recognized
+      by setting the variable <b>bp_tp</b>. If the "bp_tp" variable is empty or does not exist,
+      the engine defaults to "Unknown".<br/><br/>
+
+      The bp_tp variable sets the expected barcode type, or types, which will provide better recognition results.
+      If multiple barcode types are expected, the value of this variable must be a combination of the barcode types shown below.
+      Multiple types can be read by adding the values of their codes together.  Always set the expected type to the minimum
+      possible types.  This variable can be set using rrSet prior to calling a barcode recognition action.
+      For example: rrSet("256","@X.bp_tp") for reading a Code 39 barcode.<br/><br/>
+
+      <b>Valid barcode types:</b><br/>
+      <br/>
+      0         : Unknown. Detects most 1D barcode types automatically.<br/>
+      1         : INDUSTRY 2 OF 5<br/>
+      2         : INTERLEAVED 2 OF 5<br/>
+      4         : IATA 2 OF 5<br/>
+      8         : DATALOGIC 2 OF 5<br/>
+      16        : INVERT 2 OF 5<br/>
+      32        : BCD MATRIX<br/>
+      64        : MATRIX 2 OF 5<br/>
+      128       : CODE 32<br/>
+      256       : CODE 39<br/>
+      512       : CODABAR 2<br/>
+      1024      : CODE 93<br/>
+      2048      : CODE 128<br/>
+      4096      : EAN-13<br/>
+      8192      : EAN-8<br/>
+      16384     : UPC-A<br/>
+      32768     : UPC-E<br/>
+      65536     : ADD 5<br/>
+      131072    : ADD 2<br/>
+      262144    : UCC128/EAN-128<br/>
+      524288    : Patch Code<br/>
+      1048576   : PostNet<br/>
+      2097152   : PDF417<br/>
+      4194304   : DataMatrix<br/>
+      8388608   : Code 39 Extended<br/>
+      16777216  : Code 93 Extended<br/>
+      33554432  : QRCode<br/>
+      67108864  : IntelligentMail<br/>
+      134217728 : Royal Mail (RM4SCC)<br/>
+      268435456 : Australian Post 4-State Code<br/>
+      536870912 : Aztec<br/>
+      1073741824: GS1DataBar<br/>
+      <br/><br/>
+
+      <b>Variable Length Royal Mail Barcodes</b><br/><br/>
+      The Royal Mail barcode is a fixed length barcode.  Some countries use a variable a variable length
+      variation of the Royal Mail barcode, such as the Postal Services of Portugal.  To allow reading of a variable
+      length Royal Mail barcode for Portuguese CTT, in addition to selecting the Royal Mail barcode type, the variable
+      length setting must be enabled.  Setting the DCO variable "RoyalMailVariableLength" to "1" will allow detection
+      of variable length Royal Mail barcodes.
+      It is allowed to enable variable length for fixed length Royal Mail barcodes, if the length
+      restriction does not need to be enforced.<br/><br/>
+
+      This example sets the barcode type to variable length Royal Mail:<br/>
+      rrSet("1", "@P.RoyalMailVariableLength")<br/>
+      rrSet("134217728", "@P.bp_tp")<br/>
+      GetBarcode()<br/><br/>
+
+      <b>Minimum and Maximum Expected Barcodes Settings</b><br/><br/>
+
+      Multiple barcodes can exist and be recognized on a single page.  The DCO variable <b>bp_su</b> controls the maximum number
+      of barcodes that will attempt to be read on a single page.  If not specified, the default maximum is 10.<br/><br/>
+
+      The minimum number of expected barcodes can be specified using the DCO variable <b>bp_minExpected.</b>
+      This setting will control when image enhancement takes place.  Unless specified, the minimum expected barcodes will
+      default to the same value as the maximum number of barcodes setting.<br/><br/>
+
+      The engine uses these variables to determine how many barcodes are expected on the page
+      and will cause the engine to stop looking once the threshold has been met.  If the expected
+      number of barcodes is not met, the engine can perform internal image adjustments to the image
+      and read it again looking for the expected number of barcodes.  If your pages will only have
+      one expected barcode, then set the minimum and maximum expected barcode
+      variables to 1 for best results.<br/><br/>
+
+      <b>Barcode Detection Steps</b><br/><br/>
+
+      The barcode actions will detect using the following steps.<br/>
+      - Recognize barcodes on the page / field.<br/>
+      - Stop if minimum expected is detected.<br/>
+      - If minimum not reached and image enhancement is enabled then<br/>
+      - - Use each of the enabled image enhancement features and read the barcode.<br/>
+      - - Stop if minimum expected is detected.<br/>
+      - - Continue performing each enabled image enhancement feature to detect the minimum expected barcodes.<br/><br/>
+
+      If the number of recognized barcodes
+      is equal to or more than the specified minimum, image enhancement will be skipped.
+      If the minimum number of barcodes has not been reached, and if image enhancement is enabled,
+      then barcode recognition will be performed a second time using the configured type of
+      image enhancement in an attempt to read the barcode.<br/><br/>
+
+      For example, if the configured minimum barcodes is 1 and the maximum is 10, first barcode
+      recognition will be performed without any image enhancement and attempt to read up to 10
+      barcodes.  If at least 1 barcode is read,
+      the action will complete.  If 0 barcodes are read, the action will perform the specified image
+      enhancement and attempt once more to recognize the barcodes on the page.
+      If 0 barcodes are read and no image enhancement is configured, the action will complete
+      without a second attempt at recognition.<br/><br/>
+
+      Another example is if two barcodes are expected with the minimum set to 2. If 2 or more barcodes
+      are read, then recognition will stop.  If less than two are read and if image enhancement
+      is enabled, the barcode action will perform the configured image enhancement type and
+      attempt to read the barcode again.  It will do this for each type of enabled image enhancement.<br/><br/>
+
+      <b>Image Enhancements</b><br/><br/>
+
+      Barcodes are more tolerant to image deterioration than traditional recognition.
+      Damaged barcodes can often still be recognized. The fault tolerance can vary
+      based on the specific barcode type, as a whole, they are more resilient
+      than traditional character recognition.
+      Barcodes are also generally more tolerant to skew and rotation problems.<br/><br/>
+
+      It is still possible that barcodes can have problems being read if the image
+      is of poor quality. For example, if it has been poorly scanned, copied several
+      times, or has other visible issues, a barcode may still not be read correctly.
+      The barcode action library has built in image enhancement mechanisms
+      to internally adjust the image when the barcode cannot be read.
+
+      Image enhancement may be necessary in order to help read damaged or poorly scanned barcodes.
+      Depending on the problem with the barcode, different types of enhancements may make the barcode readable.
+      The barcode actions offer a way to enhance the image while reading the barcode. To enable this
+      feature, set the variable <b>bp_enhance</b> to "1".  When set to "1", the engine will
+      first try to recognize the barcode without image enhancement.<br/><br/>
+
+      If the minimum number of barcodes has
+      not been read, then the action will try again using the specified image enhancement.
+      If the minimum number of barcodes has been read, then the image enhancement will be skipped.
+      If your barcode images are such that they will always require image enhancement, set <b>bp_enhance</b>
+      to "2", which will skip the first recognition step that attempts to recognize without image enhancement.<br/><br/>
+
+      Enabling image enhancement for barcodes will only alter the image
+      during barcode recognition, the original image in the batch will be left unchanged.<br/><br/>
+
+      The image enhancements are not cumulative, enable only one type of image enhancement that is needed.
+      If sometimes one image enhancement helps, for example binarize,
+      and other times a different image enhancement helps, such as smooth zoom,
+      then both can be enabled, however, the minimum and maximum also need to be set.  The engine will
+      try each image enhancement that is enabled until the minimum number of expected
+      barcodes is read.  It is not possible to control the order in which the engine tries
+      multiple enhancements.  For best performance, enable the minimum number of enhancements
+      that help your images.<br/><br/>
+
+      <b>Image Enhancement Types</b><br/><br/>
+
+      Smooth Zoom: <b>bp_zoom</b> - Scales the image larger to help improve recognition for small barcodes.<br/>
+      Blur: <b>bp_blur</b> - Blurs the image which can help jagged lines.<br/>
+      Dilate: <b>bp_dilate</b> - Expands pixels making lines thicker.<br/>
+      Erode: <b>bp_erode</b> - Removes pixels along line edges.<br/>
+      Flip: <b>bp_flip</b> - It is usually not necessary to flip the image for an upside-down barcode to recognize.<br/>
+      Resize: <b>bp_resize</b> - Enlarges the image which could help small barcodes, similar to zoom.<br/>
+      Binarize: <b>bp_binarize</b> - Converts 24 and 8 bit images to 1 bit.  A 1 bit image can
+      improve recognition for barcodes where the contrast between the barcode lines and the background is low or when
+      there is light shading preventing recognition.<br/><br/>
+
+      These enhancements are temporary and will not change the image within the batch.<br/><br/>
+
+      <b>Enabling Image Enhancement</b><br/><br/>
+      To activate automatic image enhancement, set the DCO variable <b>bp_enhance</b> to "1" prior to calling a barcode action
+      on the DCO page or field node that will be recognized.<br/>
+      For example: rrSet("1","@X.bp_enhance")<br/><br/>
+
+      Each specific image enhancement can be enabled by setting the associated DCO variable to "1" or disabled by setting it to "0".
+      By default, "Smooth Zoom" is always enabled and all other image enhancements are disabled.<br/><br/>
+
+      For example, if "Smooth Zoom" is the desired enhancement, simply enabling image enhancement by setting bp_enhance to "1" will
+      enable image enhancement for Smooth Zoom.<br/><br/>
+
+      If only Binarize is required, then using this sequence prior to calling a barcode action will enable only the Binarize feature.
+      rrSet("1","@X.bp_enhance")<br/>
+      rrSet("0","@X.bp_zoom")<br/>
+      rrSet("1","@X.bp_binarize")<br/><br/>
+
+      The above example, and other examples in this library, show how to set DCO variables using
+      rrSet.  This action will set variables at runtime.  Alternatively these variables can be set
+      in the Setup DCO from within Datacap Studio.  Setting the variables within the Setup DCO
+      can be more efficient.  For example, assume that the above three rrSet actions are called
+      on page type "Other".  Assuming the batch ingests 100 pages, then these three actions will
+      be called on every page, resulting in 300 calls to the rrSet action.  Alternatively,
+      these three variables can be created and set in the DCO from within Datacap Studio
+      on the "Other" DCO object.  When set in the Setup DCO, the variables will
+      automatically exist on every "Other" object and rrSet will not need to be called
+      within the rules to create these variables on every object within the batch.<br/><br/>
+
+      <b>Enabling Multiple Enhancements</b><br/><br/>
+
+      Multiple enhancements can be enabled if you find that you consistently receive documents that require different types
+      of enhancements.  For example, some documents always work the first time, other documents only detect if binarize is used
+      and others work only if blur is used.  If multiple enhancements are enabled, the action will attempt to recognize using
+      each of the enabled enhancement types until the minimum expected have been read.<br/><br/>
+
+      For example, to always use Binarize and Blur to recognize the barcode, set the following prior to recognizing the barcode:<br/>
+      rrSet("1","@X.bp_enhance")<br/>
+      rrSet("0","@X.bp_zoom")<br/>
+      rrSet("1","@X.bp_binarize")<br/>
+      rrSet("1","@X.bp_blur")<br/><br/>
+
+      The action will then use the blur and binarize enhancements until the minimum number is read.  If bp_enhance is set to "1"
+      the action will always first try to recognize without any enhancements and only if the minimum is not reached, will it continue.
+      Each additional enhancement type enabled will be attempted until the minimum are read or all enabled enhancements have been attempted.<br/><br/>
+
+      For best performance, always set the minimum number of barcodes
+      expected or the action may perform unnecessary enhancements.<br/><br/>
+
+      The order in which the enhancements are attempted by
+      the barcode action cannot be controlled.<br/><br/>
+
+      <b>Barcode Orientation</b><br/><br/>
+
+      Barcode orientation defaults to both horizontal and vertical.
+      Specifying the orientation may help in detection of barcodes. For example, if the barcodes
+      will always be horizontal, then detection and recognition can be improved by setting the orientation
+      to Horizontal only.
+      If necessary, the orientation can be configured by setting the DCO variable <b>bp_or.</b><br/><br/>
+      
+      0 = Horizontal and Vertical.<br/>
+      1 = Horizontal.<br/>
+      2 = Vertical.<br/>
+      3 = Horizontal, Vertical and Diagonal.<br/><br/>
+
+      Again, the bp_or variable can be set on the object within the SetupDCO or can be set
+      at runtime using the rrSet action.<br/><br/>
+     <b>Note:</b> Diagonal barcodes can be detected along with Vertical barcodes i.e by setting bp_or=0 or bp_or=2 or bp_or=3. <br/><br/>
+      
+      <b>Barcode Byte Mode:</b><br/><br/>
+
+      Some specific barcode types, such as PDF-417, allow null characters within the data stream.
+      If this occurs, the full length of the barcode can be truncated returning only the characters up to the first null character.
+      This is typically observable by noting that the read barcode data
+      is shorter than expected.  For example, if the
+      barcode should be a 40 character ID but it returns truncated text.<br/><br/>
+
+      To treat a barcode as byte data, set the DCO variable <b>BarcodeUseByte</b> to "1".
+      This setting will treat the stream as bytes and also convert any null characters to spaces so the entire string can then be
+      utilized in other parts of the application.  By default, this parameter is off.<br/><br/>
+
+      When in byte mode, the default replacement character of a space can be set to a different replacement character
+      by setting the DCO variable <b>BarcodeReplacementChar</b> to the desired replacement character.
+      For example, rrSet("-","@X.BarcodeReplacementChar") sets the variable "BarcodeReplacementChar"
+      on the current DCO object to "-" which will change the replacement
+      character from a space to a dash when byte mode is enabled.<br/><br/>
+
+      <b>NOTE:</b> Unicode characters are not supported when using byte mode.<br/><br/>
+
+      <b>Patch Codes</b><br/><br/>
+
+      Patch codes can be recognized in addition to barcodes.  Patch codes
+      are very similar to barcodes but can be less reliable.  If all pages
+      are checked for patch codes it is possible for lines on a page
+      that resemble patch codes can be mistaken for patch codes.  While this
+      is somewhat rare, but can happen.  If you have a choice between creating
+      separator sheets that use patch codes or barcodes, a barcode is the
+      reliable option.<br/><br/>
+
+      When the barcode type is set to <b>Patch Code</b>, the following string
+      values may be returned by the engine (the string value depends on the type of Patch Code
+      that is found): <br/>
+
+      <br/>Patch 1: <b>1100</b>
+      <br/>Patch 2: <b>1001</b>
+      <br/>Patch 3: <b>1010</b>
+      <br/>Patch 4 / Toggle Patch: <b>0110</b>
+      <br/>Patch 6: <b>0011</b>
+      <br/>Patch T / Transfer patch: <b>0101</b><br/><br/>
+
+      When recognizing PatchCodes, the barcode type must be set explicitly to PatchCode.
+      The default barcode type setting of "Unknown" will not detect PatchCodes.<br/><br/>
+
+      <b>Barcode Results Stored In DCO Variables</b><br/><br/>
+
+      The results of barcode recognition will be stored in field data, in DCO variables
+      or both.  When barcode recognition is performed on a field, the results of the
+      barcode read are stored in the field's text value. When recognized on a page,
+      results can be stored in variables such as GetBarCodeList and GetBarCode.
+      Storing and retrieving data from DCO variables is a common task for actions
+      and Datacap applications.  Refer to the action help for names of variables
+      that are created from barcode recognition.<br/><br/>
+
+      The top-level help topic of the ApplicationObjects action library discusses the Datacap Object Hierarchy (DCO)
+      including the different object levels and object variables. It is recommended that the DCO is well
+      understood when writing a Datacap application.<br/><br/>
+
+      <b>Using Barcode Recognition Results</b><br/><br/>
+
+      When the barcode is read, the following variables are created on the current DCO object:<br/><br/>
+
+      GetBarCode : The recognized value of the barcode.<br/>
+      CodeName : The barcode type.<br/>
+      Confidence : The barcode confidence.<br/>
+      Height : The height of the barcode in pixels.<br/>
+      Width : The width of the barcode in pixels.<br/>
+      Left : The left coordinate of the barcode in pixels.<br/>
+      Top : The top coordinate of the barcode in pixels.<br/>
+      Position : Four separated values which are the coordinates of the
+      barcode in pixels: left, top, right, bottom.<br/><br/>
+
+      The data is provided for an application to use as needed. The variables can be read by other actions, including custom actions.
+      How this data is used is dependent on the use case. For many applications, barcodes will be read within a field, and the
+      recognized value will be used by accessing the field's value. Similarly, a barcode could be read that the page level, and again the
+      recognized value can be accessed by accessing the "GetBarCode" variable.<br/><br/>
+
+      This example shows a simple example of setting page types based on the barcode value.<br/><br/>
+
+      OtherRule<br/>
+      - Function1<br/>
+      - - rrCompare("Inv","@X.GetBarCode")<br/>
+      - - SetPageType("Invoice")<br/>
+      - Function2<br/>
+      - - rrCompare("1234","@X.GetBarCode")<br/>
+      - - SetPageType("Claim")<br/>
+      - Function3:Default<br/>
+      - - SetPageType("Trailing_Page")<br/>
+
+      The example first tests the barcode value to see if it is "Inv", if so, then it sets the
+      type of the current page to "Invoice".  If the barcode is "1234", then it sets the page type
+      to "Claim". If it is not any of those, or if the barcode does not exist, then the page is set
+      to "Trailing_Page".  This kind of example would require the barcode to exist on the page
+      being assigned the page type.  If barcodes are used on separator pages, then the barcode
+      would indicate the grouping of the documents and the rules logic would be different.<br/><br/>
+
+      To illustrate how other data can be used, there could be a use case to only recognize barcodes
+      that appear at the bottom of the page and ignore any barcodes at the top of the page. This use
+      case could be solved in a few ways.  One solution would be to create a generic field that
+      spans the entire lower half of the page. This field could exist for a single page type, and
+      each page could be set to that page type, the fingerprint template ID set,
+      and then the field zones loaded. Once the field is ready, barcode recognition can be run on the
+      field object.  If the barcode exists in the lower half of the page, it would be recognized.
+      If the barcode does not exist on the page, or if it exits only at the top of the page, then the
+      barcode would not be recognized.<br/><br/>
+
+      An alternate way of satisfying the same use case could be done by calling GetBarcode
+      on the entire page. The results of the barcode can then be examined to determine if the barcode
+      is in the bottom half of the page or the top half of the page by using rules to
+      determine if the barcode coordinates are within a particular range.  Here is an example ruleset.<br/><br/>
+
+      rrSet("No","@X.BarcodeIsAtTheBottom")<br/>
+      GetBarcode()<br/>
+      SplitTextIntoVariables("@X.Position0", "BarcodeSplitPos",",")<br/>
+      rrCompareNumeric("@X.BarcodeSplitPos_1",>,"1600")<br/>
+      rrSet("Yes", "@X.BarcodeIsAtTheBottom")<br/>
+
+      This ruleset first sets a variable called "BarcodeIsAtTheBottom" and sets the value to "No".  The barcode is
+      then read. The position variable contains the barcode coordinates in a "left,top,right,bottom" format. SplitTextIntoVariables
+      will take this comma separated list and break it into unique variables. The second variable BarcodeSplitPos_1, which is the top,
+      is checked to see if the value is greater than 1600 pages, which is about half way down a 300 dpi 8.5"x11" page.  If the value
+      is greater than that, then the variable "BarcodeIsAtTheBottom" is changed to "Yes".  Now any following rule can check
+      the value of this variable to see if there is a barcode at the bottom of the page.
+      The example shows an alternate way of solving the use case and illustrates some alternative ways
+      the barcode data could be used within an application.
+      The action SplitTextIntoVariables is in the ValidationsAndTextAdjustments action library.<br/><br/>
+
+
+      <b>Smart Parameters</b><br/><br/>
+
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+    </h>
+
+
+
+    <method name="GetAllBarcodes" qi=": Searches all the barcodes on the current page and writes them to the calling object's GetBarCodeList variable.">
+      <p name="BarcodeSeparator" type="string"/>
+      <ap>
+        The separator to use when storing multiple barcodes. If not provided, the default separator is a comma.
+        If barcodes might contain a comma within the data, then the separator should be changed to a unique character.<br/><br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Recognizes all of the barcodes on the current page, provided they meet the type that has
+        been previously configured.<br/>
+
+        All of the recognized barcodes will be stored in the current DCO object in a variable named "GetBarCodeList".
+        Each barcode value is separated using the string separator value entered as a parameter.<br/><br/>
+
+        If the engine does not detect any barcodes, then the variable GetBarCodeList is not populated nor created.<br/><br/>
+
+        The variable "NumBarcodes" will be created in the current DCO object containing the number of
+        barcodes that have been recognized.<br/><br/>
+
+        For each barcode recognized, a unique set of DCO variables will be created using the following
+        naming convention. X is the index of the barcode starting at 0.  For example, if 4 barcodes have been recognized
+        then GetBarCode0, GetBarCode1, GetBarCode2 and GetBarCode3 will be created along with all of the other variables
+        using the same naming technique.
+
+        GetBarCodeX : The recognized value of the barcode.<br/>
+        CodeNameX : The barcode type.<br/>
+        ConfidenceX : The barcode confidence.<br/>
+        HeightX : The hight of the barcode in pixels.<br/>
+        WidthX : The width of the barcode in pixels.<br/>
+        LeftX : The left coordinate of the barcode in pixels.<br/>
+        TopX : The top coordinate of the barcode in pixels.<br/>
+        PositionX : Four separated values which are the coordinates of the
+        barcode in pixels: left, top, right, bottom.<br/><br/>
+        <e>
+          rrSet("33554432","@Xbp_tp")<br/>
+          <b>GetAllBarcodes(",")</b><br/><br/>
+
+          This example configures the engine to detect QR codes and then detects all of the
+          QA codes on the page.  For each barcode detected, the results will be stored
+          in the variables specified and the variable GetBarcodeList will
+          contain a CSV list of all recognized barcode values.  Instead of calling
+          rrSet, the expected barcode types can be selected in the Bar/P properties
+          tab within the Zones tab of Datacap Studio.<br/><br/>
+
+          rrSet("3", "@X.bp_minExpected")<br/>
+          rrSet("1","@X.bp_enhance")<br/>
+          rrSet("0","@X.bp_zoom")<br/>
+          rrSet("1","@X.bp_binarize")<br/>
+          rrSet("1","@X.bp_blur")<br/>
+          <b>GetBarcode()</b><br/><br/>
+
+          This example assumes the barcode type has previously been configured in Datacap Studio
+          in the Bar/P tab of the Zones tab to configure the bp_tp on all objects of the current type.
+          It also enables the binarize image enhancement to run.  The minimum
+          number of barcodes expected is 3.  If 3 or more barcodes are read, then the barcode
+          action will stop successfully.  If 2 or less barcodes are read, the action will
+          enable the "binarize" image enhancement and try to read the barcode again.
+          If still only 2 or less barcodes are read, the engine will try blurring the image
+          and reading the barcodes again.
+          The image enhancements are only in effect for the length of the action and does
+          not change the source image within the batch. The image enhancements
+          are not cumulative and the order they are used cannot be controlled.<br/>
+        </e>
+      </h>
+      <lvl>Page and field level.</lvl>
+      <ret>
+        <b>True</b> if the action is called at the page level or field level. Otherwise, <b>False.</b><br/><br/>
+        In addition the calling object's value and variable "GetBarCode" will be filled with the bar code value. This action also
+        stores barcode information such as confidence, coordinates, code name, and size. If the object's barcode settings are set to read more than
+        one barcode, and more than one barcode is found, barcodes are also stored in the variable "GetBarCodeX" where "X" is the index of
+        the barcode found.
+      </ret>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+
+    <method name="GetBarcode" qi=": Recognizes arbitrary 1D or 2D codes.">
+      <ap>None.</ap>
+      <lvl>Page or Field level only.</lvl>
+      <ret>
+        <b>True</b> if the action is called at the page level or field level. Otherwise, <b>False.</b><br/><br/>
+        In addition the calling object's value and variable "GetBarCode" will be filled with the bar code value. This action also
+        stores barcode information such as confidence, coordinates, code name, and size. If the object's barcode settings are set to read more than
+        one barcode, and more than one barcode is found, barcodes are also stored in the variable "GetBarCodeX" where "X" is the index of
+        the barcode found.
+      </ret>
+      <h>
+        Use this action to read the first barcode found on a page if the page has 1D or 2D barcodes.
+        If recognizing on a field
+        object, the field must have a Position assigned that corresponds to the area on the image containing the barcode
+        when bar code reading is performed.
+        For example, to load zone coordinates after a fingerprint has been assigned to the page,
+        the application would invoke the CreateFields action, which creates the fields in the DCO. 
+        Then the application would call the ReadZones action to load the position coordinates from the fingerprint template associated with the page. 
+        When this is complete, the field is ready for field level barcode reading and the GetBarcode action can be called on the fields
+        where a barcode is expected.
+        If anchors or fingerprint matching are used,
+        ReadZones or other registration may be required to align the fields correctly to the fingerprint template zones.<br/><br/>
+
+        When the barcode is read, the following variables are created on the current DCO object:<br/><br/>
+
+        GetBarCode : The recognized value of the barcode.<br/>
+        CodeName : The barcode type.<br/>
+        Confidence : The barcode confidence.<br/>
+        Height : The height of the barcode in pixels.<br/>
+        Width : The width of the barcode in pixels.<br/>
+        Left : The left coordinate of the barcode in pixels.<br/>
+        Top : The top coordinate of the barcode in pixels.<br/>
+        Position : Four separated values which are the coordinates of the
+        barcode in pixels: left, top, right, bottom.<br/><br/>
+
+        If called on a field object, the barcode value will also be stored in
+        the field's text property.<br/><br/>
+        <br/>
+        <e>
+          rrSet("1", "@X.bp_minExpected")<br/>
+          rrSet("2048", "@X.bp_tp")<br/>
+          <b>GetBarcode()</b><br/><br/>
+
+          This example configures the reader to expect 1 Code-128 barcode on the page and
+          sets the barcode type in rules prior to calling the barcode action.<br/><br/>
+
+          rrSet("1", "@X.bp_minExpected")<br/>
+          rrSet("1","@X.bp_enhance")<br/>
+          rrSet("0","@X.bp_zoom")<br/>
+          rrSet("1","@X.bp_binarize")<br/>
+          <b>GetBarcode()</b><br/><br/>
+
+          This example assumes the barcode type has previously been configured in Datacap Studio
+          in the Bar/P tab of the Zones tab to configure the bp_tp on all objects of the current type.
+          It also enables the binarize image enhancement to run.  The minimum
+          number of barcodes expected is 1.  If 1 barcode is read, then the barcode
+          action will stop successfully.  If 0 barcodes are read, the action will
+          enable the "binarize" image enhancement and try to read the barcode again.
+          This image enhancement is only in effect for the length of the action and does
+          not change the source image within the batch.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+
+    <method name="GetDataMatrixBarcode" qi=": Recognizes Data Matrix codes">
+      <ap>None.</ap>
+      <lvl>Page or Field level only.</lvl>
+      <ret>
+        <b>True</b> if the action is called at the page level or field level. Otherwise, <b>False.</b><br/><br/>
+        In addition the calling object's value and variable "GetBarCode" will be filled with the bar code value. This action also
+        stores barcode information such as confidence, coordinates, code name, and size. If the object's barcode settings are set to read more than
+        one barcode, and more than one barcode is found, barcodes are also stored in the variable "GetBarCodeX" where "X" is the index of
+        the barcode found.
+      </ret>
+      <h>
+        Use this action if your page or field has Data Matrix codes.
+        This action is very similar to the GetBarcode action.
+        The difference is that the barcode type for Data Matrix barcodes will be set automatically.
+        It is not necessary to set the barcode type. If the barcode type is set, it will be ignored.<br/><br/>
+
+        When the barcode is read, the following variables are created on the current DCO object:<br/><br/>
+
+        GetBarCode : The recognized value of the barcode.<br/>
+        CodeName : The barcode type.<br/>
+        Confidence : The barcode confidence.<br/>
+        Height : The height of the barcode in pixels.<br/>
+        Width : The width of the barcode in pixels.<br/>
+        Left : The left coordinate of the barcode in pixels.<br/>
+        Top : The top coordinate of the barcode in pixels.<br/>
+        Position : Four separated values which are the coordinates of the
+        barcode in pixels: left, top, right, bottom.<br/><br/>
+
+        If called on a field object, the barcode value will also be stored in
+        the field's text property.<br/><br/>
+        <e>
+          <b>GetDataMatrixBarcode()</b><br/><br/>
+
+          This action automatically configures the engine to read Data Matrix barcodes
+          and will return the save the first occurance in the GetBarCode variable
+          when called at the page level. When called at the field level, the value will
+          also be stored in the field text.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+    <method name="GetPDF2DBarcode" qi=": Recognizes PDF-417 codes.">
+      <ap>None.</ap>
+      <lvl>Page or Field level only.</lvl>
+      <ret>
+        <b>True</b> if the action is called at the page level or field level. Otherwise, <b>False.</b><br/><br/>
+        In addition the calling object's value and variable "GetBarCode" will be filled with the bar code value. This action also
+        stores barcode information such as confidence, coordinates, code name, and size. If the object's barcode settings are set to read more than
+        one barcode, and more than one barcode is found, barcodes are also stored in the variable "GetBarCodeX" where "X" is the index of
+        the barcode found.
+      </ret>
+      <h>
+        Use this action if your page has PDF-417 codes.
+        This action is very similar to the GetBarcode action.
+        The difference is that the barcode type for PDF-417 barcodes will be set automatically.
+        It is not necessary to set the barcode type. If the barcode type is set, it will be ignored.<br/><br/>
+
+        When the barcode is read, the following variables are created on the current DCO object:<br/><br/>
+
+        GetBarCode : The recognized value of the barcode.<br/>
+        CodeName : The barcode type.<br/>
+        Confidence : The barcode confidence.<br/>
+        Height : The height of the barcode in pixels.<br/>
+        Width : The width of the barcode in pixels.<br/>
+        Left : The left coordinate of the barcode in pixels.<br/>
+        Top : The top coordinate of the barcode in pixels.<br/>
+        Position : Four separated values which are the coordinates of the
+        barcode in pixels: left, top, right, bottom.<br/><br/>
+
+        If called on a field object, the barcode value will also be stored in
+        the field's text property.<br/><br/>
+
+        If the barcode data contains nulls, it is possible to enable byte mode.
+        Refer to the top-level help for this action library for more information.<br/><br/>
+        <e>
+          <b>GetPDF2DBarcode()</b><br/>
+          This example reads a PDF-417 barcode on the page.<br/><br/>
+
+          rrSet("1","@X.BarcodeUseByte")<br/>
+          rrSet("~","@X.BarcodeReplacementChar")<br/>
+          <b>GetPDF2DBarcode()</b><br/>
+          This example reads a PDF-417 barcode in byte mode and changes the default null replacement character with a tilde.
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+      <method name="IdentifyOtherPagesByBarcode" qi=": Updates the current page type if a barcode match is found.">
+          <p name="BarcodePageMappings" type="string"/>
+          <p name="LastPageTypeMappings" type="string"/>
+          <p name="MappingsDelimiter" type="string"/>
+          <p name="KeyValueSeparator" type="string"/>
+          <p name="CaseSensitive" type="string"/>
+          <p name="DefaultPageType" type="string"/>
+          <ap>
+              <b>BarcodePageMappings:</b> A delimited list of barcode value-page type mappings that are
+              evaluated to determine whether matching barcodes exist on the current page.<br/><br/>
+
+              <b>LastPageMappings:</b> A delimited list of page types value-page type mappings that are
+              evaluated to determine the page type to assign pages without a barcode match.<br/><br/>
+
+              <b>MappingsDelimiter:</b> (Optional) Delimiter separating mappings.  A single character used to separate
+              multiple barcode and multiple last page mapping groups.  Default: comma (,).  <br/><br/>
+
+              <b>KeyValueSeparator:</b> (Optional) Delimiter used to separate the barcode mappings and last page mappings in an a key value pair.
+              Default: equals sign (=). <br/><br/>
+
+              <b>CaseSensitive:</b> (Optional) True, enforces case sensitivity when evaluating the list of barcodes found on the page.  Default: False.<br/><br/>
+
+              <b>DefaultPageType:</b> The page type to assign when no matches are found.<br/><br/>
+
+              Smart parameters are supported for all parameters.<br/>
+          </ap>
+          <h>
+              This action processes all pages with a type of "Other", looking for barcodes that match the
+              input page type, indicating the start of a document.  If a barcode value is found,
+              this action updates the type of the current page by using the corresponding input mapping.<br/><br/>
+              
+              This action would be used to identify pages when separator sheets, containing a barcode value,
+              are used between each document.  These separator sheets are added during the scan process to
+              signal the start of each document.<br/><br/>
+              
+              For example, if a batch contains a document consists of two a single pages, then
+              the scan sequence would be: separator page, document page, separator page, document page.<br/><br/>
+
+              If the input sequence consists of a 3 page, a 1 page document, and a 2 page document,
+              then the scan sequence would be: separator page, page, page, page, separator page, page,
+              separator page, page, page.<br/><br/>
+              
+              The action does not require a document separator in the batch when each document is a single
+              page, until a multipage document is encountered.  This allows all single page documents to be
+              placed first in the scan job without a separator and the multi-page document at the end,
+              separated with a barcode separator sheet.<br/><br/>
+              
+              For example, if a scan job consists of  3 single page documents and then two - 2 page documents, 
+              the scan job only needs two separator sheets to be added like this:
+              page, page, page, separator, page, page, separator, page, page.  This sequence would create
+              a batch of 5 documents.<br/><br/>
+
+              <b>Mapping Specification</b><br/><br/>
+              
+              The input for parameter BarcodePageMappings must take the following
+              form:<br/>
+              ˂BarcodeValue>˂KeyValueSeparator>˂NewPageType>˂MappingsDelimiter><br/><br/>
+
+              For example: "1234=Main_Page,56789=Trailing_Page"<br/><br/>
+              
+              The LastPageTypeMappings use a similar format as the barcode mappings:<br/>
+
+              ˂LastPageTypeValue>˂KeyValueSeparator>˂NewPageType>˂MappingsDelimiter><br/><br/>
+              
+              If the barcode on the page is "1234", then the current page
+              will be assigned the page type "Main_Page".  If the barcode value
+              is "56789", then the current page will be assigned the type
+              "Trailing_Page". <br/><br/>
+              
+              If a barcode is not found on the page, and if no previous barcodes have been read,
+              then the page will be assigned the type specified in "DefaultPageType".<br/><br/>
+              
+              If a barcode is not found on the page, and a barcode has been read on a previous page,
+              then the LastPageMappings will be used to assign the pagetype.<br/><br/>                           
+
+              If multiple barcode values are found, the first barcode will be used for matching the barcode mapping specification.<br/><br/>
+
+              It is allowed to have multiple key-value pairs that map different
+              barcode or last page type values to the same page type. For example:<br/>
+              123=Invoice,ABC=Invoice,Hello=Invoice,Separator=Separator,Sep=Separator<br/><br/>
+              
+              <e>
+                  rrSet("ENDDOC=Document_Separator|ATTACH=Attachment_Separator","@B.Mapping")<br/>
+                  rrSet("Document_Separator=Main_Page|Attachment_Separator=Attachment|Main_Page=Trailing_Page|Trailing_Page=Trailing_Page|Attachment=Attachment","@B.PageMapping")
+                  rrSet("|","@B.MappingSeparator")<br/>
+                  rrSet("=","@B.KeyValueSeparator")<br/>
+                  rrSet("True","@B.CaseSensitive")<br/>
+                  <b>IdentifyOtherPagesByBarcode("@B.Mapping", "B.PageMapping", "@B.MappingSeparator","@B.KeyValueSeparator","@B.CaseSensitive", "Main_Page")</b><br/><br/>
+
+                  As an illustration, the action uses smart parameters to obtain the values of all parameters, except the last parameter.
+                  Smart parameters allow values to be retrieved from other locations such as DCO locations or the application's settings file.<br/><br/>
+
+                  IdentifyOtherPagesByBarcode evaluates every page within the batch, if the page type is not "Other", then the page
+                  is already assigned a type and will be skipped.<br/><br/>
+                  
+                  For each page, the action will attempt to read a barcode from the page.  If a barcode is found,
+                  it will look to see if the barcode value matches "ENDDOC" or "ATTACH".  If it matches one of those,
+                  then it will assign the page the specified type.<br/><br/>
+                  
+                  If the barcode type does not match, or if a barcode was not read, and if no barcodes have been read within the
+                  batch, then the page is assigned the value in DefaultPageType.<br/><br/>
+
+                  If the barcode type does not match, or if a barcode was not read, and there previously was a barcode
+                  found within the match, then the LastPageTypeMappings will be used to assign the page. If the previously
+                  found page type was "Document_Separator", because a separator page was found, then the current page
+                  will be assigned the type "Main_Page".  If the previous page type was set to "Main_Page", the page will be
+                  assigned "Trailing_Page". If the previous page was set to "Trailing_Page", then the current page will
+                  also be set to "Trailing_Page".<br/><br/>
+              </e>
+          </h>
+          <lvl>Batch level.</lvl>
+          <ret>
+              <b>True.</b>
+          </ret>
+          <see>
+              Refer to the top-level help topic of this action library for more information about using barcodes, including
+              how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+              that have poor scan quality.<br/>
+          </see>
+      </method>      
+      
+
+
+    <method name="IdentifyPageByBarcode" qi=": Updates the current page type if a barcode match is found.">
+      <p name="BarcodePageMappings" type="string"/>
+      <p name="MappingsDelimiter" type="string"/>
+      <p name="KeyValueSeparator" type="string"/>
+      <p name="CaseSensitive" type="string"/>
+      <ap>
+        <b>BarcodePageMappings:</b> A delimited list of barcode value-page type mappings that are
+        evaluated to determine whether matching barcodes exist on the current page.
+        For more information, see the Details section.
+        If any of these mappings are regular expressions, set the batch-level variable BarcodeRegEx to "true".
+        If this variable is not set to true, the regular expressions are not recognized as regular expressions. <br/><br/>
+
+        <b>MappingsDelimiter:</b> (Optional) Delimiter separating mappings.  A single character used to separate
+        multiple barcode value-page type key-value pairs.  Default: comma.  <br/><br/>
+
+        <b>KeyValueSeparator:</b> (Optional) Delimiter used to separate the barcode value and page type in an a key value pair.
+        Default: equals sign (=). <br/><br/>
+
+        <b>CaseSensitive:</b> (Optional) True enforces case sensitivity when evaluating the list of barcodes found on the page.  Default: False.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        This action searches all of the barcodes that are found on the current page for a match from
+        the provided mappings by using the GetBarCodeList variable. If a barcode value is found,
+        this action updates the type of the current page by using the corresponding input mapping.<br/><br/>
+
+        This action assumes that GetAllBarcodes has
+        previously been used to read all of the barcodes on the page.
+        The GetAllBarcodes action is automatically called if the GetBarCodeList variable does not exist.
+        If the GetAllBarcodes action was called earlier with a unique separator,
+        use an identical symbol for the MappingsDelimiter parameter.<br/><br/>
+
+        <b>Mapping Specification</b><br/><br/>
+          
+        The input for parameter BarcodePageMappings must take the following
+        form:<br/>
+        ˂BarcodeValue>˂KeyValueSeparator>˂PageType>˂MappingsDelimiter><br/><br/>
+
+        For example: "1234=Main_Page,56789=Trailing_Page"<br/>
+        If the barcode on the page is "1234", then the current page
+        will be assigned the page type "Main_Page".  If the barcode value
+        is "56789", then the current page will be assigned the type
+        "Trailing_Page". If the barcode on the page is not read or if
+        the value does not match any of the values in the specification
+        then no page type will be assigned and the action will return false.
+        Additional barcodes and page values can be listed, separated by the "MappingsDelimiter" character.<br/><br/>
+
+        If multiple barcode values are found, the page type that is assigned is the first
+        corresponding value from the GetBarCodeList variable.<br/><br/>
+        
+        It is allowed to have multiple key-value pairs that map different
+        barcode values to the same page type. For example:<br/>
+        123=Invoice,ABC=Invoice,Hello=Invoice,Separator=Separator,Sep=Separator<br/><br/>
+        <e>
+          IdentifyByBarcode("Separator=Separator_Page,Attach=Attachment_Page,Main=Main_Page","","","")<br/>
+          This example looks for the barcode values "Separator", "Attachment" and "Main".
+          The default values are used for the separators and case sensitivity.<br/><br/>
+
+          IdentifyByBarcode("Separator=Separator_Page%Attach=Attachment_Page","%","","")<br/>
+          This example looks for barcodes "Separator" and "Attach". The separator % is
+          used to denote each key-value pair.<br/><br/>
+
+          rrSet("Separator|Separator_Page%Attach|Attachment_Page","@B.Mapping")<br/>
+          rrSet("%","@B.MappingSeparator")<br/>
+          rrSet("|","@B.KeyValueSeparator")<br/>
+          rrSet("True","@B.CaseSensitive")<br/>
+          <b>IdentifyByBarcode("@B.Mapping","@B.MappingSeparator","@B.KeyValueSeparator","@B.CaseSensitive")</b><br/>
+          This example changes the default values for the separators and also performs a case sensitive match
+          of the barcode values.  It demonstrates the use of smart parameters. This example is obtaining
+          the input values from batch level variables. In this example the values were set just prior
+          to calling the action. In a real life example, the batch level variables could be set by
+          previous rules or tasks.<br/><br/>
+
+          rrSet("True","@B.BarcodeRegEx)<br/>
+          <b>IdentifyByBarcode("C.A=Invoice,I...=Invoice","","","")</b><br/>
+          This example sets the batch level variable BarcodeRegEx to "True", enabling
+          regular expression matching. A barcode that matches the regular expression "C.A" or "I..."
+          will be assigned the page type "Invoice".<br/><br/>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>True,</b> if a match is found.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+
+    <method name="MatchAnyBarcode" qi=": Searches all the barcodes on the current page and checks if one matches the value you enter as a parameter.">
+      <p name="ExpectedBarcodeValue" type="string"/>
+      <ap>
+        The value of the barcode to match.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Recognizes and evaluates all the barcodes on the current page or current field and checks
+        if one of the barcodes matches the parameter value.
+        If running at field level and the field does not have a zone defined, then recognition will run for the whole page.
+        If a match occurs, the barcode's value is placed into a page level variable called 'GetBarCode'.
+        If running at the field level, the matched value is also stored in the text property.<br/><br/>
+
+        The expected barcode types must be set prior to calling this action. See the top-level help
+        for more information.<br/><br/>
+        <e>
+          <b>MatchAnyBarcode("FAX")</b><br/><br/>
+
+          This example will look for an barcode with the value "FAX"
+          and will return true if one is found.<br/>
+        </e>
+      </h>
+      <lvl>Page level and field level.</lvl>
+      <ret>
+        <b>True</b> if the action is called at the page level or field level and one of the barcode values on the page
+        matches the parameter value (parameter value must not be empty).  Otherwise, <b>False.</b> <br/><br/>
+
+        In addition the calling object's value and variable "GetBarCode" will be filled with the bar code value. This action also
+        stores barcode information such as confidence, coordinates, code name, and size. If the object's barcode settings are set to read more than
+        one barcode, and more than one barcode is found, barcodes are also stored in the variable "GetBarCodeX" where "X" is the index of
+        the barcode found.
+      </ret>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+    <method name="MatchBarcodePrefix" qi=": Searches all the barcodes on the current page and checks if one matches the value you enter as a parameter.">
+      <p name="ExpectedBarcodePrefix" type="string"/>
+      <ap>
+        The value of the barcode to match.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Recognizes and evaluates all the barcodes on the current page or current field
+        and checks if one of the barcodes starts with the parameter value.
+        If running at the field level and the field does not have a zone defined, then recognition will run for the whole page.
+        If a match occurs, the barcode's value is placed into a page level variable called 'GetBarCode'.
+        If running at the field level, the matched value is also stored in the text property.<br/><br/>
+        <e>
+          <b>MatchBarcodePrefix("ATM")</b><br/><br/>
+
+          If one of the barcode matches the prefix provided, the
+          action will return true. "ATM", "ATM123", "ATMPAGE"
+          are all examples of barcode values that will return true.<br/>
+        </e>
+      </h>
+      <lvl>Page level and field level.</lvl>
+      <ret>
+        <b>True</b> if the action is called at the page level or field level and one of the barcode values on the page
+        matches the parameter value (parameter value must not be empty).  Otherwise, <b>False.</b> <br/><br/>
+        In addition the calling object's value and variable "GetBarCode" will be filled with the bar code value. This action also
+        stores barcode information such as confidence, coordinates, code name, and size. If the object's barcode settings are set to read more than
+        one barcode, and more than one barcode is found, barcodes are also stored in the variable "GetBarCodeX" where "X" is the index of
+        the barcode found.
+      </ret>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+    <method name="MatchFirstBarcode" qi=": Tests the first barcode found with the value specified by the parameter.">
+      <p name="ExpectedBarcodeValue" type="string"/>
+      <ap>
+        A value of the barcode to match.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Checks if the current page contains a barcode with the value specified by the parameter.
+        This action uses the first barcode that is successfully read.<br/><br/>
+
+        One possible use of this action is to identify a document's Separator page.
+        The action will return true if the first barcode matches allowing the
+        next action after this action to run.<br/><br/>
+
+        Refer to top-level help in this action library for information regarding barcode configuration in Datacap Studio.
+        <e>
+          <b>MatchFirstBarcode("Separator")</b><br/>
+          SetPageType("Separator")<br/><br/>
+          
+          This example looks for a barcode with the value "Separator". If found, the second action,
+          an ApplicationObjects action, establishes the page as a Separator page.<br/>
+        </e>
+      </h>
+      <lvl>Page level only.</lvl>
+      <ret>
+        <b>True</b> if the first barcode on the page has a value that matches the parameter.
+        Otherwise, <b>False.</b><br/><br/>
+      </ret>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+
+    <method name="SetBarcodeMinimumConfidence" qi=": Changes the default confidence for successful barcode recognition." >
+      <p name="MinimumConfidence" type="string"/>
+      <ap>
+        An integer value representing the minimum confidence required for barcodes read by the engine to be accepted.
+        Valid values are in the range of 1-10. The default value, when this action is not used, is 3.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <lvl>Page or Field level only. Must be set on the object that calls the action to read the barcode.</lvl>
+      <ret>
+        <b>False</b> if the confidence value cannot be set either because it is invalid or an error
+        occurs or if the action is called at a level other than page or field. Otherwise, <b>True </b>
+      </ret>
+      <h>
+        Sets the minimum confidence required for barcodes read by the engine to be accepted.<br/><br/>
+
+        Barcodes are generally reliable, even when the confidence is lower than a
+        typical character recognition. It is suggested that an application be tested with
+        numerous real input pages to determine the lowest confidence that is
+        still providing accurate results.<br/><br/>
+        <e>
+          <b>SetBarcodeMinimumConfidence(5)</b><br/>
+          GetBarcode()<br/><br/>
+
+          This example sets the minimum confidence to 5. Any value in the range of 5-10 will
+          be considered a successful read of the barcode.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top-level help topic of this action library for more information about using barcodes, including
+        how to specify the barcode type and how to enable automatic image enhancements to read barcodes
+        that have poor scan quality.<br/>
+      </see>
+    </method>
+
+
+  </com>
+</rrx>

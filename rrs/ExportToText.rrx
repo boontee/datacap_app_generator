@@ -1,0 +1,1216 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="ExportToText" v="9.1.6">
+  <com ref="Datacap.Libraries.ExportToText.Actions"  qi=" : Creates a plain text data file using application data">
+    <h>
+      The ExportToText action library provides actions that will export field values, DCO variables,
+      batch information and other text to a plain text export file.  The export file can be in a UTF-8 or UTF-16
+      format.<br/><br/>
+
+      The application can control the name of the export file and its location.  If the export file is written
+      to a shared folder, then the export file name should be unique using the batch ID or other identifier that
+      is guaranteed to be unique so one batch does not overwrite the export file from a different batch.<br/><br/>
+
+      Once created, the file can be moved or sent to an external repository using subsequent Datacap actions.
+      Alternatively, the export file can be saved in a directory that will be picked up by an external process.
+      If an external process is picking up the exported file, it is up to the application designer to ensure that
+      the external process does not try to pick up the file prior to it being completely written out to disk.<br/><br/>
+
+      An application can create any number of export files. There can be multiple plain text files created with this
+      action library or other export files can be created in addition to the plain text file created by this action library.<br/><br/>
+
+      The format of the file and the data to include in the file is up to the application designer.  The text can be lines without
+      any specific length, the file can be created as a comma separated file, fixed length data, or any combination of these
+      types.<br/><br/>
+
+      The approach to creating a text file is to first identify the name and location of the file. This information can
+      be provided dynamically at runtime, allowing for a file to be named with the batch ID, date stamp, time stamp, etc.
+      The file information is typically provided on a batch open, but can be provided at any level.<br/><br/>
+
+      Once the file name and location has been provided, the actions can then be called to export data as needed.  Data can be
+      exported from any type of object: batch, document, page or field, but specific actions may only support being called
+      on certain types of objects.<br/><br/>
+
+      A typical operation would be to export data at field level. By using export actions on the page level node to export
+      the field data, or actions on the field level, as the rules engine iterates through each Datacap object within
+      the application, the plain text file can be built, piece by piece. For example, if CSV output is enabled, each field
+      can be output and as each field is placed into the output file, the actions will automatically add commas between
+      each exported field, with an end result of all of the fields in a line of text, separated by commas, or any desired
+      separator character. At the last field, the action StartNewLine can be called to indicate that when the next
+      action is called to write to the file, it will be placed on a new line.  If there are multiple pages being exported
+      into the file, then it will have the result of placing the field data for page 1 on the first line, the field data
+      for page 2 on the next line, the field data for page 3 on the next line, etc. The placement of the actions and the
+      DCO nodes they are attached to will determine the format of the output file.<br/><br/>
+
+      Even if an export action is configured to export a field, the export of that field can be configured
+      to be skipped at runtime based on the value of the DCO variable NOEXPORT or the status of the field.
+      Any fields that have a DCO variable called "NOEXPORT" set to the value of "1" will be
+      excluded from the export file, regardless of the field's status.<br/><br/>
+
+      Once all of the data has been written, then the file needs to be closed with the CloseExportFile action.  This
+      is typically called on the batch level close of the ruleset that performed the open, or could be at the batch level in
+      a subsequent ruleset.  While actions can be split across multiple rulesets, when generating a file,
+      all of the actions called to create the file must be within the same task profile if the data
+      is to be included in the same export file.<br/><br/>
+
+      The following is a simple ruleset to provide an overview of how the export actions can be used
+      within an application.  Assuming that each page has three fields called Field1, Field2 and Field3,
+      this example will first create an export file named based on the current batch id, then export
+      the date at the top of the export file.  The rest of the file will contain three
+      comma separated entries for each page. ExportText("@X") will export the text
+      value for each field.  Once all of the fields of all of the pages are exported, the export
+      file will be closed.<br/><br/>
+
+      BatchOpenRule<br/>
+      - Function<br/>
+      - - SetExportDirectory("@APPPATH(export)")<br/>
+      - - SetExportFileName("@BATCHID+.txt")<br/>
+      - - ExportText("Current Date: +@DATE()")<br/>
+      - - SetCSVMode("On")<br/><br/>
+
+      PageOpenRule<br/>
+      - Function<br/>
+      - - StartNewLine()<br/><br/>
+
+      Field1Rule<br/>
+      - Function<br/>
+      - - ExportText("@X")<br/><br/>
+
+      Field2Rule<br/>
+      - Function<br/>
+      - - ExportText("@X")<br/><br/>
+
+      Field3Rule<br/>
+      - Function<br/>
+      - - ExportText("@X")<br/><br/>
+
+      BatchCloseRule<br/>
+      - Function<br/>
+      - - CloseExportFile()<br/><br/>
+
+      If the fields contained names, the sample output file could look like this:<br/><br/>
+
+      Current Date: 02/10/2025<br/>
+      Mary,Patricia,Linda<br/>
+      Barbara,Elizabeth,Jennifer<br/>
+      Maria,Susan,Margaret<br/><br/><br/>      
+
+
+      It is recommended that the application developer understands how the Datacap object hierarchy, DCO, operates.
+      Information about the DCO can be found in the help for the ApplicationObjects action library.<br/><br/>
+
+      In addition to the data processed within the batch, it is likely desired that other data also be included
+      in the export file such as the batch ID, date, time, job ID, and other environmental information
+      be saved within the export file. These values can be obtained using smart parameter notation
+      as input to actions.  Refer to the smart parameter guide for more information on using these
+      types of parameters.<br/><br/>
+    </h>
+
+    <method name="CloseExportFile" qi="Closes the currently opened export file.">
+      <ap>None.</ap>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <h>
+        Closes the currently opened Export file.
+        Once closed, it would be expected that if further calls are made to export data, that
+        a new file name is provided to the action library usin ghe SetExportFileName action.
+        If a subsequent export action is called to write to the file and the file name
+        has not been changed, the existing file will be overwritten with the new data.<br/><br/>
+
+        This action usually belongs to its own batch level rule.  However, it can be used at any level.<br/><br/>
+        <e>
+          <b>CloseExportFile()</b><br/>
+          In a typical application, this action will be placed on a batch close event, with the SetExportFileName and
+          SetExportDirectory actions called on a batch open event. This action will close the file.
+          <br/>
+        </e>
+      </h>
+      <see>
+        SetExportFileName, SetExportDirectory<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="ExportAllPageFields" qi="Exports all field values on the current page, including values of Line Item Detail sub-fields - with exceptions.">
+      <ap>None.</ap>
+      <h>
+        This action exports all field values of the current page. The value of each field is saved
+        in the export file on the same line.  If CSV mode is enabled, then each field will be separated
+        by the configured separator character.<br/><br/>
+        
+        The action does not
+        export those values of field objects of the Document Hierarchy with:<br/><br/>
+        
+        1. The DCO  variable NOEXPORT with a value of "1".<br/><br/>
+
+        2. If the current status of the field matches the status configured with the action SetIgnoreFieldStatus.<br/><br/>      
+        
+        <e>
+          <b>ExportAllFields()</b><br/>
+          This action must be called on a page level DCO object.  Each of the page's child fields 
+          will have its text value placed into the export file.<br/>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>False</b> if the action is not used at the Page level. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="ExportBlankCSVFields" qi="Inserts blank fields into the Export file, adjacent to the current field.">
+      <p name="Count"/>
+      <ap>
+        <b>Count</b> A number indicating how many blank fields to add to the Export file.
+      </ap>
+      <h>
+        The <b>ExportBlankCSVFields</b> action adds the number of fields you specify. This action
+        only has an effect if CSV mode is enabled.  It will create blank entries within the CSV file.
+        If this action is called on a field object, the text value of the field does not matter as only
+        blank entries will be created in the export file.<br/><br/>
+
+        Note: Make sure you call SetCSVMode, and optionally SetCSVElementSeparator, to set the separator values as
+        desired for your export file.  If neither of these actions are called before
+        this action, no empty fields will be exported because 
+        the default separator is set to no separator.<br/><br/>
+        <e>
+          SetCSVMode("On")<br/>
+          <b>ExportBlankCSVFields("12")</b><br/><br/>
+
+          This example will add 12 blank entries in the CSV file, such as ",,,,,,,,,,,".
+          Additionally, this example shows the action SetCSVMode called directly before the blank fields action.
+          This is for illustration.  As long as the action is run prior to calling ExportBlankCSVFields, on any DCO
+          object, then the mode will be in effect for subsequent actions.<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetSCVMode<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+
+    <method name="ExportCurrentField" qi="Exports the current field value to the Export file.">
+      <ap>None.</ap>
+      <h>
+        Exports the current field value to the Export file.  The exported value will
+        be on the same line as the previous exported value, unless StartNewLine
+        has been called. If CSV mode has been enabled, then the value will be
+        preceded by the current CSV separator value.<br/><br/>
+        <e>
+          <b>ExportCurrentField()</b><br/><br/>
+          
+          This example would be called on a field object. The current text value of the field
+          will be added to the export file.<br/><br/>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        False if there is an error, otherwise <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="ExportFillerCharacters" qi="Adds a string of filler characters to the Export.">      
+      <p name="Count"/>
+      <p name="CharactersToExport"/>
+      <ap>
+        <b>Count</b> A number indicating the total length in characters of the filler.<br/><br/>
+        
+        <b>CharacterToExport:</b> One or more characters to place into the export file.
+        This value can be a single character or multiple characters.  If multiple characters
+        are provided, then the sequence will be repeated based on the provided count.<br/><br/>        
+        
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        Adds a single or multiple filler characters to the export file, repeated by the number of times indicated in the
+        "Count" input parameter.<br/><br/>
+        
+        If called on a field object, the filler string is written to the file regardless of the data in the current field.<br/><br/>
+        <e>
+          <b>ExportFillerCharacters("4",":")</b><br/>          
+          The action in the example fills the current field with 4 instances of the character ":" such as
+          "::::" to the export file.<br/><br/>
+
+          <b>ExportFillerCharacters("4","@B.MyVariable")</b><br/>
+          Similar to the previous example, however this obtains the filler text from
+          the DCO variable called "MyVariable" which is expected to be on the batch level DCO.<br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        <b>False</b> if the first parameter is not numeric or if there is an error.
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="ExportPageField" qi="Exports the specified Field object's value to the Export file.">
+      <p name="FieldToExport"/>
+      <ap>
+        <b>FieldToExport:</b> The name of the child Field object whose value you want to export.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        Exports the specified Field object's value to the Export file. Will only export the
+        first Field if multiple fields of the same field type are found.<br/><br/>
+
+        The text will be exported on the same line as the previously exported text
+        unless StartNewLine was previously called.  If CSV mode is enabled, then the data
+        will be exported with the configured separator character.<br/><br/>
+        <e>
+          <b>ExportFieldValue("Date")</b><br/>
+          <b>ExportFieldValue("Number")</b><br/>
+          <b>ExportFieldValue("Total")</b><br/><br/>
+
+          This sequence exports the current values stored in the Date, Number and Total fields.
+          These fields must be children of the current page.<br/>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not a Field object's name or if an error occurs. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+    
+    <method name="ExportPageFieldFixedLengthLeftJustified" qi="Exports a specified number of characters from a field's left end (left-justified.)">
+      <p name="FieldToExport"/>
+      <p name="FixedLength"/>
+      <ap>        
+        <b>FieldToExport:</b> The field's name to export.  This is the name of the corresponding field object of the Document Hierarchy.
+        the field must be a child object of the current page.<br/><br/>
+        
+        <b>FixedLength:</b> All exported values will be adjusted to this length.<br/><br/>
+        
+        Smart parameters are supported for all parameters.
+      </ap>
+      <h>
+        This action exports the text value of the named field to the export file.  The field
+        must be a child of the current page.  The field will be right justified and adjusted to
+        the length provided.  If the value is longer, it will be truncated.
+        If the field is shorter than the provided length, then
+        the exported value will be padded to the end using the current pad character
+        to make the value the exact length specified.<br/><br/>
+
+        Calling this action will enable left justified, fixed length export for all subsequent
+        export actions.<br/><br/>        
+        <e>
+          <b>ExportPageFieldFixedLengthLeftJustified("Volume","8")</b><br/>
+          This example assumes the current page has a field called "Volume". The text
+          value of that field will be added to the export file and adjusted to be 8 characters
+          long.  If the text is shorter than 8 characters, it will be padded using the current
+          fill character.<br/>
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>False</b> if either parameter is invalid or if the action is called at the wrong level.
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        ExportPageFieldFixedLengthRightJustified, SetFillCharacter<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="ExportPageFieldFixedLengthRightJustified" qi="Exports a specified number of characters from a field's right end (right-justified.)">
+      <p name="FieldToExport"/>
+      <p name="FixedLength"/>
+      <ap>
+        <b>FieldToExport:</b> The field's name to export.  This is the name of the corresponding field object of the Document Hierarchy.
+        the field must be a child object of the current page.<br/><br/>
+
+        <b>FixedLength:</b> All exported values will be adjusted to this length.<br/><br/>
+
+        Smart parameters are supported for all parameters.
+      </ap>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>False</b> if either parameter is invalid or if the action is called at the wrong level.
+        Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        This action exports the text value of the named field to the export file.  The field
+        must be a child of the current page.  The field will be right justified and adjusted to
+        the length provided.  If the value is longer, it will be truncated.        
+        If the field is shorter than the provided length, then
+        the exported value will be padded from the front using the current pad character
+        to make the value the exact length specified.<br/><br/>        
+
+        Calling this action will enable right justified, fixed length export for all subsequent
+        export actions.<br/><br/>
+        <e>
+          <b>ExportPageFieldFixedLengthRightJustified("Volume","8")</b><br/>
+          This example assumes the current page has a field called "Volume". The text
+          value of that field will be added to the export file and adjusted to be 8 characters
+          long.  If the text is shorter than 8 characters, it will be padded using the current
+          fill character.<br/>
+        </e>
+      </h>
+      <see>        
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="ExportText" qi="Exports a value to the Export file.">
+      <p name="Text"/>
+      <ap>
+        <b>Text:</b> The value to export.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        The provided text will be exported to the export file.  It will be added to the same
+        line as the previous exported value unless the action StartNewLine has first
+        been called.  If CSV mode or left / right justification has been enabled,
+        then this value will also be adjusted based on the settings prior to writing
+        to the text file.<br/><br/>
+        
+        Smart parameters are supported, providing a wide range of additional values
+        and locations from which data can be obtained for writing to the export file.<br/><br/>
+
+        This action is similar to the action ExportTextNotJustified, the difference is
+        that this action will respect the current left or right justification
+        mode, if it is enabled.<br/><br/>
+
+        <e>        
+          <b>ExportText("Hello There")</b><br/>
+          This example will write the text "Hello There" to the export file.  The value will
+          be exported as CSV if the CSV mode is enabled. The value will also be adjusted
+          to be left or right justified, if justification mode has been enabled.<br/><br/>
+          
+          <b>ExportText("@DATE")</b><br/>
+          This example uses a smart parameter to place the current date into the
+          export file.<br/><br/>
+
+          <b>ExportText("@BATCHID")</b><br/>
+          This example uses a smart parameter to place the current batch ID into the
+          export file.<br/><br/>
+
+          <b>ExportText("Current Operator: +@OPERATOR")</b><br/>
+          If the ID of the current operator is "Tom", then this will output the
+          text "Current Operator: Tom" in the export file.<br/><br/>
+
+          <b>ExportText("@P\MyField.MyVariable"</b><br/>
+          Assuming this is called on a page or field DCO, the smart parameter will navigate from the page
+          to the field called "MyField", obtain the value of the variable "MyVariable"
+          and write that value to the export file.<br/><br/>
+
+          <b>ExportText("@P\MyField")</b><br/>
+          This example is similar to the previous example, but it will instead
+          obtain the text value of the field "MyField" and save it in the export file.<br/><br/>
+
+          <b>ExportTExt("@PILOT(BATCHDIR)")</b><br/><br/>
+          This example will place the path to the current batch into the exported file.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        NotJustified, SetSCVMode, SetCSVElementSeparator<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+
+    <method name="ExportTextNotJustified" qi="Exports an evaluated smart parameter value to the Export file.">
+      <p name="Text"/>
+      <ap>
+        <b>Text:</b> The value to export.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        The provided text will be exported to the export file.  It will be added to the same
+        line as the previous exported value unless the action StartNewLine has first
+        been called.  If CSV mode or left / right justification has been enabled,
+        it will have no effect on the output value.<br/><br/>
+
+        Smart parameters are supported, providing a wide range of additional values
+        and locations from which data can be obtained for writing to the export file.<br/><br/>
+
+        This action is similar to the action ExportText, the difference is
+        that this action will not justify the output value even if
+        the left or right justification
+        mode is enabled.<br/><br/>
+
+        <e>
+          <b>ExportTextNotJustified("Hello There")</b><br/>
+          This example will write the text "Hello There" to the export file.  The value will
+          be exported as CSV if the CSV mode is enabled. The value will also be adjusted
+          to be left or right justified, if justification mode has been enabled.<br/><br/>
+
+          <b>ExportTextNotJustified("@DATE")</b><br/>
+          This example uses a smart parameter to place the current date into the
+          export file.<br/><br/>
+
+          <b>ExportTextNotJustified("@BATCHID")</b><br/>
+          This example uses a smart parameter to place the current batch ID into the
+          export file.<br/><br/>
+
+          <b>ExportTextNotJustified("Current Operator: +@OPERATOR")</b><br/>
+          If the ID of the current operator is "Tom", then this will output the
+          text "Current Operator: Tom" in the export file.<br/><br/>
+
+          <b>ExportTextNotJustified("@P\MyField.MyVariable"</b><br/>
+          Assuming this is called on a page or field DCO, the smart parameter will navigate from the page
+          to the field called "MyField", obtain the value of the variable "MyVariable"
+          and write that value to the export file.<br/><br/>
+
+          <b>ExportTextNotJustified("@P\MyField")</b><br/>
+          This example is similar to the previous example, but it will instead
+          obtain the text value of the field "MyField" and save it in the export file.<br/><br/>
+
+          <b>ExportTExtNotJustified("@PILOT(BATCHDIR)")</b><br/><br/>
+          This example will place the path to the current batch into the exported file.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        ExportText<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+
+    <method name="LineItemAddElement" qi="Includes the specified Line Item Field object as an element of a Line Item Array. ">
+      <p name="FieldName"/>
+      <ap>
+        <b>FieldName:</b> The name of the child field object of the Document Hierarchy to export.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action is used for exporting Line Item values.
+        This action includes the specified Line Item field object as an element of a Line Item Array.<br/><br/>
+
+        The elements added to the line item elements are either names of fields to export, blank
+        export entries, or smart parameters that will be evaluated.
+        When LineItemExportElements is called, it will process each of the line item "elements" that have
+        been added. The items added by LineItemAddElement are names of line item fields that will be exported.<br/><br/>
+
+        A Line Item Array accumulates and organizes captured line item values retrieved from the Data
+        file of a particular page.<br/><br/>
+
+        <b>Note:</b> A rule using this action should be applied to the <i>LINEITEM</i> fields
+        of the Document Hierarchy.<br/><br/>        
+        <e>
+          <b>LineItemAddElement("Price")</b><br/>
+          LineItemExportElements()<br/><br/>
+
+          The action above expands the Line Item Array by one field: Price.<br/><br/>
+
+          LineItemExportElements will populate this element and other elements
+          of the array with the captured values it finds in a page's Data file before exporting them.
+        </e>
+      </h>
+      <lvl>
+        The parent field that contains the child Line Item field.
+      </lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        LineItemExportElements,  LineItemClearElements, LineItemAddBlankFields<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="LineItemAddBlankFields" qi="Includes the specified number of blank fields as elements of a Line Item Array. ">
+      <p name="Count"/>
+      <ap>
+        <b>Count:</b> The number of Blank CSV field values to export as part of the Line Item Array.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action includes the specified number of Blank Line Item fields as elements
+        of a Line Item Array.<br/><br/>
+
+        A Line Item Array accumulates and organizes captured line item values retrieved
+        from the Data file of a particular page.  This action will add "blank" values
+        to the collection that will be exported when LineItemExportElements is called.<br/><br/>
+
+        <b>Note:</b> A rule using this action must be applied to the <i>LINEITEM</i> fields of the Document Hierarchy.<br/><br/>
+
+        This action is used for exporting Blank Line Item values.
+        <e>
+          <b>LineItemAddBlankFields("6")</b><br/><br/>
+
+          The action above expands the Line Item Array by six blank fields<br/><br/>
+
+          LineItemExportElements will populate this element and other elements
+          of the array with the captured values it finds in a page's Data file before exporting them.
+        </e>
+      </h>
+      <lvl>
+        The parent field that contains the child Line Item field.
+      </lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        LineItemExportElements, LineItemClearElements,LineItemAddElements, LineItemAddSmartParameter<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="LineItemAddSmartParameter" qi="Add a smart parameter algorithm as an element of a Line Item Array. ">
+      <p name="SmartParameter"/>
+      <ap>
+        <b>SmartParameter:</b> Smart Parameter to be evaluated during processing of the Lineitem array.
+      </ap>
+      <h>
+        This action permits adding a smart parameter as an element of a Line Item Array to be evaluated
+        during the Array processing.<br/><br/>
+
+        A Line Item Array accumulates and organizes captured line item values retrieved
+        from the Data file of a particular page.<br/><br/>
+        
+        The elements added to the line item elements are either names of line item 
+        fields to export, blank export entries, or
+        smart parameters that will be evaluated.
+        When LineItemExportElements is called, it will process each of the line item "elements" that have
+        been added. The "Smart Parameter" elements that have been added will be evaluated as the elements
+        are processed.
+
+        <b>Important!</b> A rule using this action must be applied to the <i>LINEITEM</i> fields of the Document Hierarchy.<br/><br/>        
+        <e>
+          <b>LineItemAddSmartParameter("@F\Price+@TIME(HH:MM:SS)")</b><br/>
+          LineItemExportElements()<br/><br/>
+
+          The action above places a child field Price of the calling field node (@F)
+          appended with the current time in format HH:MM:SS to the export file. <br/><br/>
+
+          LineItemExportElements will populate this element and other elements
+          of the array with the captured values it finds in a page's Data file before exporting them.
+        </e>
+      </h>
+      <lvl>
+        The parent field that contains the child Line Item field.
+      </lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        LineItemExportElements, LineItemClearElements, LineItemAddElements, LineItemAddBlankFields<br/>
+        Refer to the top level help for general information about using this action library.<br/>
+        Refer to the smart parameter guide for more information on available smart parameters.
+      </see>
+    </method>
+
+
+    <method name="LineItemClearElements" qi="Clears values in the Line Item Array.">
+      <ap>None</ap>
+      <h>
+        This is mainly a housekeeping function you can use to be sure the array does not contain leftover values.
+        <e>
+          <b>LineItemClearElements()</b><br/>
+          This example will clear out any previously set line item elements for export.
+        </e>
+      </h>
+      <lvl>
+        The parent Field object of the Document Hierarchy that contains a child
+        Line Item field, such as you may typically find in an invoice application.
+      </lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        LineItemAddElement, LineItemAddExportElements, LineItemAddBlankFields, LineItemAddSmartParameter<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+    
+
+    <method name="LineItemExportElements" qi="Exports the captured values in a page's Line Item Array that have been populated with LineItemAddElement actions.">
+      <ap>None.</ap>
+      <lvl>
+        The parent field that contains the child Line Item sub-fields.
+      </lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <h>
+        Exports the captured values in a page's Line Item Array that have been populated
+        with LineItemAddElement actions.
+        <e>
+          LineItemAddElement("Price")<br/>
+          LineItemAddElement("LineTotal")<br/>
+          <b>LineItemExportElements()</b><br/>
+          StartNewLine()<br/><br/>
+
+          This example exports the values included in the Line Item Array to your Export file.
+        </e>
+      </h>
+      <see>
+        LineItemClearElements, LineItemAddElement, LineItemAddBlankFields, LineItemAddSmartParameter<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+    
+    
+    <method name="ResetFieldExportSettings" qi="Resets the variables of the bound Field object of the Document Hierarchy.">
+      <ap>None.</ap>
+      <h>
+        This action resets some of the export settings that can be independently set by other actions.
+        It is provided as a quick way to reset custom export settings.<br/><br/>
+        
+        + The default field fill character is reset to a space.<br/>
+        + Field justification is reset to left and turned off.<br/>
+        + Fields are no longer set to a specific length.<br/>
+        + The ignore field status is reset to not ignore any fields based on the status.<br/>
+        
+        <e>
+          <b>ResetFieldExportSettings()</b><br/>
+          This action can be called on any level and resets the values mentioned. Alternatively,
+          the user could have instead called the individual actions to turn off the features.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetFixedLength, SetJustifiedExportMode, SetFillCharacter and SetIgnoreFieldStatus<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+    
+    <method name="SaveExportFilePathAsVariable" qi="Saves the path and name of your Export file to the variable specified by the parameter. ">
+      <p name="VariableName"/>
+      <ap>
+        <b>VariableName:</b> The name of the variable name to store the full name and path of the export file.
+        If the variable does not exist, it will be created.<br/>
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        Saves the path and name of your Export file to the variable specified by the parameter.  If the
+        variable does not exist, it will be created.  The value will be placed into the current DCO
+        object and can be accessed by subsequent actions in the same rule, in a following rule or
+        in a following task. Unless it is specifically cleared, this value will exist for
+        the life of the batch.<br/><br/>
+        <e>
+          <b>SaveExportFilePathAsVariable("Export_File")</b><br/>
+          ExportText(@X.Export_File")<br/><br/>
+
+          This example saves the path of the export file in the variable "Export_File".
+          The subsequent action ExportText then writes the value to the export file. This use
+          is just an example and the value could be used where ever required in a subsequent action
+          and is easily accessed using smart parameters as shown.<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="SetCSVElementSeparator" qi="Ensures that all exported values are delimited by a separator designated as the parameter.">
+      <p name="CustomSeparator"/>
+      <ap>
+        <b>CustomSeparator:</b> Uses the provided custom character as the separator between fields when
+        CSV output is enabled.<br/><br/>       
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Ensures that all exported values are delimited by a separator designated as the parameter.<br/><br/>
+        
+        If you wish to set your own custom separator, SetCSVMode("Custom") must be called prior to exporting fields.
+        If SetCSVMode("Custom") is not called, then your custom element separator will not be used for export.<br/><br/>
+        <e>
+          SetCSVMode("Custom")<br/>
+          <b>SetCSVElementSeparator("|")</b><br/>
+          This action enables CSV output using a custom separator and 
+          uses "|" to delimit the Export file's values.<br/><br/>
+
+          <b>SetCSVMode("Off")</b><br/>
+          This example turns off the addition of the separator when values are
+          written in the export file.<br/><br/>
+
+          <b>SetCSVElementSeparator(" ")</b><br/>
+          This example sets the separator to a space.<br/><br/>
+
+          <b>SetCSVElementSeparator("@CHR(32)")</b><br/>
+          This is an alternate example of setting the separator value
+          to a space using smart parameter notation for a space.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetCSVMode<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+    
+    <method name="SetCSVMode" qi="Formats exported values to be delimited by a comma separator.">
+      <p name="CSVMode"/>
+      <ap>
+        <b>CSVMode:</b> must be one of these values:<br/><br/>
+        
+        <b>ON:</b> Enables CSV formatted output using a comma separator.<br/>
+        <b>CUSTOM:</b> Uses a custom separator, as set by SetElementSeparator(), between output fields.<br/>
+        <b>OFF:</b> Causes no separator to be placed between output fields.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Ensures that all exported values are delimited by a comma separator or by
+        a custom separator. This output mode can be used to create a Comma Separated
+        Variable, CSV, output file which is a standard way of creating rows and columns
+        of data within a plain text file.<br/><br/>
+        <e>
+          <b>SetCSVMode("On")</b><br/>
+          ExportFieldValue("Date")<br/>
+          ExportFieldValue("Number")<br/>
+          ExportFieldValue("Total")<br/>
+          <b>SetCSVMode("Off")</b><br/><br/>
+
+          This sequence will export the captured values of the Date, Number, and Total Field
+          objects into your Export file.  A comma will be added after each value to separate the fields.
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetElementSeparator<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+    
+    
+    <method name="SetExportDirectory" qi="Specifies the path to the Export file's location. Alternatively, you can use a Smart Parameter to identify a Paths.ini file that has a set of path parameters for your application - see the Parameters and Details sections below.">
+      <p name="ExportDirectoryPath"/>
+      <ap>
+        <b>ExportDirectoryPath:</b> The complete path to the application's Export folder.<br/><br/>
+        
+        Smart parameters are supported.<br/>
+      </ap>
+      <lvl>All</lvl>
+      <ret>
+        <b>True</b> if the path specified by the parameter exists or can be created. Otherwise, <b>False.</b>
+      </ret>
+      <h>
+        The action's parameter specifies the path to the Export file's location.
+        If the directory does not exist, the action will create the folder.<br/><br/>
+        
+        If it is expected that the action will create the directory, 
+        the rights of the user ID running the rules must have the access to create
+        the directory.  If running with Rulerunner, then it would be the ID for the
+        Rulerunner service.  If it is a client running rules, then the ID running the
+        client must have access.<br/><br/>
+
+        For this action to take effect, it must be called prior to the first action that writes a
+        value to the export file. <br/><br/>
+        <e>
+          SetExportFileName("Export_+@BATCHID+.txt")<br/>
+          <b>SetExportDirectory("c:\ParentDirectory\Invoice\Export")</b><br/>
+          This example uses a hard coded path to specify the output directory.<br/><br/>
+
+          SetExportFileName("Export_+@BATCHID+.txt")<br/>
+          <b>SetExportDirectory("@APPPATH(export)")</b><br/>
+          In the second example, a smart parameter is used to obtain the location of the Export Directory from the
+          value configured in the Application Manager.  The benefit of this approach is that the
+          path is stored in a central location. If the application should be moved, such as from
+          a test environment to production, then only the path in the application manager
+          needs to be updated to provide the correct path.  The application rules do not need to change.<br/><br/>
+
+          <b>SetExportDirectory("@APPPATH(export)+\+@BATCHID")</b><br/>
+          This example expands on the the above by adding a unique subdirectory
+          named with the ID the current batch.<br/><br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="SetExportFileEncoding">
+      <p name="Encoding"/>
+      <ap>
+        <b>Encoding:</b> The encoding to use for the exported text file. 
+        The values can be "UTF8" or "UTF16".
+        <br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Determines if the Export file is created with UTF-8 or UTF-16 encoding.
+        If this action is not called, then the default value is UTF-8.
+        If this action is called with an in valid parameter, then the format will default to UTF-8.<br/><br/>
+
+        For this action to take effect, it must be called prior to the first action that writes a
+        value to the export file. It is recommended to call this action immediately before or immediately
+        after setting the export file name and path.<br/><br/>        
+        <e>
+          <b>SetExportFileEncoding("UTF8")</b><br/>
+          SetExportFileName("Export_+@BATCHID+.txt")<br/>
+          SetExportDirectory("@APPPATH(export)")<br/>
+          ExportAllFields()<br/><br/>
+
+          This example will create files in UTF-8 format.<br/><br/>
+
+          <b>SetExportFileEncoding("UTF16")</b><br/>
+          SetExportFileName("Export_+@BATCHID+.txt")<br/>
+          SetExportDirectory("@APPPATH(export)")<br/>
+          ExportAllFields()<br/><br/>
+
+          This example will create the file in UTF-16 format.<br/><br/>
+        </e>
+      </h>
+      <lvl>Any.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetExportFileName, SetExportDirectory<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    <method name="SetExportFileName" qi="Assigns a name to the current Export file.">
+      <p name="ExportFileName"/>
+      <ap>
+        <b>ExportFileName:</b> The name and extension of the file to create and fill with the exported data.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Assigns a name to the current Export file.  For this action to take effect, it must be called prior to the first action that writes a
+        value to the export file. <br/><br/>
+
+        If the file already exists, the file will be overwritten.<br/><br/>
+
+        Once created, the file can be moved or sent to an external repository using subsequent Datacap actions.
+        Alternatively, the export file can be saved in a directory that will be picked up by an external process.
+        If an external process is picking up the exported file, it is up to the application designer to ensure that
+        the external process does not try to pick up the file prior to it being completely written out to disk.<br/><br/>
+        <e>
+          SetExportDirectory("@APPPATH(export)")<br/>
+          <b>SetExportFileName("Export_+@BATCHID+.txt")</b><br/><br/>
+
+          This sequence establishes a series of Export files with names such as<br/>
+          Export_20021231.001.txt<br/>
+          Export_20021231.002.txt<br/><br/>
+
+          SetExportDirectory("@APPPATH(export)")<br/>
+          <b>SetExportFileName("@BATCHID+.txt")</b><br/><br/>
+          
+          This example will establish a series of Export files with Batch IDs as the name:<br/>
+          20021231.001.txt<br/>
+          20021231.002.txt<br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetExportDirectory<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+
+    <method name="SetFillCharacter" qi="Sets the filler character to be used to expand the current value of a field in the export file.">
+      <p name="FixedLengthFillCharacter"/>
+      <ap>
+        <b>FixedLengthFillCharacter:</b> A single character to be used as the filler value to adjust a value's length.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False</b> if more than one character is entered as a parameter or if an error occurs. Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        Sets the filler character to be used to expand the current value of a field to the length
+        specified by the action SetFieldLength.
+        If the field value is longer than this length, it will be truncated to this length.<br/><br/>
+
+        When using SetFillCharacter, the action SetFixedLength, ExportPageFieldFixedLengthLeftJustified 
+        or ExportPageFieldFixedLengthRightJustified must also
+        be used to set the maximum length of the field.  
+        Use ResetFieldExportSettings to clear this setting.<br/><br/>
+        <e>
+          SetFixedLength("10")<br/>
+          <b>SetFillCharacter("$")</b><br/><br/>
+          
+          This example sets the fill character to a $.  If the exported text is "Hello", then
+          the value will be written to the export file as "Hello$$$$$"<br/><br/>
+
+          SetFixedLength("10")<br/>
+          SetJustifiedExportMode("R")<br/>
+          <b>SetFillCharacter(" ")</b><br/><br/>
+
+          This example uses blank spaces to pad the exported text. The padding has been set to
+          right justified.  If the exported text is "Hello", the exported
+          text will be preceded by 5 spaces as in "     Hello".<br/><br/>
+
+          SetFixedLength("10")<br/>
+          SetJustifiedExportMode("R")<br/>
+          <b>SetFillCharacter("@CHR(32)")</b><br/><br/>
+          
+          This is an example similar to the previous example, but uses smart parameter
+          notation to set the value to a space.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+
+    <method name="SetFixedLength" qi="Uses the Numeric value you enter as a parameter to establish a fixed length of a value exported from the current field.">
+      <p name="RequiredTextLength"/>
+      <ap>
+        <b>RequiredTextLength:</b> The required length of exported field data.  All data will be padded or truncated
+        to this length.  If set to 0, then the length of text will not be adjusted.<br/><br/>
+        
+        Smart parameters are supported.<br/>
+      </ap>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not an integer or if there is an error. Otherwise, <b>True.</b>
+      </ret>
+      <h>
+        Uses the numeric value you enter as a parameter to establish a fixed length of a value exported from the current field.
+        When this value is set, subsequent export actions will have their output values adjusted to be exactly the
+        length specified by this action.<br/><br/>
+        
+        Any following actions are not required to be in the same rule as the rule that calls this action. However,
+        the actions must be in the same task profile as the rule that called this action.<br/><br/>
+        
+        Use ResetFieldExportSettings to clear this setting or set the value to 0.<br/><br/>
+        <e>          
+          SetFixedLength("10")<br/>
+          <b>SetFillCharacter("$")</b><br/>
+          ExportText("Hello")<br/><br/>
+
+          This example sets the fill character to a $.  If the exported text is "Hello", then
+          the value will be written to the export file as "Hello$$$$$". It is not necessary
+          to call this action on every object that calls an export action.  The length
+          specification will stay in effect until the task profile is complete or
+          until the action is called again with a new value.<br/><br/>
+
+          SetFixedLength("10")<br/>
+          SetJustifiedExportMode("R")<br/>
+          <b>SetFillCharacter(" ")</b><br/>
+          ExportText("Hello")<br/><br/>
+
+          This example uses blank spaces to pad the exported text. The padding has been set to
+          right justified.  If the exported text is "Hello", the exported
+          text will be preceded by 5 spaces as in "     Hello".<br/><br/>
+        </e>
+      </h>
+      <see>
+        ResetFieldExportSettings<br/>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    
+    <method name="SetIgnoreFieldStatus" qi="Any field with this status will not be included in the export file.">
+      <p name="StatusToIgnore"/>
+      <ap>
+        <b>StatusToIgnore:</b> An integer that represents the status of fields to be "ignored" by Export tasks so the value it contains will not be exported.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action establishes the status that determines if an Export task will
+        export a field's value.  If the status of the field being exported matches this set value,
+        the field's value will not be exported.<br/><br/>
+
+        Any following export actions are not required to be in the same rule as the rule that calls this action. However,
+        the actions must be in the same task profile as the rule that called this action.<br/><br/>
+        
+        Use ResetFieldExportSettings to clear this setting.<br/><br/>
+        
+        Any fields that have a DCO variable called "NOEXPORT" set to the value of "1" will also be
+        excluded from the export file, regardless of the field's status.<br/><br/>
+        <e>
+          <b>SetIgnoreFieldStatus("1")</b><br/>
+          ExportCurrentField()<br/><br/>
+          
+          This example ensures that runtime values for fields with a "1" status will not
+          be added to an Export file or update an Export database. (Typically, "1" denotes a problem field.)
+          This example assumes it is running on a field level object. If the status of the field
+          is "1", then the field's value will not be exported. For illustration, the example shows
+          SetIgnoreFieldStatus as being called in the same ruleset as the ExportCurrentField action.
+          As long as SetIgnoreFieldStatus was called prior to the export for this field, the setting
+          will be in effect.<br/>
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not numeric or if there is an error. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.<br/>
+        For more information about the DCO "STATUS" variable, refer to the help in the ApplicationObjects
+        action library.
+      </see>
+    </method>
+
+    <method name="SetJustifiedExportMode" qi="Right-justifies or left-justifies exported values.">
+      <p name="JustifyMode"/>
+      <ap>
+        <b>JustifyMode:</b> An upper case R (right-justified) or L (left-justified) to indicate that exported
+        field values should be left justified or right justified.<br/><br/>
+        
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        Right-justifies or left-justifies a field's exported values according to the parameter you enter.
+        For this setting to take affect, the action SetFixedLength must also be used to 
+        set the maximum length of the field.  Left justification will add characters to the end
+        of the exported text to extend it to the full length.  Right justification will add characters
+        to the start of the exported text to extend it to the full length.
+        If SetFixedLength is set to 0, then left and right
+        justification is disabled.<br/><br/>
+
+        Any following export actions are not required to be in the same rule as the rule that calls this action. However,
+        the actions must be in the same task profile as the rule that called this action.<br/><br/>
+
+        Use ResetFieldExportSettings to clear this setting.  If this action is not called, then it defaults to
+        left-justified.<br/><br/>        
+        <e>
+          SetFixedLength("10")<br/>
+          <b>SetJustifiedExportMode("R")</b><br/><br/>
+          
+          This sequence configures the export actions so that any exported text is set to 10 characters long.
+          If the exported text is less than 10 characters, then it will be padded to be 10 characters long
+          and because the justification is set to "Right", then padding characters will be added
+          to the front of the text.
+        </e>
+      </h>
+      <lvl>Any level.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not an "R" or "L", or if an error occurs. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+
+    <method name="SetOMRSeparator" qi="For multi-punch OMR fields, uses the parameter's value as the separator character.">
+      <p name="Separator"/>
+      <ap>The separator character you want to use.</ap>
+      <h>
+        For multi-punch optical mark recognition, OMR, fields, uses the parameter's value as the separator character.  When
+        multi-punch fields are exported, you typically do not want to use the same separator
+        that you are using for CSV separators as OMR values are all within a single field.  This
+        action allows you to specify a custom separator to be used when exporting OMR values.  If this
+        action is not called, the default value is a space.<br/><br/>
+
+        Any following export actions are not required to be in the same rule as the rule that calls this action. However,
+        the actions must be in the same task profile as the rule that called this action.<br/><br/>
+        <e>
+          <b>SetOMRSeparator(";")</b><br/><br/>
+          
+          This example sets the value separator to a semicolon.<br/><br/>
+        </e>
+      </h>
+      <lvl>All levels.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+    
+
+    <method name="StartNewLine" qi="Starts a new line in your Export file.">
+      <ap>None.</ap>
+      <lvl>Any level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <h>
+        Starts a new line in your Export file. Each call to an export action, such as ExportText or ExportCurrentValue,
+        will output the value on the same line as the previous value exported.  Call StartNewLine
+        to start a new output line in the export file.<br/><br/>
+
+        Depending on the application needs, it may make sense to call this action just before the first value
+        to be placed on a new line, or after the last value written to a line.<br/><br/>
+        <e>
+          <b>StartNewLine()</b><br/>
+          ExportText("Export Output")<br/><br/>
+
+          This sequence starts a new line and adds the text "Export Output" to the beginning of the line.<br/>
+        </e>
+      </h>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+
+    
+    <method name="WriteBlankLines" qi="Inserts blank lines into the Export file.">
+      <p name="LineCount"/>
+      <ap>
+        <b>LineCount:</b> A positive integer indicating how many blank lines to add below the current line in the export file.<br/><br/>
+        
+        Smart parameters are supported.
+      </ap>
+      <h>
+        Inserts <b>n</b> blank lines into the Export file.
+        <e>
+          <b>BlankLines("4")</b><br/><br/>
+
+          This action inserts four empty lines, leaving the insertion point for the next output on
+          the following line. Additional output will begin on the fifth line.<br/><br/>
+          
+          <b>BlankLines("@B.LinesToAdd")</b><br/><br/>
+
+          This example uses the value of the batch variable "LinesToAdd" to determine how
+          many lines to add to the file.  It is assumed that a previous action has
+          created this batch level variable with the proper value or that the variable
+          had been created in the Setup DCO in Datacap Studio and set with the number
+          of lines to export.<br/>
+        </e>
+      </h>
+      <lvl>All level.</lvl>
+      <ret>
+        <b>False,</b> if the parameter is not an integer or if an error occurs. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top level help for general information about using this action library.
+      </see>
+    </method>
+    
+  </com>
+</rrx>

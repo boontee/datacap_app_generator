@@ -1,0 +1,3466 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="RuleRunnerLogic" v="9.1.10.11">
+  <com ref="Datacap.Libraries.RuleRunnerLogic.Actions"  qi=": Actions that help control application logic within rulesets">
+    <!-- Example action declaration -->
+    <h>
+      The RuleRunnerLogic action library consists of actions that help control the logic flow
+      of application rules, actions that move data from object to object and
+      other batch utility features.  These actions
+      are fundamental actions and every Datacap application is going to use one or
+      more of these actions in the application's rules.<br/><br/>
+
+      Do not confuse this action library with the RuleRunner process itself.  The RuleRunner process
+      is a background process that runs Datacap application rules.
+      Those rules can contain actions from
+      the RuleRunnerLogic action library, but it does not mean they are exclusively for
+      the RuleRunner process.  Rules can be run by several different Datacap clients
+      such as DCDesktop, FastDoc, Datacap Studio and any other mechanism that runs
+      rules within Datacap.  The RuleRunnerLogic actions can be used with any
+      Datacap process that runs rules and they can be used in any application.<br/><br/>
+
+      <b>⟸ ♕ Datacap Ruleset Overview ♕ ⟹</b><br/><br/>
+
+      The Datacap engine performs the steps laid out by the workflow, tasks and rules of
+      an application.  The following are descriptions of these components.<br/><br/>
+
+      Ruleset: A ruleset is a collection of rules. A single application can contain many rulesets.
+      A ruleset can contain one or more rules. A ruleset is assigned to one or more Task Profiles.<br/><br/>
+
+      Rule: A rule is a set of functions that
+      are associated with one or more DCO objects. (Refer to the ApplicationObjects
+      top-level help for information about the Datacap DCO hierarchy.)  A Rule
+      can contain one or more functions.<br/><br/>
+
+      Function: A function can contain one or more actions. Each action will run
+      one after the other as long as the action returns true.  If the last action
+      in a function returns true, then the rule finishes and no additional actions
+      are run in the rule.  The ruleset will be considered to have a
+      successful status.  If any action in a ruleset returns false, then
+      no further actions in that function will run.  Control will move to the
+      next function in the ruleset and the actions in the next function
+      will begin executing.  If an action returns false and there are no additional
+      functions, then the rule will stop and be considered a failed ruleset.<br/><br/>
+
+      The following shows a generic layout of a ruleset as seen in Datacap Studio:<br/><br/>
+
+      Ruleset<br/>
+      - Rule<br/>
+      - - Function<br/>
+      - - - Action<br/>
+      - - - Action<br/>
+      - - Function<br/>
+      - - - Action<br/>
+      - - Function<br/>
+      - - - Action<br/>
+      - - - Action<br/>
+      - Rule<br/>
+      - - Function<br/>
+      - - - Action<br/>
+      - - - Action<br/>
+      - - - Action<br/>
+      - - Function<br/>
+      - - - Action<br/>
+      - - Function<br/>
+      - - - Action<br/><br/>
+
+      The text appearing in the Ruleset, Rule and Function nodes can be
+      anything that an application developer wants.  Often it helps to make
+      the nodes descriptive, making the intent of the rule or function clear
+      to anyone looking at the ruleset.  Meaningful information will make it
+      easier when revisiting an application at a later time.
+      For example, a rule could be named "Other Rule" to indicate that these are
+      the actions that will be run on the page type "Other".  Likewise,
+      "Invoice Page" could be the name of a rule that is attached to a page type
+      of "Invoice". Using meaningful text in Datacap Studio for the names of
+      the Ruleset, Rule and Function tree nodes will make it easier to understand
+      the logic of the application and to make changes at a later time.<br/><br/>
+
+      The orders of the rulesets and rules are changeable.  Changing the order of
+      a Ruleset or Rule will not change when the object is run. The order of execution is dependent
+      on the task profile configuration and the objects that exist at runtime.
+      Organizing Rulesets and Rules so they appear in execution order within Datacap Studio is recommended
+      as it will make it easier to understand the rule logic and easier to  
+      debug an application.<br/><br/>
+
+      The order of the Functions is very important.  The first function in a rule
+      is always run first.  The second function will be run only if one of the actions
+      in the first rule returns false.  The third function in a rule will only be run if
+      one of the actions in the second function returns false, and so on.<br/><br/>
+
+      The following is an example ruleset for illustration:<br/><br/>
+
+      MyVerificationRuleset<br/>
+      - My Page Rule<br/>
+      - - Function Load Zone Locations<br/>
+      - - - SetDirectoryFPX("@APPPATH(fingerprint)" name="StrParam")<br/>
+      - - - ReadZonesFPX()<br/>
+      - - - RecognizePageFieldsOCR_A()<br/>
+      - Invoice Field Rule<br/>
+      - - Function Verify Invoice Number Exists<br/>
+      - - - IsTextLength("@X", "1", "˃=")<br/>
+      - - - rrSet("@X","@P.TheValueRead")<br/>
+      - - Function Invoice Number Was Not Read<br/>
+      - - - rrSet("Ooops","@P.TheValueRead")<br/><br/>
+
+      In the above example, the Rule "My Page Rule" would be attached to one or more page
+      objects in the Setup DCO.  For example, it may be attached to a page type called "Invoice".
+      The page invoice would have some expected fields, perhaps called "InvoiceNumber".<br/><br/>
+
+      When the rules engine processes each page object of type "Invoice", it will run the rules
+      in "My Page Rule" on the object. There could be one page called Invoice or there could
+      be many pages.  Each one will be called, one after the other.  The rules first setup
+      the directory for the FPXML fingerprints location.  It then calls ReadZonesFPX which
+      will load the positions of each field as determined by the associated fingerprint.
+      These positions indicate the rectangular section on the image that correspond to
+      each field.  The action RecognizePageFieldsOCR_A then uses the OCR_A engine to perform
+      text recognition for each field on the page.  There are many different ways recognition
+      can be performed such as field level, full page and partial page.  It all depends on the needs
+      of the application. This example happens to use field level which is a very common method.<br/><br/>
+
+      Once the page rule has completed, then the rules engine will start processing each child object
+      on the current page, running any rule in the same ruleset that is associated with a field.
+      In our example, there is just one field associated.  It is the InvoiceNumber field which
+      is attached to the "Invoice Field Rule".  The first thing run is the IsTextLength action.
+      It checks the value of "@X". "@X" means the current object. When no other specification is provided,
+      "@X" will default to the "Text" value of the current object. In this case, it will grab the
+      recognized text for the field. It then checks to see if the length of that text is greater
+      than or equal to 1 character.  If so, then it will set a variable on the parent page
+      object called "TheValueRead".  The current field value is copied to the parent page
+      and stored in the variable "TheValueRead".  This is just an example to show a small amount
+      of what could be done, it isn't something a typical application would do.  Many application's rules
+      would simply perform a validation check and stop, setting the status of the object to 0 or 1, indicating
+      if it is a "OK" value or a "Failed" value.<br/><br/>
+
+      If the field did not read any text, then IsTextLength will return false.  All subsequent
+      actions in the function will be skipped.  Control will then change to the next function.
+      In this example, the function "Function Invoice Number Was Not Read" will run, calling
+      rrSet("Ooops","@P.TheValueRead"), which again will set a variable on the parent page
+      called "TheValueRead", only this time it will be set to the value "Ooops". Again, this is
+      just an illustration, the rules could do any number of steps that are required for
+      an application's use cases.<br/><br/>
+
+      An action that returns false is not always an undesirable situation 
+      as it is often useful to help control the logic flow. 
+      The action GoToNextFunction
+      is an action that always returns false.  This is useful to force a function
+      to pass control to the next function.  It can allow functions to segregate work
+      into smaller units broken up logically by functions.<br/><br/>
+
+      One example could be an instance where actions are needed to perform a task,
+      but under normal operation, the action may sometimes return false.  However,
+      it is desired to still have the rule continue to do additional work.  In this example,
+      assume that there are four fields on a page that need to have the status
+      set to Hidden.  However, sometimes all the fields may exist, or sometimes only some
+      may exist, and other times perhaps none of them exist.  This could be handled using
+      a logic flow like this:<br/><br/>
+
+      Ruleset<br/>
+      - MyPageRule<br/>
+      - - Function Set Field1<br/>
+      - - - rrSet("-1","@P\Field1.STATUS")<br/>
+      - - - GoToNextFunction()<br/>
+      - - Function Set Field2<br/>
+      - - - rrSet("-1","@P\Field2.STATUS")<br/>
+      - - - GoToNextFunction()<br/>
+      - - Function Set Field3<br/>
+      - - - rrSet("-1","@P\Field3.STATUS")<br/>
+      - - - GoToNextFunction()<br/>
+      - - Function Set Field4<br/>
+      - - - rrSet("-1","@P\Field4.STATUS")<br/>
+      - - - GoToNextFunction()<br/>
+      - - Function Stop<br/>
+      - - - SetReturnValue("True")<br/><br/>
+
+      The above rule will first attempt to set Field1
+      to a STATUS of -1, which means it is hidden. If the
+      field exists, the rrSet action will run, then
+      the action GoToNextFunction will pass control
+      to the next function.  If Field1 does not exist,
+      rrSet for Field1 will return false. This again will pass control to
+      the next function which will attempt to set the status for Field2,
+      and so on for the rest of the desired fields.  The last function
+      calls the action SetReturnValue.  This action simply returns True or False
+      based on the input parameter.  Here it returns True, which causes the entire
+      rule to exit with a "True" or "successful" state.<br/><br/>
+
+      <b>⟸ ♕ Workflows and Tasks ♕ ⟹</b><br/><br/>
+
+      The workflow defines the steps that occur in processing.  Each step in the workflow is called
+      a Task.  A workflow can contain any number of tasks.  A typical workflow looks similar to this:<br/><br/>
+
+      Physical Scan or Virtual Scan > PageID > Profiler > Verify > Export<br/><br/>
+
+      These are the logical steps of the workflow.  Often, the number of physical tasks directly map to the logical
+      steps.  That is not a requirement.  There can be any number of tasks within the workflow.  For example,
+      the Profiler step could be multiple tasks that segregate the work.  Likewise, there may be several
+      tasks that together comprise the complete Export step.
+
+      The PageID task has the actions and steps that determine the type of each ingested document. There are many
+      different ways this can be achieved, based on the use cases of the application.  It can be fully automated
+      or it can be performed with user interaction.<br/><br/>
+
+      The Profiler task is a general name for the task that performs the processing of the data in the batch.
+      It can perform page recognition, call out to databases, perform transactions to third party systems, etc., anything
+      that is required to get the data extracted, prepared and validated.  This task is sometimes separated into
+      multiple tasks.  The benefit of adding more tasks can help spread out processing and makes debugging problems
+      and maintenance easier.<br/><br/>
+
+      The Verify task is an interactive user task.  In this step, a user would correct verification errors such
+      as fields that do not meet requirements. For example, a date is not a valid date, an account number is not
+      a valid account number, a page has not been signed, etc.  This task can be skipped if no validation errors
+      are encountered or if the step is not needed.<br/><br/>
+
+      The Export task is the logical point where the results of the batch are saved.  Files and data can be
+      copied to other directories, uploaded to repositories, sent to external databases, or any combination of
+      events.  Frequently the export task is actually two tasks, "PreExport" and "Export".  Again, the task can be split
+      into any number of tasks that makes sense for the application.<br/><br/>
+
+      In addition to the tasks in the workflow, batches can branch or be split into child batches.
+      When you use branching to route workflows, the entire batch is sent from the main job to a child job.
+      When the child job completes, the batch returns to the main job.
+      When you use splitting to route workflows, documents in the batch are split off from the parent batch and
+      placed into one or more child batches. The child batches are sent to a child job for processing and do not return to the main job.
+      For branching, use the TaskRaiseCondition action to raise the condition flag of the task.<br/><br/>
+
+      <b>Branch:</b> When a task finishes with a Branch condition raised, the Datacap Server creates a new queue record,
+      and routes the batch to the child job (Fixup). The original parent queue record gets the status as Waiting.
+      The Waiting status means that the processing is suspended on that workflow until the branch workflow finishes successfully.
+      In the TravelDocs Fixup example, after an operator reorganizes or rescans the documents and pages into an acceptable sequence,
+      the Fixup queue status becomes Job Done, and the Main Job picks up processing of the batch where it left off.<br/><br/>
+
+      <b>Jump:</b> When a task finishes with a Jump condition, the Datacap Server moves the batch forward or 
+      backwards in the existing job workflow by one or more steps, possibly skipping or re-doing some tasks
+      within the workflow.<br/><br/>
+
+      <b>Split:</b> When a task finishes with the Split condition, the Datacap Server creates new child batches, 
+      as many as the application specifies, each with its own BatchID, batch record, and queue record. 
+      The original parent batch might continue to the next task in the workflow if any documents remain. 
+      The SplitBatch action encapsulates the functionality that is needed to prepare each child batch.<br/><br/>
+
+      <b>Stop (or not set):</b> When a task finishes with the Stop condition, 
+      the Datacap Server sets the queue status to Stopped, and no further action is taken.<br/><br/>
+
+      The "Profile" tab in Datacap Studio is the location that shows each of the rulesets that are run for each profile task
+      in the workflow. When a task runs, the rule engine will process each of the rulesets listed in
+      the profile for the task.  Rules can be added or changed within the profile as necessary for the application.<br/><br/>
+      
+      <b>⟸ ♕ Custom User Validation Messages ♕ ⟹</b><br/><br/>
+
+      The Datacap client validation panel displays fields to a user, highlighting the fields that fail
+      validation parameters.  For example, if a field should be a date, but the date format is not valid, that
+      will be highlighted and a message will be displayed to the user when the field is selected. Another example
+      could be that a field must be at least 5 characters long but cannot be more than 10 characters long, a failure
+      of the validation test will cause the field to show as a problem to the verify operator and display a message
+      that is associated with the failed field.<br/><br/>
+
+      The DCO can contain two special variables, MESSAGE and MessageID.  These variables are used by actions
+      and clients to convey information to the user as to why a field has a failed validation test. Many of the
+      validation actions in the ValdiationAndTextAdjustments action library will automatically set this variable
+      to display pre-translated messages to the user.<br/><br/>
+
+      It is possible that an application may require additional
+      validation tests with messages that are custom to the application, created by the
+      application developer.  An application can be written to
+      display custom messages to the user within the verification panel using the actions
+      MessageSetTextAndID, MessageSetRuntimeParameter, MessageClear and MessageSetText. If required,
+      translated versions of these messages can be also displayed, based on the
+      current language displayed for the client application.  It would be up to the application developer
+      to acquire translations of their custom messages.<br/><br/>
+
+        To allow translated messages, the messages must be defined in a file called resources.json.
+        The default language file must be placed in the "Project" directory of the application.
+        This is the directory with the "dco_" prefix. For example, for the application APT, the
+        project directory is APT\dco_APT.  The default language resources.json file must be in that
+        directory.  Translated versions of this file must be placed in subdirectories named using the standard
+        language identifier.  For example, the French translation would be placed into APT\dco_APT\fr,
+        the German translation would be placed into APT\dco_APT\de, the Brazilian Portuguese
+        translation would be placed into APT\doc_APT\pt-br, etc.<br/><br/>
+
+      The action MessageSetTextAndID must be used to set the message and it will be looked up
+      at runtime by the client application in the appropriate language file.  Optionally, the action
+      MessageSetRuntimeParameter can be used to populate replacement parameters at runtime, and the values
+      of these parameters can also be optionally translated.
+      The file resources.json is not required if messages do not require translation.<br/><br/>
+
+      The json file uses entries of this format: "keytype.keyid":"value".  Key-value pairs are
+      separated by commas and usually placed one per line for ease of reading and update.<br/><br/>
+
+      The "keytype", must be one of these values: "job", "task", "shortcut", "field", "workflow",
+      "appname", "pagetype", "doctype", "text", or "variable".  The "keyid" is user defined.<br/><br/>
+
+      Example json file:<br/><br/>
+
+      {<br/>
+      "workflow.TravelDocs":"Travel Documents",<br/>
+      "field.Airfare":"Airfare",<br/>
+      "field.Taxes":"Taxes",<br/>
+      "field.Unit_Cost":"Unit cost",<br/>
+      "field.Total":"Total cost",<br/>
+      "message.M001":"Invalid car type selected.  Enter {0}, {1}, {2}, {3} or {4}."<br/>
+      }<br/><br/>
+
+      If some text should not be translated, then it is recommended to not place it in the json file
+      to prevent accidental translation.<br/><br/>
+
+      The message to display from the resources.json file is configured using the MessageSetTextAndID action
+      and, optionally, the MessageSetRuntimeParameter action.  Refer to the help for these actions for
+      details.<br/><br/><br/>
+      
+
+      <b>⟸ ♕ Smart Parameters - Reference Guide ♕ ⟹</b><br/><br/>
+
+      If an action supports smart parameters, it is specified in the action help of the action.  Smart parameters are very powerful
+      specifications for action parameters that allow access of data to and from other DCO objects and perform
+      special pre-defined operations in one step.<br/><br/>
+
+      Smart parameters can be used to dynamically obtain or create action input parameters at runtime.  For example,
+      an action could be provided the value of a field after recognition, a parameter could pull the value from a
+      DCO variable that was set by a previous action, or a smart parameter could evaluate to the current date, the current
+      time, the current job ID, the current operator ID, the path to the current batch that is running, and more.
+      Smart parameter syntax can also be used to build expressions at runtime that concatenate dynamic data and
+      static data at runtime.  Smart parameters are
+      a flexible way to provide a wide range of input to any action that supports smart parameters.<br/><br/><br/>
+
+
+      <b>Smart Parameters Object Hierarchy Navigation</b><br/><br/>
+
+      One of the abilities of smart parameters is the syntax to specify which DCO object to access when
+      reading or writing a variable. For example, a rule runs on a particular DCO object, but may need to access
+      information from a different object.
+      For example, an action on a page object may need to test, copy or set a value on a child field object
+      and smart parameters are the method to accomplish this task.
+      To better understand the Datacap Object Hierarchy, see information provided
+      in the top-level help of the ApplicationObjects action library.<br/><br/>
+
+      Not all actions support smart parameters.  Check the action help to confirm if smart parameters are supported.
+      If an action supports smart parameters, it can also mean that certain hard coded values need to be specifically
+      escaped or specified to have them interpreted as desired.<br/><br/>
+
+      <b>@B.VariableName</b><br/>
+      Accesses the value of the specified variable on batch DCO node, regardless of the current DCO node level.
+      The current DCO node does not need to be batch level.
+      The current node can be a batch, document, page or field node and this syntax accesses the parent batch node.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the value of the TYPE variable for the batch.
+        The second example creates a new variable Name at the batch level and sets the value to “Fred”.<br/><br/>
+        <c>
+          rrGet("@B.TYPE")<br/><br/>
+        </c>
+        Result: rrGet is typically called on a field node. The value "TravelDocs" is then set on the field text value.<br/><br/>
+        <c>
+          rrSet(“Fred”,”@B.Name”)<br/><br/>
+        </c>
+        Creates the variable "Name" at the batch level and sets its value to “Fred”.  This value can then be used in a subsequent action
+        called on the same DCO node, or any DCO node.
+      </e>
+      <br/><br/>
+
+      <b>@D.VariableName</b><br/>
+      Accesses the value of the specified variable on a document level DCO node.
+      The current DCO node does not need to be a document level node. The current node can be a document, page or field node and this syntax accesses the parent document node.
+      If the current level was Document, then the current DCO node would be accessed.  
+      If the action is called from a page or field, then the parent document node would be used, provided
+      the hierarchy does have a parent Document node, which is the typical case.
+      For example, the "other" page type is atypical in that respect because not have a parent Document node.<br/><br/>
+
+      This syntax should not be used on a batch level DCO node.<br/><br/>
+
+      <e>
+        In the first example, the smart parameter obtains the value of the TYPE variable for the current document
+        and compares it to an expected type. In the second example, a value is set on the document node.<br/><br/>
+        <c>
+          rrCompare("@D.TYPE", "Car_Rental")<br/><br/>
+        </c>
+        Result: If the document type matches "Car_Rental", the action returns true, otherwise it returns false.<br/><br/>
+        <c>
+          rrSet(“Hotel_Rental”, “@D.ImportantInfo”)<br/><br/>
+        </c>
+        Result: The action creates a variable on the document node called "ImporantInfo" and sets it to "Hotel_Rental".
+        The source variable could also be a smart parameter and pull the value from another location,
+        such as from a field value.
+      </e>
+      <br/><br/>
+
+
+      <b>@P.VariableName</b><br/>
+      Accesses the value of the specified variable on the current, or parent, page DCO node.
+      If the current node is a page node, then the current DCO node would be accessed.
+      If called on a field, this would access the parent page node, assuming it is a standard page structure and the field has a parent page object.<br/><br/>
+
+      This syntax would not be used on a batch or document DCO node.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the value of the TemplateID variable for the current page.<br/><br/>
+        <c>
+          rrCompare("@P.TemplateID", "1022")<br/><br/>
+        </c>
+        Result: This action uses the system variable "TemplateID" to check the value of the fingerprint assigned to the current page.
+      </e>
+      <br/><br/>
+
+
+      <b>@F.VariableName</b><br/>
+      Accesses the value of the specified variable within a field and would be called on a field DCO node only.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the value of the TYPE variable for the current field.<br/><br/>
+        <c>
+          rrGet("@F.TYPE")<br/><br/>
+        </c>
+        Result: rrGet reads the system TYPE variable for the current field node and put the value, such as "Pickup_Date", into the current
+        field's text value.
+      </e>
+      <br/><br/>
+
+      <b>@X.VariableName</b><br/>
+      Accesses the text of the specified variable on the current node.
+      This smart parameter enhances the portability of the rules by working generically on the current DCO node.
+      For example, a function that is written for the page level can be reused at another level by simply tying the
+      ruleset to a new DCO object without having to update the @X smart variable to the new level. It allows someone
+      to write a rule without having to worry about the current node level as the syntax works for the current node
+      at any level.<br/><br/>
+
+      <e>
+        Uses the current node specifier, @X, when calling an action with a smart parameter.<br/><br/>
+        <c>
+          SplitFileName("@STRING(C:\Dir1\Dir2\MyFile.abc)","@X.FRoot","@X.FPath", "@X.FName","@X.FExt")<br/><br/>
+        </c>
+        Result: This example splits the file and saves the information into 4 variables on the current node:<br/><br/>
+        
+        FRoot = "C:\"<br/>
+        FPath = "C:\Dir1\Dir2"<br/>
+        FName = "MyFile"<br/>
+        FExt = ".abc"<br/><br/>
+        
+        If this action were run a page object, this is an example XML representation of the created variables:<br/><br/>
+
+        ˂P id="TM000001"˃<br/>
+        ·· ˂V n="TYPE"˃Other˂/V˃<br/>
+        ·· ˂V n="STATUS"˃49˂/V˃<br/>
+        ·· ˂V n="IMAGEFILE"˃tm000001.tif˂/V˃<br/>
+        ·· ˂V n="PageName"˃tm000001˂/V˃<br/>
+        ·· ˂V n="ScanSrcPath"˃C:\Datacap\MyApplication\Images\Input\MyTestImage.tif˂/V˃<br/>
+        ·· ˂V n="FRoot"˃C:\˂/V˃<br/>
+        ·· ˂V n="FPath"˃C:\Dir1\Dir2˂/V˃<br/>
+        ·· ˂V n="FName"˃MyFile˂/V˃<br/>
+        ·· ˂V n="FExt"˃.abc˂/V˃<br/>
+
+      </e>
+      <br/><br/>
+
+
+      <b>@B\ObjectName[\ObjectName][.VariableName]</b><br/>
+      Accesses objects in the batch with the navigation starting at the batch level. The @B specification can be called
+      from any level within the hierarchy and starts the navigation from the batch level.<br/><br/>
+
+      The first ObjectName specified must be an object that is an immediate child of the batch object.
+      Additional levels of object navigation can be specified. For a batch level navigation, usually the most common
+      navigation would be for a field, when there is a field present at the batch level, which is sometimes done
+      to support specific types of operations.  A \document, \document\page, or \document\page\field specification can be
+      provided.  For example, "@B\Invoice\Main_Page\PO_Number" could be specified to navigate down to the field "PO_NUMBER" and access
+      that object.  However, in practice, this is not usually useful as there can be many child documents called "Invoice" on the
+      batch object.  Similarly, there can be many child pages called "Main_Page" off of a document node. In this scenario,
+      the navigation always select the first child encountered in the hierarchy.  For the specification "@B\Invoice\Main_Page\PO_Number",
+      the first child document encountered matching "Invoice" is be used, next the first page found matching "Main_Page", then the PO_Number
+      field is accessed. Indexing to other pages of the same name is not possible with this syntax.<br/><br/>
+
+      This type of specification would typically only be used from the batch level when there is a field
+      directly attached to the batch object, because there will only be one field for that object and there will be no ambiguity.<br/><br/>
+
+      The VariableName is optional. If specified, the variable named will be read or written.  If not specified, it will
+      use the "Text" property, which is typically only valid for field objects.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the value of the Text variable for the batch-level field "Field2".<br/><br/>
+
+        Sample XML representation segment of the DCO showing the batch-level field called "Field2":<br/><br/>
+
+        ˂B type="APT"˃<br/>
+        ·· ˂V n="ID"˃0˂/V><br/>
+        ·· ˂V n="TYPE"˃Batch˂/V><br/>
+        ·· ˂V n="STATUS"˃0˂/V><br/>
+        ·· ˂V n="MIN TYPES"˃0˂/V˃<br/>
+        ·· ˂V n="MAX TYPES"˃0˂/V˃<br/>
+        ·· ˂P type="Other" pos="0" min="0" max="0"/˃<br/>
+        ·· ˂D type="Document" pos="0" min="0" max="0"/˃<br/>
+        ·· ˂F type="Field2" pos="0" min="0" max="0"/˃<br/><br/>
+        <c>
+          rrCompareCase("@B\Field2", "Car", "False")<br/><br/>
+        </c>
+        Result: Accesses the batch level field called Field2 and if the value of that field is "Car", then the action returns True.
+        Otherwise the action returns False.
+      </e><br/><br/>
+
+
+      <b>@D\ObjectName[\ObjectName][.VariableName]</b><br/>
+      Accesses objects in the batch with the navigation starting at the document level. The @D specification can be called
+      from a document level, or an object level lower than the document level.  It cannot be called from a batch level object.
+      If called from an object lower than the document level, navigation starts from the parent document object.<br/><br/>
+
+      The first ObjectName specified must be an object that is an immediate child of the current document object.
+      Additional levels of object navigation can be specified.  A \page or \page\field specification can be
+      provided.  For example, "@D\Main_Page\PO_Number" could be specified to navigate down to the field "PO_NUMBER" and access
+      that object.  However, in practice, this is not usually useful as there can be many child pages called "Main_Page" off of a document node. In this senario,
+      the navigation always selects the first child found in the hierarchy.  For the specification "@D\Main_Page\PO_Number",
+      the first child page found matching the name "Main_Page" is accessed, then the PO_Number
+      field on that page is accessed. Indexing to other pages of the same name is not possible with this syntax.<br/><br/>
+
+      The VariableName is optional. If specified, the variable named is read or written.  If not specified, the smart parameter evaluates to
+      the "Text" property, which is valid for field objects only.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the value of the TYPE variable for the field “Field1”, which is directly attached to the current document.<br/><br/>
+        <c>
+          rrSet("@D.STATUS", "@D\Main_Page\PO_Number.STATUS")<br/><br/>
+        </c>
+        Result: This smart parameter navigates down to the first child page called "Main_Page" then navigate to the "PO_Number" field and set it to the same status as the current document node.
+        If Main_Page cannot be found or if PO_Number cannot be found, a blank value is be set.
+      </e>
+      <br/><br/>
+
+      <b>@P\ObjectName[\ObjectName][.VariableName]</b><br/>
+      Accesses objects in the batch with the navigation starting at the page level. The @P specification can be called
+      from a page level, or lower, object.  It cannot be called from a batch level or document level object.
+      If called from an object below the page level, navigation starts from the parent page object.<br/><br/>
+
+      The first ObjectName specified must be an object that is an immediate child of the page object.
+      Additional levels of object navigation can be specified.  A \field or \field\field specification can be
+      provided.  For example, "@P\PO_Number" could be specified to navigate down to the field "PO_NUMBER" and access
+      that object. This allows a page to access the value of a child field.<br/><br/>
+
+      This syntax is also important as it allows a field to access a sibling field.
+      For example, if the current DCO node was a field called "Tax", it could also use the syntax "@P\PO_Number"
+      to access the value or variables from a sibling field on the page called "PO_Number".
+      <br/><br/>
+
+      The VariableName is optional. If specified, the variable named is read or written.  If not specified, smart parameter evaluates
+      use the "Text" property, which is typically used for field objects only.<br/><br/>
+
+      Navigation from a page level object down to field level objects is the most common use case because there can only
+      exist a single child field of a specific name.  This is unlike a document or batch object that can have multiple child objects
+      of the same name at runtime, making the correct navigation ambiguous. The @P\ syntax is also a common way for
+      fields to access a sibling field.<br/><br/>
+
+      <e>
+        In the first example, the smart parameter returns the text of the Car_Type field on the current page.<br/><br/>
+
+        In the second example, the smart parameter returns the value of the TYPE variable of the Car_Type field.<br/><br/>
+
+        The example assumes this is the field as represented in XML:<br/>
+        ˂F id="Car_Type"˃<br/>
+        ·· ˂V n="TYPE"˃Car_Type˂/V˃<br/>
+        ·· ˂V n="STATUS"˃1˂/V˃<br/>
+        ·· ˂C cn="10" cr="588,748,600,769">83˂/C˃   ˂-- ‘S'<br/>
+        ·· ˂C cn="10" cr="605,748,620,769">85˂/C˃   ˂-- ‘U'<br/>
+        ·· ˂C cn="10" cr="625,748,643,769">86˂/C˃   ˂-- ‘V'<br/>
+        ˂/F><br/><br/>
+        <c>
+          rrSet("@P\Car_Type", "@P.MyCarType)<br/><br/>
+        </c>
+        Result: Creates a variable called "MyCarType" on the page object with the value "SUV"<br/><br/>
+        <c>
+          rrCompare("@P\Car_Type.STATUS", "0")<br/><br/>
+        </c>
+        Result: From the page level rules, it checks the status of the field "Car_Type" and if the status is 0, the engine runs the rules after the
+        rrCompare action.  Because the STATUS is 1, rrCompare returns False and control jumps to the next function within the current ruleset.
+      </e>
+      <br/><br/>
+
+
+      <b>@F\ObjectName[\ObjectName][.VariableName]</b><br/>
+      Accesses objects in the batch with the navigation starting at the field level.
+      As the field is the lowest level of object, the "F" specification can only be called from a field object.<br/><br/>
+
+      A field is allowed to have a subfield as a child object.  Using the navigation syntax, it is possible to run a rule
+      on the parent field that accesses the variables in subfield.<br/><br/>
+
+      The VariableName is optional. If specified, the variable named is read or written.  If not specified, it evaluates to
+      the "Text" property of the field.<br/><br/>
+
+      <e>
+        In these examples, the rule that contains the action is bound to a field with subfields.
+        In the first example, the smart parameter returns the text of the Unit_Cost subfield of the current field.
+        In the second example, the smart parameter returns the value of the Unit_Cost subfield TYPE variable.<br/><br/>
+
+        For the example, here is an XML representation of the DCO that shows the current field has a subfield called "UnitCost".<br/><br/>
+
+        ˂F id="Other_Charges_Line_Item0"˃<br/>
+        ·· ˂V n="TYPE">Other_Charges_Line_Item˂/V˃<br/>
+        ·· ˂V n="STATUS"˃0˂/V˃<br/>
+        ·· ˂F id="Unit_Cost"˃<br/>
+        ···· ˂V n="TYPE"˃Unit_Cost˂/V˃<br/>
+        ···· ˂V n="STATUS"˃1˂/V˃<br/>
+        ···· ˂C cn="10" cr="1290,511,1305,540">36˂/C˃   ˂-- ‘$'<br/>
+        ···· ˂C cn="10" cr="1308,515,1321,536">57˂/C˃   ˂-- ‘9'<br/>
+        ···· ˂C cn="10" cr="1325,533,1329,536">46˂/C˃   ˂-- ‘.'<br/>
+        ···· ˂C cn="10" cr="1334,515,1348,536">57˂/C˃   ˂-- ‘9'<br/>
+        ···· ˂C cn="10" cr="1350,515,1365,536">48˂/C˃   ˂-- ‘0'<br/>
+        ·· ˂/F˃<br/>
+        ˂/F˃<br/><br/>
+        <c>
+          rrSet("@F\Unit_Cost", "@X")<br/><br/>
+        </c>
+        Result: The value $9.90 from the subfield Unit_Cost is copied to the value of the current field.<br/><br/>
+        <c>
+          rrSet("@F\Unit_Cost.STATUS", "@F.STATUS")<br/><br/>
+        </c>
+        Result: Updates the current field with the status 1 from the subfield "Unit_Cost".
+      </e>
+      <br/><br/>
+
+
+      <b>@X\ObjectName[\ObjectName][.VariableName]</b><br/>
+      Accesses objects in the batch with the navigation starting at the current object level.
+      The ObjectName must be a child of the current object. If additional ObjectNames are provided,
+      they must exist under the previously specified object.<br/><br/>
+
+      For example, if called on a document node, the first ObjectName specified must be an object that is an immediate child of the current document object.
+      Additional levels of object navigation can be specified.  A \page or \page\field specification can be
+      provided.  For example, "@X\Main_Page\PO_Number" could be specified to navigate down to the field "PO_NUMBER" and access
+      that object when the current node is a document.
+      However, in practice, this is not usually useful from a document object as there can be many child pages called "Main_Page" off of a document node. In such a situation,
+      the navigation always selects the first child found in the hierarchy.  For the specification "@D\Main_Page\PO_Number",
+      the first child page of the document object that is found matching "Main_Page" is accessed, then the PO_Number
+      field on that page is accessed. Indexing to other pages of the same name is not possible with this syntax.<br/><br/>
+
+      Navigation is usually performed on a page or field object because they can only have single instance of the named object.<br/><br/>
+
+      The VariableName is optional. If specified, the variable named is read or written.  If not specified, the smart parameter evaluates to
+      the "Text" property, which is typically only valid for field objects.<br/><br/>
+
+      Navigation from a page level object down to field level objects is the most common use case because 
+      every child field contains a unique name.  This is unlike a document or batch object that can have multiple child objects
+      of the same name at runtime, making the correct navigation ambiguous. If a field object needs data from a sibling field,
+      then use the @P\ navigation from the field object so the navigation starts from the parent page object.<br/><br/>
+
+      <e>
+        This example assumes that a page level node is the current object.
+        In the first example, the smart parameter returns the text of the Car_Type field on the current page.
+        In the second example, the smart parameter returns the value of the TYPE variable of the Car_Type field.<br/><br/>
+
+        The example assumes this is the field as represented in XML:<br/>
+        ˂F id="Car_Type"˃<br/>
+        ·· ˂V n="TYPE"˃Car_Type˂/V˃<br/>
+        ·· ˂V n="STATUS"˃1˂/V˃<br/>
+        ·· ˂C cn="10" cr="588,748,600,769">83˂/C˃   ˂-- ‘S'<br/>
+        ·· ˂C cn="10" cr="605,748,620,769">85˂/C˃   ˂-- ‘U'<br/>
+        ·· ˂C cn="10" cr="625,748,643,769">86˂/C˃   ˂-- ‘V'<br/>
+        ˂/F><br/><br/>
+        <c>
+          rrSet("@P\Car_Type", "@P.MyCarType)<br/><br/>
+        </c>
+        Result: Creates a variable called "MyCarType" on the page object with the value "SUV"<br/><br/>
+        <c>
+          rrCompare("@P\Car_Type.STATUS", "0")<br/><br/>
+        </c>
+        Result: From the page level rules, the action checks the status of the field "Car_Type" and if the status is 0, the engine runs the rules that follow the
+        rrCompare action.  Because the STATUS is 1, rrCompare returns False and control jumps to the next function within the current ruleset.
+      </e>
+
+      <b>@X\ObjectName[\ObjectName][.CONFIDENCESTRING]</b><br/>
+        The variable "CONFIDENCESTRING" is a special designation to get and set the confidence of field text.
+        The each character in a text field has a special confidence attribute. The confidence comes from the recognition engine
+        and indicates how sure it is that a character was recognized correctly. A confidence of '9', indicates that the engine
+        was very confident that the character is correct.  The lowest confidence of '0' is used to indicate that the engine
+        is not sure the character is correct.  As the value progresses up to '9', the engine becomes more sure that it did a good job
+        during recognition.<br/><br/>
+
+        When specifying smart parameter navigation syntax, if the variable specified is "CONFIDENCESTRING" and the syntax
+        specifies a field, then the operation will get or set the confidence of the text within the field.  If CONFIDENCESTRING
+        is specified on any other kind of node, then it will act as a standard DCO variable.<br/><br/>
+        
+        The specified confidence string can set unique values for each character.  Only characters between 0 to 9 are allowed.
+        If the specified confidence string is shorter than the text in the field, the remaining characters will be given a confidence of '9'.
+        If the specified confidence string is longer than the text in the field, the extra characters will be truncated.
+        Only characters 0 through 9 are allowed in a confidence string.<br/><br/>
+
+        Additional mechanisms can also manipulate the confidence value of a field.
+        The smart parameter @DCO(CONFIDENCESTRING), allows reading of the confidence, but cannot set the confidence.
+        The ApplicationObjects action SetFieldConfidence will set the confidence of a field, but it allows only a single
+        confidence specification and sets all characters in the field to the same confidence.<br/><br/>
+        
+        <e>
+            rrSet("11339", "@F.CONFIDENCESTRING")<br/>
+            This example assumes that the action is run on a field.  It sets the confidence for the field to "11339".<br/><br/>
+            
+            rrSet("@P\Field1.CONFIDENECESTRING", "@X.TheFieldConf")<br/>
+            This example assumes that the action is run on a page and the page has an existing field called "Field1".
+            The confidence of Field1 will be stored into a page level variable called "TheFieldConf".<br/>
+        </e>
+
+        <br/><br/><br/>
+
+      <b>Smart Parameters Predefined Variables - Application Configuration</b><br/><br/>
+
+      <b>@APPPATH(KeyPath)</b><br/>
+      Retrieves the path to a file or folder from the application's configuration (.app) file.
+      Use the Datacap Application Manager to modify the information that is contained in this file.
+      Do not edit the file directly.<br/><br/>
+
+      Syntax<br/>
+      @APPPATH(KeyPath)<br/><br/>
+
+      Arguments<br/>
+      KeyPath: Specifies the key within the application configuration file to query.<br/><br/>
+
+      If the field name is unique within the file, you can specify just the field name.<br/><br/>
+
+      If the field name is not unique within the file, you must specify the path to the instance you want.
+      For example, you might have multiple workflows. If you do not specify the path, you get the first instance.<br/><br/>
+
+      To obtain the path, move the mouse pointer over the field in the Datacap Application Manager and read the path from the tooltip.<br/><br/>
+
+      <e>
+        You can use @APPPATH to retrieve the following information from the application configuration file.<br/><br/>
+
+        Field name ············ Key name ·········· Example ········································ Notes<br/><br/>
+
+        Application fields<br/>
+        Batches folder ········ runtime ············ @APPPATH(runtime) ························ (Field name is unique)<br/>
+        Export folder ·········· export ·············· @APPPATH(export) ·························· (Field name is unique)<br/>
+        Fingerprint folder ····· fingerprint ········· @APPPATH(fingerprint) ····················· (Field name is unique)<br/><br/>
+
+        Workflow fields<br/>
+        Setup DCO ············· setupdco ·········· @APPPATH(setupdco) ······················ (assumes single workflow)<br/>
+        Rules folder ············· rules ················ @APPPATH(dco_Workflow1/rules) ······ (specifies Workflow 1)<br/>
+        VScan source folder · vscanimagedir ·· @APPPATH(vscanimagedir) ················ (assumes single workflow)<br/>
+        Imagefix INI ·············· imagefix ·········· @APPPATH(dco_Workflow2/imagefix) ·· (specifies Workflow 2)
+      </e>
+      <br/><br/>
+
+
+      <b>@APPVAR(KeyPath)</b><br/>
+      Retrieves a connection string, value, or other attribute from the application configuration (.app) file.
+      Use the Datacap Application Manager to modify the information that is contained in this file.
+      Do not edit the file directly.  The Datacap Application Manager encrypts the connection strings and decryption is handled by the standard actions.<br/><br/>
+
+      Attention: Before Datacap 8.0, this parameter returns the value for the specified variable as defined in the [Variables] section in paths.ini.
+      The .ini file is in the process folder of the application.  The application configuration has replaced the paths.ini file in Datacap versions
+      after 8.0.<br/><br/>
+
+      Syntax<br/>
+      @APPVAR(KeyPath[:attribute])<br/><br/>
+
+      Arguments<br/>
+      KeyPath: Specifies the path to field you want. See @APPPATH for details.<br/><br/>
+
+      attribute - Specifies the attribute name (optional):<br/><br/>
+
+      For custom values, use "v" (if you do not specify an attribute, "v" is assumed).
+      For connection strings, use "cs".
+
+      The easiest way to get the path and attribute is to look in the Datacap Application Manager:<br/>
+
+      On the Application and Datacap tabs, move the mouse pointer over the field and read the smart parameter value from the tooltip.<br/>
+      On the Custom Values tab, read the smart parameter value that is displayed in each section.<br/><br/>
+
+      You can use @APPVAR to retrieve the following information from the application configuration file.<br/><br/>
+
+      Field name<br/>
+      Key name:attribute<br/><br/>
+
+      <e>
+        Field name ······················· Key name ································· Example ······································ Notes<br/><br/>
+
+        Workflow fields<br/>
+        Lookup database ··············· lookupdb:cs ···························· @APPVAR(lookupdb:cs) ·················· (Workflow 1)<br/>
+        Fingerprint database ·········· fingerprintconn:cs ···················· @APPVAR(fingerprintconn:cs) ·········· (one workflow)<br/>
+        Export database ················ exportdb:cs ···························· @APPVAR(dco_Wkflw1/exportdb:cs) ·· (Workflow 1)<br/><br/>
+
+        Datacap fields<br/>
+        Engine database ··············· tmengine:cs ····························· @APPVAR(tmengine:cs) ·················· (Field is unique)<br/><br/>
+        Admin database ················ tmadmin:cs ······························ @APPVAR(tmadmin:cs) ··················· (Field is unique)<br/><br/>
+
+        Custom values<br/>
+        General string values ·········· values/gen/˂value_name˃ ·········· @APPVAR(values/gen/Value1) ·········· (Value1)<br/>
+        Connection strings ············· values/dsn/˂value_name˃:cs ······ @APPVAR(values/dsn/DB1:cs) ········· (CS for DB1)<br/>
+        Datacap connection strings · values/tmdsn/˂value_name˃:cs · @APPVAR(values/tmdsn/TMDB1:cs) ·· (CS for TMDB1)<br/>
+        Advanced values ················ values/adv/˂value_name˃ ············ @APPVAR(values/adv/Value1) ··········· (Value1)
+      </e>
+      <br/><br/><br/>
+
+      <b>Smart Parameters Predefined Variables - Batch</b><br/><br/>
+
+      <b>@BATCHID</b><br/>
+      Returns the value of the id attribute for the current batch. The batch ID can be useful to save as metadata
+      with a batch for history and tracking. It can be used for other things such as naming of data files.<br/><br/>
+
+      <e>
+        In this example, the batch ID and page ID are used to name the export file.<br/><br/>
+        <c>
+          SetExportDirectory("@APPPATH(export)")<br/>
+          SetExportFileName("Export_+@BATCHID+_+@ID+.txt")<br/><br/>
+        </c>
+        Result: When these actions are called on a page node, they use the batch ID and the current page ID to name the export file.
+        The export file name will be similar to: "Export_20240046.001_TM000001.txt"
+      </e>
+      <br/><br/>
+
+      <b>@ID</b><br/>
+      Returns the value of the id attribute for the current object.
+      For example, if the rule that contains this special variable is bound to a page, the current object is the current page.<br/><br/>
+
+      <e>
+        In this example, the batch ID and page ID are used to name the export file.<br/><br/>
+        <c>
+          SetExportDirectory("@APPPATH(export)")<br/>
+          SetExportFileName("Export_+@BATCHID+_+@ID+.txt")<br/><br/>
+        </c>
+
+        Result: When this is called on a page node, the action uses the batch ID and the current page ID to name the export file.
+        The export file name will be similar to: "Export_20240046.001_TM000001.txt"
+      </e>
+      <br/><br/>
+
+
+      <b>@STATUS</b><br/>
+      Returns the value of the STATUS variable for the current object.
+      STATUS is also a setup property and might specify a special characteristic (for example,
+      a status of -1 indicates a hidden field).  The @STATUS is logically equivalent to the syntax "@X.STATUS".<br/><br/>
+
+      The DCO status can be set to any value, however specific values are considered to be a standard and have special uses
+      in specific actions and verification panels. The list of typical status values is provided in the top-level help
+      of the ApplicationObjects action library.<br/><br/>
+
+      <e>
+        In this example, the rule that contains the action is bound to a page and the smart parameter returns the status of the current page.<br/><br/>
+        <c>
+          rrCompare("@STATUS", "1")<br/><br/>
+        </c>
+
+        Result, if the status of the object is 1, which typically means there is a problem, rrCompare returns true and the next action
+        is run.  For example, perhaps there is some logic that should only be run in the event of a failed page or field, it can be
+        controlled using this action.<br/><br/>
+        
+        <c>
+          rrSet("0", "@STATUS")<br/><br/>
+        </c>
+        Result: This action sets the current object status to 0, which means there are no problems.  Object status can be set explicitly within
+        rules as needed. Status can also be implicitly changed by verification panels and some actions.
+      </e>
+      <br/><br/>
+
+
+      <b>@VALUE</b><br/>
+      Returns the text of the current object, which is expected to be a field.  The "Text" variable of a field is what
+      holds the field's value.  For example, this is where field recognition text is stored and used for display to an end user.<br/><br/>
+
+      <e>
+        In this example, the rule that contains the action is bound to a field and the smart parameter returns the text of the current field.
+        If the current object is not a field, @VALUE looks for a value in a variable Text of the calling object.<br/><br/>
+        <c>
+          rrCompareCase("@VALUE", "SUV", "FALSE")<br/><br/>
+        </c>
+        Result: If the field value matches "SUV" in upper or lower characters, then the action rrCompareCase returns True and the next action runs.
+        Otherwise, the action returns False and skip to the next function in the ruleset.
+      </e>
+      <br/><br/>
+
+
+      <b>@VAR(VariableName)</b><br/>
+      Returns the value of the specified variable on the current object.
+      The @VAR keyword works logically the same as @X.  @X has been adopted as the standard replacement for @VAR
+      as it logically fits in with the other smart parameter syntax such as @F, @P, etc.<br/><br/>
+
+      <e>
+        In this example, the rule that contains the action is bound to a page. The smart parameter returns the value of the TYPE variable for the current page.<br/><br/>
+        <c>
+          rrCompare("@VAR(TYPE)", "Rental_Agreement")<br/><br/>
+        </c>
+        Result: If the current page is of type "Rental_Agreement", rrCompare returns True, running the actions that follow.
+        This allows for special processing when a "Rental_Agreement" page is encountered.
+      </e>
+      <br/><br/><br/>
+
+
+      <b>Smart Parameters Predefined Variables - Job / Task</b><br/><br/>
+
+      These are predefined smart parameters that have special meaning and are related to obtaining read-only job and task information at runtime.<br/><br/>
+
+      <b>@JOBID</b><br/>
+      Returns the ID of the current job. This ID is the value that is specified in the ID field on the Datacap Administrator Workflow tab.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the ID of the current job.<br/><br/>
+        <c>
+          rrCompare("@JOBID", "MainJob")<br/><br/>
+        </c>
+        Result: Obtains the current job ID and compares it to "MainJob".  If it matches exactly, it returns True, otherwise it returns False.
+        This could be useful to change the application rule flow based on the name of the job.
+      </e>
+      <br/><br/>
+
+      <b>@JOBNAME</b><br/>
+      Returns the name of the current job. This name is the value that is specified in the Description field on the Datacap Administrator Workflow tab.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the name of the current job.<br/><br/>
+        <c>
+          rrCompare("@JOBNAME", "MainJob")<br/><br/>
+        </c>
+        Result: This action obtains the current job name and compares it to "MainJob".  If the current job ID matches exactly, 
+        it returns True, otherwise it returns False.
+        This is useful to change the application rule flow based on the name of the job.
+      </e>
+      <br/><br/>
+
+      <b>@OPERATOR</b><br/>
+      Returns the user name of the person who ran the job.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the name of the person who ran the job.<br/><br/>
+        <c>
+          rrSet("@OPERATOR", @X.TheOperator)<br/><br/>
+        </c>
+        Result: This action obtains the name of the current operator and stores it into another variable on the current object.  One possible use could be to pick up
+        this variable later and store it as metadata with a batch to keep track of the operator that ran the batch.
+      </e>
+      <br/><br/>
+
+
+      <b>@STATION</b><br/>
+      Returns the ID of the station that runs the job. This ID is the value that is specified in the ID field on the Datacap Administrator Workflow tab.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the ID of the station that runs the current job.<br/><br/>
+        <c>
+          rrSet("@STATION", @X.TheStation)<br/><br/>
+        </c>
+        Result: The action obtains the name of the current station, such as station "1", and stores it into another variable called "TheStation".  
+        One of the uses of this action is to pick up
+        this variable for later and store it as metadata with a batch to keep track of the station that ran the batch.
+        An alternative example use could be to perform an rrCompare or rrCompareNot and perform special rules based on the station.
+      </e>
+      <br/><br/>
+
+
+      <b>@TASKID</b><br/>
+      Returns the ID of the current task. This ID is the value that is specified in the ID field on the Datacap Administrator Workflow tab.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the ID of the current task.<br/><br/>
+        <c>
+          rrCompare("@TASKID", "Export")<br/><br/>
+        </c>
+        Result: Obtains the current task name and compares it to "Export".  If it matches exactly, it returns True, otherwise it returns False.
+        This kind of test could be useful to change the application rule flow based on the name of the job.
+      </e>
+      <br/><br/>
+
+
+      <b>@TASKNAME</b><br/>
+      Returns the name of the current task. This name is the value that is specified in the Description field on the Datacap Administrator Workflow tab.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the name of the current task.<br/><br/>
+        <c>
+          rrCompare("@TASKNAME", "Export")<br/><br/>
+        </c>
+        Result: This action obtains the current task name and compares it to "Export".  If the taskname matches exactly, it returns True, otherwise it returns False.
+        This kind of test is useful to change the application rule flow based on the name of the job.
+      </e>
+      <br/><br/><br/>
+
+
+      <b>Smart Parameters Predefined Variables - Utility</b><br/><br/>
+
+      These are predefined smart parameters that have special meaning and are related to obtaining read-only information at runtime.
+      The items in this section are of general use.<br/><br/>
+
+      <b>@CHR(UnicodeValue)</b><br/>
+      Returns the character corresponding to the specified decimal Unicode value. This can be particularly useful for passing
+      a parameter value that is also a smart parameter special character, allowing it to be passed to the action as the indicated
+      character value without additional smart parameter processing on the character, such as slashes, plus signs and the "at" symbol.
+      It is also useful to pass a value that may be
+      difficult to type into the edit field of Datacap Studio but still needs to be passed to an action.<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the @ character corresponding to the value 64.  This is an example
+        of testing a field value to a hard coded expected value that contains an @ symbol.<br/><br/>
+        <c>
+          rrCompare("Hi+@CHR(64)+There", @F)<br/><br/>
+        </c>
+        Result: The parameter @CHR(64) resolves to "@". The + signs cause this value
+        to be concatenated with the text before and after it, resulting in the string "Hi@There".  The rrCompare action
+        then compares that string to the text value of the current field. If the string matches, the action returns true,
+        otherwise it returns false.<br/><br/>
+
+        This is an additional example to show that the CHR can be used multiple times in a parameter.<br/><br/>
+        <c>
+          rrCompare("Hi+@CHR(64)+There+@CHR(33)", @F)<br/><br/>
+        </c>
+        Result: The value stored in the current text value for the field is "Hi@There!".
+      </e>
+      <br/><br/>
+
+
+      <b>@DATE(Format)</b><br/>
+      Returns the current date in the format specified.
+      If Format is blank, the default format is “MM/DD/YYYY”.<br/><br/>
+
+      The Format specification allows the representation to be customized to the date value meets a required format.<br/><br/>
+
+      Valid date formats are:<br/>
+      “yyyy-MM-dd”<br/>
+      “yyyy/MM/dd”<br/>
+      “MM-dd-yyyy”<br/>
+      “MM/dd/yyyy”<br/><br/>
+
+      Note: You can reformat a date field by calling the ValidationsAndTextAdjustments action IsFieldDateWithReformat function on the current field.
+      i.e. IsFieldDateWithReformat("yyyy/MM/dd")<br/><br/>
+
+      <e>
+        In this example, the smart parameter returns the current date.<br/><br/>
+        <c>
+          rrSet("@DATE(mm.dd.yyyy)", @X.CurrentDate)<br/><br/>
+        </c>
+        Result: The current date, in a format like 12.31.2024,  is stored in the current object with a variable called "CurrentDate".
+        That variable can be accessed later as needed.  For example, it may be stored with the batch as metadata.
+      </e>
+      <br/><br/>
+
+
+      <b>@DCO(PropertyName)</b><br/>
+      Returns the value of the specified DCO object property for the current object.
+      The DCO object is an internal data structure that contains the current runtime batch hierarchy information.
+      For more information on the DCO, refer to the top-level help of the ApplicationObjects action library.<br/><br/>
+
+      Supported PropertyName values:<br/>
+      "ID": The ID of the current DCO node.<br/>
+      "TYPE": The type of the current DCO node.<br/>
+      "STATUS": The status of the current DCO node.<br/>      
+      "IMAGENAME": The file name for the current image. Valid on a Page DCO object.<br/>
+      "TEXT": The text for the current DCO node. Valid on a Field DCO object.<br/>
+      "CONFIDENCESTRING": A string representing the confidence values for each character in the text value of the field.  Valid when called on on a Field object only.<br/>
+      "XML": The XML representation of the DCO.<br/><br/>
+
+      <e>
+        In this example, the rule that contains the action is bound to a page.
+        The example also contains the smart parameter returns the portion of the runtime batch hierarchy XML for the current page.<br/><br/>
+        <c>
+          rrSet("@DCO(ID)", "@X.MyVar")<br/><br/>
+        </c>
+        Result: The ID of the current object is placed into a variable named "MyVar".
+      </e>
+      <br/><br/>
+
+
+      <b>@DICT_VALUE(field)</b><br/>
+      This special variable works with OMR fields (indicated by the value RecogType=4) that are bound to a dictionary.
+      It returns the dictionary values corresponding to the items that are selected in the specified OMR field.<br/><br/>
+
+      <e>
+        In this example, the rule that contains the rrGet action is bound to a page that contains an OMR field (Options).
+        The OMR field has three subfields and is bound to the dictionary shown in the XML code.
+        On the current page all three options are selected, so the return string contains all three dictionary values.<br/><br/>
+        <c>
+          rrGet("@DICT_VALUE(Options)")<br/><br/>
+        </c>
+        Result: Navigation System Child Seat Fuel Service<br/><br/>
+
+        This assumes the following OMR setup:<br/>
+        ˂DICT n="Options"˃<br/>
+        ˂W v="Navigation System"˃Navigation System˂/W˃<br/>
+        ˂W v="Child Seat"˃Child Seat˂/W˃<br/>
+        ˂W v="Fuel Service"˃Fuel Service˂/W˃<br/>
+        ˂/DICT˃<br/>
+      </e>
+      <br/><br/>
+
+
+      <b>@DICT_WORD(field)</b><br/>
+      Same as @DICT_VALUE, except this special variable returns the dictionary words corresponding to the selected items.<br/><br/><br/>
+
+
+
+      <b>@DICT_VINDEX(csv_string)</b><br/>
+      This special variable works with actions bound to an OMR field (RecogType=4) where the OMR field is bound to a dictionary.
+      The parameter returns a string of 1's and 0's corresponding to the dictionary values you specify as a comma-separated list.<br/>
+
+      <e>
+        In this example, the rule that contains the rrGet action is bound to an OMR field.
+        The OMR field has three subfields and is bound to the dictionary shown on the right.
+        The values that are specified correspond to the second and third items in the dictionary, so the return value is 011.
+        The rrGet sets the character values on the three OMR subfields to 0, 1, and 1.<br/><br/>
+        <c>
+          rrGet("@DICT_VINDEX(Fuel Service,Child Seat)")<br/><br/>
+        </c>
+        Result: The value 011 is set on the current field, assuming the OMR is setup as follows and the last two items are checked.<br/><br/>
+
+        ˂DICT n="Options"˃<br/>
+        ˂W v="Nav System"˃Nav System˂/W˃<br/>
+        ˂W v="Child Seat"˃Child Seat˂/W˃<br/>
+        ˂W v="Fuel Service"˃Fuel Service˂/W˃<br/>
+        ˂/DICT˃
+      </e>
+      <br/><br/>
+
+
+      <b>@EMPTY</b><br/>
+      This special variable represents an empty string. This smart parameter is often handy to explicitly represent an empty string
+      instead of passing a simple empty quote. There can also be a situation where this variable is the only possible way to correctly
+      pass an empty string to an action that supports smart parameters.<br/><br/>
+
+      <e>
+        In this example, rrSet clears the custom page variable MyVar.<br/><br/>
+        <c>
+          rrSet("@EMPTY","@P.MyVar")<br/><br/>
+        </c>
+        This example checks to see if a DCO variable is empty.  If the variable is empty, or does not exist, the action returns True.<br/><br/>
+        <c>
+          rrCompare("@EMPTY", "@X.message")
+        </c>
+      </e>
+      <br/><br/>
+
+
+      <b>@PILOT(PropertyName)</b><br/>
+      Returns the value of the specified Pilot object property.
+      The Pilot object is an internal data structure that is configured by Datacap at the start of task execution.
+      It contains the information that is required to run the task. Such as the batch folder (BATCHDIR),
+      the batch ID (BATCHID), the input DCO file (DCOFILE), the task priority (PRIORITY).<br/><br/>
+
+      Allowed PropertyName values:<br/>
+      "BATCHID": The current batch ID. i.e. "20240101.00000".<br/>
+      "BATCHDIR": The full path to the current batch directory. i.e. "C:\Datacap\Application\Batches\Sample.00000".<br/>
+      "OPERATOR": The current operator.<br/>
+      "STATION": The current station.<br/>
+      "CHILDRENQUANTITY": The children count, dependent on the DCO object.<br/>
+      "PROJECTPATH": The path to the application's DCO directory.  i.e. "C:\Datacap\Application\Application_DCO".<br/>
+      "PAGESINBATCH": The number of pages in the batch, dependent on the DCO object.<br/>
+      "DOCSINBATCH": The number of pages in the batch, dependent on the DCO object.<br/>
+      "EXPECTEDPAGES": The number of pages in the batch, dependent on the DCO object.<br/>
+      "ADJUSTEDPAGES": The number of pages in the batch, dependent on the DCO object.<br/>
+      "ADJUSTEDDOCS": The number of pages in the batch, dependent on the DCO object.<br/>
+      "JOBNAME": The current job name.<br/>
+      "DCOFILE": The path to the current DCO. i.e. C:\Datacap\TravelDocs\batches\20230004.004\Export.xml. At runtime the DCO is in memory so the file on disk will not reflect the current state.<br/>
+      "JOBID": The current job ID.<br/>
+      "TASKID": The current task ID.<br/><br/>
+
+      <e>
+        Assuming this action is called on a page object, this example takes the image file associated with
+        the page and copies it to a file with the same name as the original page with the new extension ".backup.tif".<br/><br/>
+        <c>
+          CopyFile("@VAR(IMAGEFILE)", "@PILOT(BATCHDIR)+\+@ID+.backup.tif", true)<br/><br/>
+        </c>
+
+        In this example, the smart parameter returns the input DCO file for the current task.<br/><br/>
+        <c>
+          rrGet("PILOT(DCOFILE)")<br/><br/>
+        </c>
+
+        Result: Gets the path to the current DCO file and writes it to the current field.  This assumes the action rrGet was called on a field object.
+      </e>
+      <br/><br/>
+
+
+      <b>@PROCESSDIR</b><br/>
+      Returns the full path to the dco_˂app_name˃ folder of the application.<br/><br/>
+
+      <e>
+        An example of populating a field value with the process directory.
+        <c>
+          rrGet("@PROCESSDIR")<br/><br/>
+        </c>
+        Result: Assuming this is called on a field object, the field value is updated with the path to the DCO directory. i.e. C:\Datacap\TravelDocs\dco_TravelDocs
+      </e>
+      <br/><br/>
+
+
+      <b>@STRING(Text)</b><br/>
+      Returns the value that is specified as a string. The STRING directive allows hard coded
+      text to be passed as a parameter to an action without the text being interpreted as a smart parameter.
+      While this is not required for most text, if the hardcoded input text contains smart parameter special characters
+      such as slashes, @, +, and ., then this prevents them from being interpreted.<br/><br/>
+        
+      The @STRING specification must meet one of the following specifications:<br/>
+      The ending parenthesis must be a parenthesis followed by a plus sign, such as "@STRING(stuff)+".<br/>
+      The ending parenthesis must be the last character in the parameter.<br/><br/>
+
+      <e>
+        This is an example that passes a string, unchanged, to rrCompareCase.<br/><br/>
+        <c>
+          rrCompareCase("@STRING(me@example.com)", "@F", "false")<br/><br/>
+        </c>
+        Result: This action compares the string "me@example.com" to the value of the current field and return true
+        if the values match. The action does not try to interpret the @ as a smart parameter symbol.<br/><br/>
+
+        A variant that shows other strings can still be concatenated, as supported by smart parameter syntax.<br/><br/>
+        <c>
+          rrCompareCase("another+@STRING(me@example.com)", "@F", "false")<br/><br/>
+        </c>
+        Result: rrCompareCase performs a case insensitive compare the string "anotherme@example.com" to the value of the current field and return true
+        if the values match. The action does not try to interpret the @ as a smart parameter symbol. <br/><br/>
+
+        In this example, the text 'Airfare' + 'Taxes' = 'Total_Cost' is passed to CalculateFields without any additional processing
+        that could change the meaning of the string.<br/><br/>
+        <c>
+          CalculateFields("@STRING('Airfare' + 'Taxes' = 'Total_Cost')", "", "")
+        </c>
+          <br/>
+          In this example, the text within the @STRING parameter is "EFG+/))H+IJ" and will not be interpreted as smart parameter syntax.<br/><br/>
+        <c>
+            rrSet("ABC+@STRING(EFG+/))H+IJ)+XYZ", "@X.MyVariable")
+        </c>
+      </e>
+      <br/><br/>
+
+
+      <b>@TIME(Format)</b><br/>
+      Returns the current time in the format specified. The allowed specifiers are HH for hour, MM for minute and SS for seconds.
+      If a format is left blank it defaults to HH:MM:SS.<br/><br/>
+
+      <e>
+        An example of using TIME with a format parameter.
+        <c>
+          rrSet("@TIME(HH:MM)", @F)<br/><br/>
+        </c>
+
+        Result: When called on a field, this action gets the current time, such as 10:45, and store the value in the current field object's text value.
+      </e>
+      <br/><br/>
+
+
+      <b>@TYPE</b><br/>
+      Returns the type of the current object. Note, this is not the same as the DCO hierarchy type such as batch, page, or field.<br/><br/>
+
+      <e>
+        An example of comparing the object type to an expected type.
+        <c>
+          rrCompare("@TYPE", "Other")<br/><br/>
+        </c>
+
+        Result: This action returns true, if the current object type is a "Other".  For most applications, it is common
+        to first assign the page type of "Other" to a newly ingested page. The page type is usually changed to something custom
+        during a "page id" task.
+      </e>
+      <br/><br/><br/>
+
+
+      <b>Common Operations with Smart Parameters</b><br/><br/>
+
+      The following are some examples of manipulation that are common for manipulating data where it may be expected
+      that a special action exists in the this action library but is not required.  This summary is intended to
+      show some manipulation that is typical for validation tasks.  This set of examples are by no means
+      the limit of how smart parameters can be used.  While many of these examples show the
+      value being passed to the handy action rrSet, the same smart parameter can be passed to any action
+      that supports smart parameters as input.
+      Refer to the smart parameter guide
+      for full details on all available smart parameters and how to use them.<br/><br/>
+
+      Append Text To A Field:<br/>
+      rrSet("Append This +@F","@F")<br/>
+      Assuming this is running on a field object, it appends the text "Append This " to the current text value of the field.
+      If the field originally contained "ABCD", the final value is "Append This ABCD")<br/><br/>
+
+      rrSet("Append This +@F+ The End","@F")<br/>
+      Similarly, if the original field value is "ABCD", the final value of the field text is "Append This ABCD The End".<br/><br/>
+
+      Concatenate Text From A Different Field:<br/>
+      rrSet("@P\AnotherField+@F","@F")<br/>
+      This example obtains the text value from the sibling field "AnotherField" and append the text to the front of the
+      text in the current DCO field.<br/><br/>
+
+      Concatenate Text From A Different Field Variable:<br/>
+      rrSet("@P\AnotherField.MyVariable+@F","@F")<br/>
+      This example grabs the value from the sibling field "AnotherField" variable called "MyVariable" and append the text to the front of the
+      text in the current DCO field.<br/><br/>
+
+      Concatenate Text From A Different Field Variable Placed Into New Variable:<br/>
+      rrSet("@P\AnotherField.MyVariable+@CHR(32)+@F","@F.NewVariable")<br/>
+      This example obtains the value from the sibling field "AnotherField" variable called "MyVariable" and append the text to the front of the
+      text in the current DCO field. The current value of the field object is not updated, instead the new result is placed into a variable
+      for the current field called "NewVariable".
+      Assuming that "MyVariable" contains the text "Hello" and the current field value is "Tom", the first parameter 
+      fully resolves to "Hello Tom" and pass that value to the rrSet action, which then place that new string
+      into the variable called "NewVariable".<br/><br/>
+
+      Assigning A Default Field Value:<br/>
+      rrSet("My Default Text","@P\MyField")<br/>
+      Assuming this action is run on a page object that contains a field called "MyField", it initialized the default value of
+      the field the "My Default Text".  If the field was already recognized, then this new text overwrites the existing text.
+      If the field is later recognized, then this default text is replaced by the recognized text.<br/><br/>
+
+      Assigning Today's Date To A Field:<br/>
+      rrSet("@DATE(dd.mm.yyyy)","@X")<br/>
+      This example shows how to assign the current date in day, month, year format when rules are run on
+      a field object.  If a date format is not specified, the @DATE smart parameter defaults to MM/DD/YYYY.<br/><br/>
+
+      Likewise, the smart parameter @TIME() can be used to put a time stamp into a field or as a parameter to an action
+      that supports smart parameters.<br/><br/>
+
+      Assigning The Current Job ID A Field:<br/>
+      rrSet("@JOBID","@X")<br/>
+      Assuming this is called on a field level object, this example shows how to assign the current job ID to the text value of a
+      field object.<br/><br/>
+
+      Is the current Job ID the expected Job ID:<br/>
+      rrCompare("@JOBID","MyJobID")<br/>
+      This compares the current Job ID with the string "MyJobID" and returns true if it matches.  If needed
+      the hard coded "MyJobID" could reference a smart parameter that contains the value. Alternatively,
+      rrCompareNot can be used to return true if the current Job ID is does not match the provided string.
+      Other comparison actions perform case insensitive comparisons.<br/><br/>
+
+      Clear a field's value:<br/>
+      rrSet("@EMPTY","@F\MyField")<br/>
+      This example shows how to empty the recognized value of the field "MyField" using a rule called on a page that
+      contains the "MyField" child.<br/><br/>
+
+      To continue if a field is empty:<br/>
+      rrCompare("@EMPTY","@X)<br/>
+      This action would be called on the field object.
+      The smart parameters can reference hard coded values or obtain
+      values from other objects or other DCO variables.<br/><br/>
+
+      To continue if a field is empty from page level:<br/>
+      rrCompare("@EMPTY","@X\MyField")<br/>
+      This tests to see if the page's field called "MyField" is empty. If so, the rule continues.<br/><br/>
+
+      To continue if a field is not empty:<br/>
+      rrCompareNot("@EMPTY","@X")<br/>
+      This action would be called on the field object to check the text value of the field.
+      If the current field is empty, the function continues to the next action
+      in the rule.  If the field contains
+      text, then control branches to the next function in the ruleset.<br/><br/>
+
+      To test if a field value is greater than a specific number:<br/>
+      rrCompareNumeric("1234", "˂", "@X")<br/>
+      This action tests to see if the numeric value of the current field text is
+      greater than 1234.  Parameters can be changed as needed.  For example, if "@X" was
+      replaced with "@D.MyVar", the value 1234 is compared against the
+      value of the parent document level variable called "MyVar".<br/><br/>
+
+      Test if a field is hidden:<br/>
+      rrCompare("-1","@X.STATUS")<br/>
+      If a field has a STATUS of "-1", it is considered to be a hidden field or ignored and is not displayed
+      in a client verification panel.  If rules logic needs to determine if a field is hidden,
+      it can be tested by checking the STATUS variable of the field to see if it is "-1".
+      This example assumes the action is running on the current field object whose status will
+      be checked.  Of course, smart parameters can be used to navigate and check the status
+      of other DCO objects.<br/><br/>
+
+      Refer to the top-level help of the ApplicationObjects action library for more information
+      on the DCO, Datacap Object Hierarchy.
+    </h>
+
+    
+    <method name="AddServerGroupToBatch" qi=": Assigns a server group to the current batch for use with role-based filtering.">
+      <p name="GroupName" type="string"/>
+      <p name="IgnoreFailure" type="string"/>
+      <ap>
+        <b>GroupName:</b> The name of an server group to assign to the batch.<br/><br/>
+
+        <b>IgnoreFailure:</b> Set to <b>True</b> to ignore errors and/or if the given group is invalid and return success to avoid failing the rule function. 
+        Otherwise set to <b>False</b><br/><br/>
+        
+        Smart parameters are supported for both parameters.<br/>
+      </ap>
+      <h>
+        <p>
+          When role-based filtering is enabled, a group can be assigned to the current batch.
+          The action AddServerGroupToBatch first confirms that the group name is valid.
+          If the group name is valid, it is added to the list of assigned groups of the current batch. 
+          Only groups to which current user belongs can be assigned to the current batch.<br/><br/>
+
+          The Role-based batch filtering feature is a feature that provides a security mechanism by restricting 
+          the access to the batches that depend on the authorization level of the user for a particular application, 
+          for example, TravelDocs. Based on the filter configuration, users can only view and work on the batches 
+          based on the user’s groups.<br/><br/>
+
+          This action is only useful when running in Datacap environment against a live batch.
+        </p>
+        <p>
+          Validity of the given group is always enforced even if <b>IgnoreFailure</b> is set to <b>True</b>.
+          If <b>IgnoreFailure</b> is set to <b>True</b> action will always report success, but it will not assign an invalid group to the batch.
+        </p>
+        <e>          
+          <b>AddServerGroupToBatch</b>("Verifiers2", "False")<br/><br/>
+          
+          This example attempts to assign the group 'Verifiers2' to the current batch. 
+          If errors happen or if 'Verifiers2' is invalid the action fails and doesn't assign the group to the batch.
+        </e>
+        <br/>
+        <e>          
+          <b>AddServerGroupToBatch</b>("Scanners1", "True")<br/><br/>
+          
+          This example attempts to assign group 'Scanners1' to the current batch. 
+          If errors happen or if 'Scanners1' is invalid the action returns true but doesn't assign the group to the batch.
+        </e>
+        <br/>
+        <e>
+          IsValidServerGroup("GRP-ADMIN-00_WinSCP.Group")<br/>
+          <b>AddServerGroupToBatch("GRP-ADMIN-00_WinSCP.Group","true")</b><br/><br/>
+          
+          This example first calls IsValidServerGroup.  If the group name is valid and can be assigned
+          for the current batch, the action returns true and then AddServerGroupToBatch will run to
+          assign the group to the batch.
+        </e>
+      </h>
+      <lvl>Any level</lvl>
+      <ret>
+        <b>True</b> if given group can be assigned to the current batch. Otherwise <b>False</b>. 
+        If errors happen while attempting to validate the group <b>False</b> is returned.
+        If the parameter IgnoreErrors is True, then the action always returns true.<br/>
+      </ret>
+      <see>        
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+    
+
+    <method name="GoToNextFunction" qi=": Always returns false so control will pass to the next function in the rule.">
+      <ap>None.</ap>
+      <h>
+        Returns a <b>False</b> condition so that the next function in the RuleSet can run.
+        This action can be used anytime control should be passed to the next
+        function in the rule, which will start executing the actions in the next function.<br/><br/>
+
+        One use is to allow segregation of steps, making it clear different intents
+        within a rule without requiring a function with a long list of actions.  It is also
+        useful for performing multiple steps that may fail within a single rule, keeping
+        actions running within that rule.<br/><br/>
+        <e>
+          Ruleset<br/>
+          - MyPageRule<br/>
+          - - Function Set Field1<br/>
+          - - - rrSet("-1","@P\Field1.STATUS")<br/>
+          - - - <b>GoToNextFunction()</b><br/>
+          - - Function Set Field2<br/>
+          - - - rrSet("-1","@P\Field2.STATUS")<br/>
+          - - - <b>GoToNextFunction()</b><br/>
+          - - Function Set Field3<br/>
+          - - - rrSet("-1","@P\Field3.STATUS")<br/>
+          - - - <b>GoToNextFunction()</b><br/>
+          - - Function Set Field4<br/>
+          - - - rrSet("-1","@P\Field4.STATUS")<br/>
+          - - - <b>GoToNextFunction()</b><br/>
+          - - Function Stop<br/>
+          - - - SetReturnValue("True")<br/><br/>
+
+          The above rule will first attempt to set Field1
+          to a STATUS of -1, which means it is hidden. If the
+          field exists, the rrSet action will run, then
+          the action GoToNextFunction will pass control
+          to the next function.  If Field1 does not exist,
+          rrSet for Field1 will return false. This again will pass control to
+          the next function which will attempt to set the status for Field2,
+          and so on for the rest of the desired fields.  The last function
+          calls the action SetReturnValue.  This action simply returns True or False
+          based on the input parameter.  Here it returns True, which causes the entire
+          rule to exist with a "True" or "successful" state.<br/><br/>
+
+          Ruleset<br/>
+          - MyFieldRule<br/>
+          - - Function Is The Value Expected<br/>
+          - - - IsValueInText(@F, "1234", "False")<br/>
+          - - - rrSet("True","@X.ValueFound")<br/>
+          - - - <b>GoToNextFunction()</b><br/>
+          - - Function If Value Not Found<br/>
+          - - - rrCompareNot("True","@X.ValueFound")<br/>
+          - - - Do something useful here
+          - - - <b>GoToNextFunction()</b><br/>
+          - - Function Continue Doing Other Things<br/>
+          - - - Do more things here<br/><br/>
+
+          This second example does a validation on a field and if the field text contains "1234",
+          then the DCO variable "ValueFound" is set to "True". The next function will always
+          get called.  If the value was found, it checks for the variable that was set
+          then does some additional work, which only occurs if the text is not in the field,
+          then it moves on to the next function which will run if the text does or does not
+          exist in the field.  This example is just an illustration of how rule logic could be used
+          within an application.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>False.</b>
+      </ret>
+      <see>
+        SetReturnValue<br/>
+        Refer to the top-level help for more information about this action library.
+      </see>
+    </method>
+
+
+    <method name="IncrementVariable" qi=": Adds a numeric value to a DCO variable.">
+      <p name="Target" type="string"/>
+      <p name="Amount" type="string"/>
+      <ap>
+        <b>Target:</b> A smart parameter that indicates the DCO variable to increment.<br/><br/>
+
+        <b>Amount:</b> The numeric value that will be added to the target variable.  Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Adds a numeric amount to a variable.  If the variable does not previously exist, it will
+        be created with the initial value of 0.  If the variable does exist but it is not
+        numeric, then the starting value will assume to be 0 and the existing value will
+        be overwritten by the new amount.<br/><br/>
+
+        A value can be instead subtracted from the specified target variable by specifying a negative
+        value for the amount.<br/><br/>
+
+        This action respects the current locale. The number in the target and the number specified
+        as the amount must match the specification for the current locale.  For example, if the
+        current locale is "en-US", then the decimal separator must be a period ".".  If the current locale
+        is "fr-FR", then the decimal separator must be a comma ",".<br/><br/>
+        <e>
+          <b>IncrementVariable("@X", "1")</b><br/><br/>
+
+          Assuming this action is running on a field object, the current field value will be incremented
+          by 1.<br/><br/>
+
+          <b>IncrementVariable("@B.MyVariable", "5.25")</b><br/><br/>
+
+          Regardless of the DCO object this action runs on, it will increment the batch level
+          variable "MyVariable" by 5.25.<br/><br/>
+
+          <b>IncrementVariable("@B.MyVariable", "-5.25")</b><br/><br/>
+
+          Regardless of the DCO object this action runs on, it will subtract 5.25
+          from the batch level variable "MyVariable".<br/><br/>
+
+          <b>IncrementVariable("@B.MyVariable", "@X")</b><br/><br/>
+
+          Assuming this action is running on a field level object, the value of the current field
+          text will be added to the batch level variable "MyVariable".<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Returns <b>False,</b> if the Amount is not a valid number for the current locale, if an error occurs adding the value or if
+        the Target specification is invalid.  Otherwise, <b>True.</b>  If the source value is not numeric or does not exist, it will be considered
+        as an initial value of 0 and is not considered an error.<br/><br/>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+      <method name="IsBatchSetToAbort" qi=": Returns true if the task has been set to abort due to an eariler action.">          
+          <ap>
+              None.
+          </ap>
+          <h>
+              A batch is typically aborted when there is a severe issue that needs to be addressed
+              for the batch to successfully complete.  An administrator would check the batch and
+              take appropriate steps to correct the problem.  This action checks the status of the 
+              task to see if it has been set to an Abort state.  It allows rules
+              to take specific steps if the batch has been set to abort.  For example, it could
+              call an action to send an email, or it could perform other desired steps before the task completes.
+              <e>
+                  AnExportRule<br/>
+                  - FunctionToSkipProcessingOnAbort<br/>
+                  - - <b>IsBatchSetToAbort()</b><br/>
+                  - - SkipChildrenObjectsAndRules()<br/><br/>
+
+                  - FunctionThatRunsForAGoodBatch<br/>
+                  - - Action<br/>
+                  - - Action<br/>
+                  - - etc.<br/><br/>
+                  
+                  This example shows how a function can call IsBatchSetToAbort() to save
+                  unecessary steps. This action would commonly be used in export to prevent
+                  data from being exported if the batch has aborted.<br/><br/>                  
+              </e>
+          </h>
+          <lvl>Any level</lvl>
+          <ret>
+              <b>True</b> if the task has been set to abort. Otherwise <b>False.</b><br/><br/>
+          </ret>
+      </method>
+      
+
+    <method name="IsValidServerGroup" qi=": Returns true if the provided server group name is valid.">
+      <p name="GroupName" type="string"/>
+      <ap>
+        <b>GroupName:</b> The name of a group to test. Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        <p>
+          Tests if a group name is valid and can be assigned to the current batch which will be used
+          for role-based filtering.        
+          Only groups to which current user belongs can be assigned to the current batch.        
+          This action is only useful when running in Datacap environment against a live batch.
+        </p>
+        <e>          
+          <b>IsValidServerGroup("Verifiers2")</b><br/><br/>
+          
+          This example tests if the group 'Verifiers2' can be assigned to the current batch.
+          The action returns true if the group is valid and can be assigned to the current batch.  When an
+          action returns true, the next action in the current function is called. If an action returns 
+          false, then control changes to the next function in the rule.<br/>
+        </e>
+      </h>
+      <lvl>Any level</lvl>
+      <ret>
+        <b>True</b> if given group can be assigned to the current batch. Otherwise <b>False</b>. 
+        If errors happen while attempting to validate the group <b>False</b> is returned.
+      </ret>
+    </method>
+
+    <method name="MessageSetTextAndID" qi=": Allows for translatable messages that are displayed for failed fields.">
+      <p name="Message" type="string"/>
+      <p name="MessageID" type="string"/>
+      <ap>
+        <b>Message:</b> The message with index substitution indicators to be assigned to the <b>MESSAGE</b> variable.<br/><br/>
+
+        <b>MessageID:</b> The ID to be assigned to the Message to enable client-side translation. This parameter is optional<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        Adds a runtime MESSAGE and a MessageID variable to the bound object of the Document Hierarchy.
+        The message is associated with the current DCO object and is displayed in the
+        Datacap client verify panel when the current object has a failed status of 1.
+        The MessageID allows the message to be displayed translated into the language used by the operator
+        running the client verification panel.<br/><br/>
+
+        Many actions in the ValidationsAndTextAdjustments library, such as IsFieldCurrency, IsFieldDate, etc.,
+        will automatically produce an appropriate translated message when the validation fails.
+        MessageSetTextAndID allows for custom messages and the ability to create custom messages for
+        custom validations that are not part of the Datacap base validations.<br/><br/>
+
+        If the MessageID is provided, then the ID will be used to find the associated message in the
+        "resources.json" file in the application's DCO directory.  For example, if the application
+        name is APT, then the DCO directory is named "dco_APT". The message can be translated and placed
+        into the resources.json file in the DCO subdirectory based on the translated language.
+        For example, dco_APT\de contains the translations in the German language and will be active when
+        the application is run when the operating system is configured for the German locale.  Note that
+        the locale used for running rules can be different than the locale used by the end user.
+        The message replacement happens within the Datacap client application within the verification
+        panel, it is not directly replaced when this action is run.
+        It is while running the verification panel when the end user language is known and the appropriate
+        translated messages and other key-value pairs are retrieved from
+        the resources.json file by the client.<br/><br/>
+
+        If the the MessageID is not provided, or if it is provided but the associated message cannot be found
+        within the json file,
+        then the text provided in the "Message" parameter will be displayed to the user.  If the message
+        is within the json file, it is recommended to duplicate the message in the call to this action
+        as a safety measure to ensure a message is provided in the case where the message is not found.<br/><br/>
+
+        The English json file in the DCO directory could have a message like this:<br/>
+        "message.V001":"Invoice Number must have a minimum length of 2 or be blank."<br/><br/>
+
+        In the German json file in the \DE directory, the string can be translated like this:<br/>
+        "message.V001":"Die Rechnungsnummer muss eine Mindestlänge von 2 aufweisen oder leer sein."<br/><br/>
+
+        If the current windows environment is configured to display the client in German, then the German version
+        of the string will be displayed, otherwise the English version will be displayed from the English
+        file.  If the message is not found, then the message provided in the parameter will be displayed.<br/><br/>
+
+        If a field has a failed status, by default the failed validation can be overridden by the verify operator
+        to successfully submit the batch despite of the failure. The override functionality can be controlled using
+        the action SetIsOverridable.<br/><br/>
+
+        This action is similar to the MessageSetText action. The difference is that MessageSetText does not allow
+        the message to be translated and does not allow for substitution variables.<br/><br/>
+        <e>
+          <b>MessageID("The field '{0}' has a value of '{1}'.", "M004")</b><br/>
+          MessageSetRuntimeParameter("@ID","Text","0")<br/>
+          MessageSetRuntimeParameter("@X","Text","1")<br/><br/>
+
+          This example will look up the text in the json file that has the identifier "message.M004".  If the message
+          exists, it will obtain either the default English version from the _dco directory, or from the translated
+          directory, if it exists and if the message is present for the current UI language.  If the message with
+          the ID "message.M004" is not found, then the message provided as the parameter will be displayed to the user.<br/><br/>
+
+          The subsequent MessageSetRuntimeParameter actions will provide the values for the {} portions of the message.
+          Assuming these actions are called on field "Total" and the value of that field is "1234", the final displayed
+          message will be "The field 'Total' has a value of '1234'."<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        MessageSetRuntimeParameter, MessageSetText, SetIsOverridable<br/><br/>
+
+        MESSAGE is a special DCO variable used to display verification failures to the
+        verification operator. Refer to the top-level help for more information about this variable
+        and how to provide translated versions of text.<br/><br/>
+
+        See the smart parameter reference guide in the top-level help of this action library.<br/><br/>
+
+        Refer to the top-level help of the ValidationsAndTextAdjustments for information about
+        the locale used when running rules and information on the hr_locale variable.<br/>
+      </see>
+    </method>
+
+    <method name="MessageSetRuntimeParameter" qi=": Allows variable substitution in a user message.">
+      <p name="TextToPlaceInMessageOrID" type="string"/>
+      <p name="Type" type="string"/>
+      <p name="Index" type="string"/>
+      <ap>
+        <b>TextToPlaceInMessageOrID:</b>  The runtime value to replace a substitution indicator with.<br/><br/>
+
+        <b>Type:</b> The value's 'Type' to enable client-side translation lookup. Permitted Type values are:<br/>
+        "job", "task", "shortcut", "field", "workflow", "appname", "pagetype", "doctype", "text", "variable".<br/><br/>
+
+        <b>Index:</b> The index of the substitution.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/>
+      </ap>
+      <h>
+        This action works together with the MessageSetTextAndID action and the MESSAGE DCO variable, which 
+        contains the message displayed to a user in a verification panel when the field status is, "problem", 1.
+        The action updates the user message by replacing substitution parameters indicated by {x}, where
+        x is a zero-based integer.  The indicated message index is replaced by the text provided
+        to the action.  The text can be optionally translated.<br/><br/>
+
+        The TextToPlaceInMessageOrID message has two different functions, depending on the contents of
+        the application's resources.json file.  When using the verification panel, the client application
+        will first attempt to use the parameter as an ID that is paired with the Type parameter.
+        For example, if the parameter's value is "Hello" and the Type is "field", the application will first
+        look in the json file for the key "field.Hello". If the key is found, then the value associated with
+        it in the json file will be used as the message replacement.  If the key is not found, then the parameter
+        will be considered as the text intended for the message and inserted to the message as-is.<br/><br/>
+
+        The Index parameter determines which parameter within the message will be replaced. The message would have been
+        previously set by the MessageID action.  An Index of 0 will replace the value {0} in the message. Index 1 will
+        replace {1}, etc.<br/><br/>
+
+        If the MessageID parameter of the MessageSetTextAndID is not found in the json file, then the Type specified
+        in the MessageSetRuntimeParameter action will be ignored and the TextToPlaceInMessageOrID parameter will be
+        placed into the message as-is, after any smart parameters have been resolved.  No translation of text
+        will occur when the MessageID is not found in the resources.json file.  The text will appear as
+        it is specified in the action parameter.<br/><br/>
+
+        The look up of translated text happens within the Datacap client application within the verification
+        panel. It is while running the verification panel when the end user language is known and the appropriate
+        translated messages and other key-value pairs are retrieved from
+        the resources.json file by the client.<br/><br/>
+
+        The types "job", "task", "shortcut", "workflow", "appname", "pagetype" and "doctype" have special
+        substitution features within the client.  While they can be specified in this action, typically they would
+        not be used in this action.  "field" can be used as a mechanism to translate field names instead of
+        showing the actual field name within the DCO, which is not translated and sometimes cryptic.
+        "text" or "variable" would be normally be used within this action.  "text" keys are typically not
+        defined in the resources.json file, meaning that there will not be any associated key so the text provided
+        within the action parameter will be displayed to the user.  For example, if displaying the data within a field
+        that data should not be translated in the resources.json file.<br/><br/>
+        <e>
+          MessageSetTextAndID("The field '{0}' has a value of '{1}'.", "M004")<br/>
+          <b>MessageSetRuntimeParameter("@ID","Text","0")</b><br/>
+          <b>MessageSetRuntimeParameter("@X","Text","1")</b><br/><br/>
+          This example will look up the text in the json file that has the identifier "message.M004".  If the message
+          exists in the resources.json file, it will obtain either the default English version from the _dco directory, or from the translated
+          directory, if it exists and if the message is present for the current UI language.  If the message with
+          the ID "message.M004" is not found, then the message provided as the parameter will be displayed to the user.<br/><br/>
+
+          The subsequent MessageSetRuntimeParameter actions will provide the values for the {} portions of the message.
+          Assuming these actions are called on field "Total" and the value of that field is "1234", the final displayed
+          message will be:<br/>
+          "The field 'Total' has a value of '1234'."<br/><br/>
+
+          This example assumes that the json file
+          does not contain keys named "text.Total" or "text.1234" in the json file. If those keys
+          did exist, then the values of those keys would be used instead of the word "Total" and "1234".
+          This shows that it is common for keys to not exist so the text is substituted
+          without any translation.<br/><br/>
+
+          MessageSetTextAndID("The field '{0}' has a value of '{1}'.", "M004")<br/>
+          <b>MessageSetRuntimeParameter("PONum","Field","0")</b><br/>
+          <b>MessageSetRuntimeParameter("@X","Text","1")</b><br/><br/>
+
+          This is similar to the first example. In this example, the first parameter in the first call to
+          MessageSetRuntimeParameter is hard coded to "PONum".  If the key "Field.PONum" exists, then the
+          value of that key will be inserted into the {0} parameter.  If the key does not exist, then
+          "PONum" will be inserted into the message.<br/><br/>
+
+          For example, if the json file had this key:<br/>
+          "field.PONum":"Purchase Order Number"<br/><br/>
+
+          Then the final message would be:
+          "The field 'Purchase Order Number' has a value of '1234'."<br/><br/>
+
+          If the json file did not have the "field.PONum" key, then the message would be:<br/>
+          "The field 'PONum' has a value of '1234'."<br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        MessageSetTextAndID<br/><br/>
+
+        MESSAGE is a special DCO variable used to display verification failures to the
+        verification operator. Refer to the top-level help for more information about this variable
+        and how to provide translated versions of text.<br/><br/>
+
+        See the smart parameter reference guide in the top-level help of this action library.
+      </see>
+    </method>
+
+    <method name="MessageClear" qi=": Clears the failure message displayed to the user in the verify panel for this object.">
+      <ap>None.</ap>
+      <h>
+        Removes the runtime MESSAGE variable and the MessageID variable
+        from the bound object of the Document Hierarchy.<br/><br/>
+
+        If StatusPreserveOff is active for the current task and if the current object
+        has a status of 1, then the MESSAGE and MessageID
+        variables are automatically deleted before the first action runs in the rule.<br/><br/>
+        <e>
+          <b>MessageClear()</b><br/>
+          IsTextLength("@F", "30", "˂=")<br/>
+          IsTextLength("@F", "0", ">")<br/><br/>
+
+          This example clears the two message variables on the current object.
+          The message variable would be set when a validation fails.
+          Typically, the message would be cleared at the start of a validation rule so that
+          if the validation fails the first time the field is validated,
+          the second time the validation rule is run on the rule
+          and if it now it passes validation, the message variable will remain empty so it is not displayed
+          in the validation panel.<br/><br/>
+
+          This specific IsTextLength test shown in the example confirms that the text of the field
+          is 1 or more characters but not more than 30 characters.  If either validation
+          fails, the IsTextLengh action will automatically set the message variable with an appropriate message.<br/><br/>
+
+          It is possible for a rule running on a field to perform a validation on a sibling field.  If the validation fails, 
+          the validation error message may be set on the sibling field so the operator will understand 
+          which field needs to be corrected.  The verification operator can fix the issue and run the validation again on the page.  
+          The sibling field's message will not be automatically cleared when this validation is run, 
+          so the image can still remain even though the issue has been corrected.  In this situation, the message 
+          variable will have to be cleared by the rules before the test that runs validation on the field.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        MessageSetText, MessageSetTextAndID, MessageSetRuntimeParameter<br/>
+        MESSAGE is a special DCO variable used to display verification failures to the
+        verification operator. Refer to the top-level help for more information about this variable
+        and how to provide translated versions of text.
+      </see>
+    </method>
+
+
+    <method name="MessageSetText" qi=": Displays the specified text to the user in the verify panel for failed validations.">
+      <p name="Message" type="string"/>
+      <ap>
+        The text will be assigned to the MESSAGE variable of the current object.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        This action can be used to provide a custom message in the MESSAGE variable of
+        the current object.  This message is displayed in the client Validation panel for the DCO object,
+        typically a field, that has a failed state. The intent is to provide a reason for the failure
+        to the Verify operator, allowing them to understand why the field is in a failed status so
+        they can correct the value of the field.  Once the operator corrects the data within the field
+        and presses the button to revalidate the page, the rules will again attempt to revalidate all
+        of the fields on the page to see if they all pass.<br/><br/>
+
+        The action MessageSetTextAndID allows the message to be translated and also allows substitution variables
+        that can also be translated.<br/><br/>
+
+        If a field has a failed status, by default the failed validation can be overridden by the verify operator
+        to successfully submit the batch in spite of the failure. The override functionality can be controlled using
+        the action SetIsOverridable.<br/><br/>
+        <e>
+          <b>MessageSetText("Field Value '+@F+' is not Valid")</b><br/><br/>
+
+          This example uses a smart parameter to get the text value of the current field.
+          If the field had the text "Hello", then the message would say,
+          "Field Value 'Hello' is not valid".<br/>
+        </e>
+      </h>
+      <lvl>All, but usually the Field level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        SetIsOverridable<br/><br/><br/>
+        
+        MESSAGE is a special DCO variable used to display verification failures to the
+        verification operator. Refer to the top-level help for more information about this variable
+        and how to provide translated versions of text.
+      </see>
+    </method>
+
+
+    <method name="NumericMaximum" qi=": Given two numeric values, the larger value is saved in the target location.">
+      <p name="Number1" type="string"/>
+      <p name="Number2" type="string"/>
+      <p name="Target" type="string"/>
+      <ap>
+        <b>Number1:</b> The first numeric value to compare. If it is not a valid number for the locale, it
+        is treated as 0.<br/><br/>
+
+        <b>Number2:</b> The second numeric value to compare. If it is not a valid number for the locale, it
+        is treated as 0.<br/><br/>
+
+        <b>Target:</b> A smart parameter that specifies the location to store the larger of the two values.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        This action compares two numeric values and stores the larger value in the location
+        specified by the Target parameter.<br/><br/>
+
+        This action respects the current locale. The numbers specified
+        as the amount must match the specification for the current locale.  For example, if the
+        current locale is "en-US", then the decimal separator must be a period ".".  If the current locale
+        is "fr-FR", then the decimal separator must be a comma ",".<br/><br/>
+        <e>
+          <b>NumericMaximum("5","4.5","@X.Larger")</b><br/><br/>
+
+          This example will store the value "5" in the variable "Larger" on the current DCO object.<br/><br/>
+
+          <b>NumericMaximum("5","@X","@X.Larger")</b><br/><br/>
+
+          Assuming this example is called on a field object, it will compare the current field
+          text to the value "5".  If the numeric value of the field is less than 5, then the
+          variable "Larger" will be created on the current DCO object with the value 5.
+          If the numeric value of the field is greater than 5, then the field value will be stored
+          in the DCO variable "Larger".<br/><br/>
+
+          <b>NumericMaximum("@X.Var1","@X.Var2","@X.Larger")</b><br/><br/>
+
+          This example compares the two variables "Var1" and "Var2" on the current DCO.
+          The larger of the two values will be stored in the variable "Larger".<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Returns <b>False,</b> if an error occurs. Otherwise <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and for
+        for the smart parameter reference guide.
+      </see>
+    </method>
+
+    <method name="NumericMinimum" qi=": Given two numeric values, the smaller value is saved in the target location.">
+      <p name="Number1" type="string"/>
+      <p name="Number2" type="string"/>
+      <p name="Target" type="string"/>
+      <ap>
+        <b>Number1:</b> The first numeric value to compare. If it is not a valid number for the locale, it
+        is treated as 0.<br/><br/>
+
+        <b>Number2:</b> The second numeric value to compare. If it is not a valid number for the locale, it
+        is treated as 0.<br/><br/>
+
+        <b>Target:</b> A smart parameter that specifies the location to store the larger of the two values.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        This action compares two numeric values and stores the smaller value in the location
+        specified by the Target parameter.<br/><br/>
+
+        This action respects the current locale. The numbers specified
+        as the amount must match the specification for the current locale.  For example, if the
+        current locale is "en-US", then the decimal separator must be a period ".".  If the current locale
+        is "fr-FR", then the decimal separator must be a comma ",".<br/><br/>
+        <e>
+          <b>NumericMinimum("5","4.5","@X.Smaller")</b><br/><br/>
+
+          This example will store the value "4.5" in the variable "Smaller" on the current DCO object.<br/><br/>
+
+          <b>NumericMinimum("5","@X","@X.Smaller")</b><br/><br/>
+
+          Assuming this example is called on a field object, it will compare the current field
+          text to the value "5".  If the numeric value of the field is more than 5, then the
+          variable "Smaller" will be created on the current DCO object with the value 5.
+          If the numeric value of the field is less than 5, then the field value will be stored
+          in the DCO variable "Smaller".  So, if the field contained the value "2", then the
+          variable "Smaller" will be set to "2" on the current field object.<br/><br/>
+
+          <b>NumericMinimum("@X.Var1","@X.Var2","@X.Smaller")</b><br/><br/>
+
+          This example compares the two variables "Var1" and "Var2" on the current DCO.
+          The smaller of the two values will be stored in the variable "Smaller".<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Returns <b>False,</b> if an error occurs. Otherwise <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and for
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="NumericRound" qi=": Rounds the target variable to the number of decimal places specified.">
+      <p name="Target" type="string"/>
+      <p name="DecimalPlaces" type="string"/>
+      <ap>
+        <b>Target:</b> A smart parameter specifying the location of the variable whose value will be rounded.<br/><br/>
+
+        <b>DecimalPlaces:</b> A positive integer indicating the number of decimal places to keep after rounding.
+        A value of 0 will result in an integer value.  If no parameter is provided or if
+        the provided value is not an integer, 0 will be
+        used as the default. Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Obtains the value from the target specified and rounds it to the number of decimal spaces
+        specified.<br/><br/>
+
+        This action respects the current locale. The numbers specified
+        as the amount must match the specification for the current locale.  For example, if the
+        current locale is "en-US", then the decimal separator must be a period ".".  If the current locale
+        is "fr-FR", then the decimal separator must be a comma ",".<br/><br/>
+        <e>
+          <b>NumericRound("@X","2")</b><br/><br/>
+
+          Assuming this is called on a field object, it will round the numeric value of the field
+          to two decimal places.  If the field text value is "123.456", the value will be
+          changed to "123.46".<br/><br/>
+
+          <b>NumericRound("@B.MyVar","")</b><br/>
+
+          Regardless of the DCO object attached to this action, it will round the batch level variable
+          "MyVar" to 0 decimal places.  If the variable contained the value "123.456", the new value
+          would be "123".<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Returns <b>False,</b> if the specified target is not a valid number, if the target is invalid or if
+        an error occurs.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and for
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="NumericTruncate" qi=": Truncates a numeric value, removing the decimal portion.">
+      <p name="Target" type="string"/>
+      <ap>
+        <b>Target:</b> A smart parameter specifying the location of the variable whose value will be truncated.<br/><br/>
+      </ap>
+      <h>
+        Obtains the value from the target specified and truncates it, removing the decimal portion of the number.<br/><br/>
+
+        This action respects the current locale. The numbers specified
+        as the amount must match the specification for the current locale.  For example, if the
+        current locale is "en-US", then the decimal separator must be a period ".".  If the current locale
+        is "fr-FR", then the decimal separator must be a comma ",".<br/><br/>
+        <e>
+          <b>NumericTruncate("@X")</b><br/><br/>
+
+          Assuming this is called on a field object, it will round the numeric value of the field
+          to two decimal places.  If the field text value is "123.456", the value will be
+          changed to "123".<br/><br/>
+
+          <b>NumericTruncate("@B.MyVar")</b><br/>
+
+          Regardless of the DCO object attached to this action, it will truncate the batch level variable
+          "MyVar".  If the variable contained the value "98.76", the new value
+          would be "98".<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Returns <b>False,</b> if the specified target is not a valid number, if the target is invalid or if
+        an error occurs.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="rrAppend" qi="Appends text to the end of a value.">
+      <p name="Source" type="string"/>
+      <p name="Target" type="string"/>
+      <ap>
+        <b>Source:</b> A value or a smart parameter, which is a reference to a value, that will be copied.<br/>
+        <br/>
+        <b>Target:</b> A smart parameter referencing a target which is receiving the value.<br/><br/>
+
+        Either parameter is optional.  If a parameter is not specified, it will default to
+        the calling object.  If the calling object is a field, it will use the field value.
+        For batch, document and page objects, it will use a variable called "Text", creating
+        the variable if it does not exist.
+      </ap>
+      <h>
+        The action retrieves the value of the source object, and "appends" it to the target value.
+        If the source value was "123" and the target was "ABC", the final value in the target
+        would be "ABC123".<br/><br/>                        
+        <e>
+          <b>rrAppend("@D.DocID","@F")</b><br/>
+          <br/>
+          Assuming this action is called on a field level object, it obtains the 
+          ID of the parent document and appends it to the current field text value.<br/><br/>
+          
+          The example is equivalent to rrSet("@F+D.DocID","@F")<br/><br/>
+        </e>        
+      </h>
+      <lvl>All</lvl>
+      <ret>
+        <b>False</b> if the action cannot locate the target object. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        rrPrepend<br/><br/>
+
+        Refer to the top-level help for more information about this action library and for
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+    
+    <method name="rrCompare" qi=": Compares two values and returns true if they are identical.">
+      <p name="Text1" type="string"/>
+      <p name="Text2" type="string"/>
+      <ap>
+        <b>Text1:</b> A value or a smart parameter, which is a reference to a value.<br/><br/>
+
+        <b>Text2:</b> A value or a smart parameter, which is a reference to a value, for comparison.<br/><br/>
+
+        <b>Note:</b> Either reference can specify a variable of the calling
+        object (the bound object of the Document Hierarchy.) Alternatively, both references can
+        identify a variable of an object that is a parent or child of the calling object.<br/><br/>
+
+        Either parameter is optional.  If a parameter is not specified, it will default to
+        the calling object.  If the calling object is a field, it will use the field value.
+        For batch, document and page objects, it will use a variable called "Text", creating
+        the variable if it does not exist.
+      </ap>
+      <h>
+        Uses the Smart Parameters that you enter as the parameter to locate and
+        compare the values of two object's variables.  The comparison is a case
+        sensitive comparison.<br/>
+        <e>
+          <b>rrCompare("@P\Expected_Pages","@B.Tot_Pages")</b><br/><br/>
+
+          This example assumes the rule is attached to a page object and has a child
+          field called Expected_Pages.  The first parameter will access the text value
+          of the field Expected_Pages and compare the value to the batch level variable
+          "Tot_Pages".  If the values are identical, the action will return true.  If the
+          values are not the same, the action will return false.<br/><br/>
+
+          <b>rrCompare("George","@X")</b><br/><br/>
+
+          This example assumes the rule is attached to a field object.  "@X" will obtain
+          the text value of the current field object.  The value of the field will be compared
+          to the word "George", if the field exactly matches "George", the action will return true,
+          otherwise the action will return false.<br/><br/>
+
+          <b>rrCompare("@P\Date.STATUS","0")</b><br/><br/>
+
+          This example assumes that the rule is attached to a page object that has a child
+          field called "Date".  It compares the STATUS of the Date field with "0".  If the
+          status is 0, then the action will return True, otherwise the action will return False.<br/><br/>
+
+          <b>rrCompare("@EMPTY", "@X")</b><br/><br/>
+
+          The smart parameter "@EMPTY" matches an empty or non-existent value.
+          If the current object is a field, it checks to see if the text value of the field is empty.
+          If the field is empty, then rrCompare will return true and the next action will run.  If the field
+          is not empty, then the action will return false and control will pass to the next function in the
+          rule and then run the first action in the next rule.<br/><br/>
+
+          <b>rrCompare("@EMPTY", "@B.MyVariable")</b><br/><br/>
+
+          Regardless of the current object running this action, it will check the batch level variable "MyVariable"
+          to see if it is empty.  If "MyVariable" is empty, or if the variable does not exist, the action will return true.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the compared values do not match. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        rrCompareNot, rrCompareCase, rrCompareCaseLength, rrCompareNotCase and rrCompareNotCaseLength.<br/><br/>
+
+        IsValueInText in the ValidationsAndTextAdjustments action library.<br/><br/>
+
+        Refer to the top-level help for more information about this action library and for
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="rrCompareCase" qi=": Compares two values and returns true if they are identical. Case sensitivity can be enabled or disabled.">
+      <p name="Text1" type="string"/>
+      <p name="Text2" type="string"/>
+      <p name="CaseSensitive" type="string"/>
+      <ap>
+        <b>Text1:</b> A value or a smart parameter, which is a reference to a value.<br/><br/>
+
+        <b>Text2:</b> A value or a smart parameter, which is a reference to a value, for comparison.<br/><br/>
+
+        Note: Either reference can specify a variable of the calling
+        object (the bound object of the Document Hierarchy.) Alternatively, both references can
+        identify a variable of an object that is a parent or child of the calling object.<br/><br/>
+
+        Either parameter is optional.  If a parameter is not specified, it will default to
+        the calling object.  If the calling object is a field, it will use the field value.
+        For batch, document and page objects, it will use a variable called "Text", creating
+        the variable if it does not exist.<br/><br/>
+
+        <b>CaseSensitive:</b> 'True' performs a case sensitive compare.  'False' performs a case insensitive compare.
+        If not supplied, the default is 'False'.  Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Performs a comparison of two strings or smart parameters to see if they are identical.
+        The comparison can be performed case sensitive or case insensitive.
+        <e>
+          <b>rrCompareCase("Main_Job","@JOBID", "False")</b><br/><br/>
+
+          Compares the string "Main_Job" to the current Job ID.  The compare is
+          case insensitive.  If the current Job ID is "MAIN_JOB", the action will return True.<br/><br/>
+
+          <b>rrCompareCase("Main_Job","@JOBID", "True")</b><br/><br/>
+
+          Compares the string "Main_Job" to the current Job ID.  The compare is
+          case sensitive.  If the current Job ID is "MAIN_JOB", the action will return False.<br/><br/>
+
+          <b>rrCompareCase("Ringo","@X","@X.CaseFlag")</b><br/><br/>
+
+          This example assumes the action is called on a field object.  "@X" will obtain the text value
+          of the current field which is compared against the value "Ringo".  The smart parameter @X.CaseFlag
+          will obtain the value of the variable CaseFlag on the current DCO object.  If the value of that
+          variable is "True", then the comparison will be case sensitive.  If the value of that variable is
+          "False", then the comparison will be case insensitive.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the compared values do not match. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        rrCompare, rrCompareNot, rrCompareCaseLength, rrCompareNotCase and rrCompareNotCaseLength.<br/><br/>
+
+        IsValueInText in the ValidationsAndTextAdjustments action library.<br/><br/>
+
+        Refer to the top-level help for more information about this action library and for
+        the smart parameter reference guide.<br/>
+      </see>
+    </method>
+
+
+    <method name="rrCompareCaseLength" qi=": Compares two values and returns true if they are identical. Case sensitivity and the number of characters to compare can be controlled.">
+      <p name="Text1" type="string"/>
+      <p name="Text2" type="string"/>
+      <p name="CaseSensitive" type="string"/>
+      <p name="Length" type="string"/>
+      <p name="FromStart" type="string"/>
+      <ap>
+        <b>Text1:</b> A value or a smart parameter, which is a reference to a value.<br/><br/>
+
+        <b>Text2:</b> A value or a smart parameter, which is a reference to a value, for comparison.<br/><br/>
+
+        <b>CaseSensitive:</b> 'True' performs a case sensitive compare.  'False' performs a case insensitive compare.<br/><br/>
+
+        <b>Length:</b> An integer for the number of characters to compare.  If the length is 0, then the entire string will be compared.<br/><br/>
+
+        <b>FromStart:</b> 'True' compares from the start of the string.  'False' compares from the end of the string.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        Uses the Smart Parameters that you enter as the parameter to locate and
+        compare the values of two object's variables.  The comparison can be limited to
+        a specified number of characters from the start or end of the string.
+        The comparison can be performed case sensitive or case insensitive.
+        <e>
+          <b>rrCompareCaseLength("Main","@JOBID", "False", "4", "True")</b><br/><br/>
+
+          Compares the string "Main" to the current Job ID.  Only the first 4 letters are compared and the compare is
+          case insensitive.  If the current Job ID is "MAIN_JOB", the action will return True.<br/><br/>
+
+          <b>rrCompareCaseLength("Main","@JOBID", "True", "4", "True")</b><br/><br/>
+
+          Compares the string "Main" to the current Job ID.  The compare is
+          case sensitive. If the current Job ID is "MAIN_JOB", the compare will not match due to case and the action will return False.<br/><br/>
+
+          <b>rrCompareCaseLength("Main Line","Main Job", "True", "4", "True")</b><br/><br/>
+
+          Compares the string "Main Line" to the string "Main Job.  The compare is
+          case sensitive and only the first 4 characters are compared.
+          The action will return True.<br/><br/>
+
+          <b>rrCompareCaseLength("@P.ScanSrcPath","GOOD.BMP", "False", "8", "False")</b><br/><br/>
+
+          Performs a case insensitive compare of the last 8 characters of the
+          ScanSrcPath page variable to the last 8 characters of the string "GOOD.BMP".
+          If the value of ScanSrcPath is "c:\test\testvalidate\images\good.bmp", the
+          action will return True.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the compared values do not match. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        rrCompare, rrCompareNot, rrCompareCase, rrCompareNotCase and rrCompareNotCaseLength.<br/><br/>
+
+        IsValueInText in the ValidationsAndTextAdjustments action library.<br/><br/>
+
+        Refer to the top-level help for more information about this action library and for
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+
+
+    <method name="rrCompareNot" qi=": Compares two values and returns false if they are identical.">
+      <p name="Text1" type="string"/>
+      <p name="Text2" type="string"/>
+      <ap>
+        <b>Text1:</b> A value or a smart parameter, which is a reference to a value.<br/>
+        <br/>
+        <b>Text2:</b> A value or a smart parameter, which is a reference to a value, for comparison.<br/><br/>
+
+        Note: Either reference can specify a variable of the calling object.
+        Alternatively, both references can identify
+        a variable of an object that is a parent or child of the calling object.<br/><br/>
+
+        Either parameter is optional.  If a parameter is not specified, it will default to
+        the calling object.  If the calling object is a field, it will use the field value.
+        For batch, document and page objects, it will use a variable called "Text", creating
+        the variable if it does not exist.
+      </ap>
+      <h>
+        This action is the negation of rrCompare.  It can be useful for when a following action should be
+        performed only when two values are different.<br/><br/>
+        <e>
+          <b>rrCompareNot("@P.Expected_Pages","@B.Tot_Pages")</b><br/>
+          SetTaskAbortBatch()<br/><br/>
+
+          Assuming this action is called on a page or field object, it will obtain the value of the variable
+          "Expected_Pages" from the page object and compare it to the value of the batch level variable "Tot_Pages".
+          If the variables have the same value, then the action will return False, which will skip all of the following
+          actions in the current function and start running the first action in the next function.  If the values do
+          not match, then the action following the compare will run.  In this example, if the variables do not match
+          the batch will be set to abort.<br/><br/>
+
+          <b>rrCompareNot("@P\Date.STATUS","0")</b><br/><br/>
+
+          This example assumes that the rule is attached to a page object that has a child
+          field called "Date".  It compares the STATUS of the Date field with "0".  If the
+          status is 0, then the action will return False, otherwise the action will return True
+          and the next action in the function will run.<br/><br/>
+
+          <b>rrCompareNot("@EMPTY", "@X.MyVariable")</b><br/><br/>
+
+          This example uses the smart parameter "@EMPTY" to check to see if a value is empty
+          or does not exist.  If the variable "MyVariable" is empty on the current object,
+          or if the variable does not exist on the current object, then the action will return
+          false.  If the variable does exist and contains any value, then rrCompareNot will
+          return True and the next action will run.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if the compared values do not match. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        rrCompare, rrCompareNot, rrCompareCase, rrCompareNotCase and rrCompareNotCaseLength.<br/><br/>
+
+        IsValueInText in the ValidationsAndTextAdjustments action library.<br/><br/>
+        
+        Refer to the top level help for more information about this action library and for
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+    <method name="rrCompareNotCase" qi=": Compares two values and returns false if they are identical.  Case sensitivity can be enabled or disabled.">
+      <p name="Text1" type="string"/>
+      <p name="Text2" type="string"/>
+      <p name="CaseSensitive" type="string"/>
+      <ap>
+        <b>Text1:</b> A value or a smart parameter, which is a reference to a value.<br/>
+        <br/>
+        <b>Text2:</b> A value or a smart parameter, which is a reference to a value, for comparison.<br/><br/>
+
+        Note: Either reference can specify a variable of the calling object.
+        Alternatively, both references can identify
+        a variable of an object that is a parent or child of the calling object.<br/><br/>
+
+        Either parameter is optional.  If a parameter is not specified, it will default to
+        the calling object.  If the calling object is a field, it will use the field value.
+        For batch, document and page objects, it will use a variable called "Text", creating
+        the variable if it does not exist.
+
+        <b>CaseSensitive:</b> 'True' performs a case sensitive compare.  'False' performs a case insensitive compare.
+        If not supplied, the default is 'False'.<br/><br/>
+      </ap>
+      <h>
+        This action is the negation of rrCompareCase.  It can be useful for when an action should be
+        performed only when two values are different.<br/><br/>
+        <e>
+          <b>rrCompareNotCase("Main_Job","@JOBID", "False")</b><br/><br/>
+
+          Compares the string "Main_Job" to the current Job ID.  The compare is
+          case insensitive.  If the current Job ID is "MAIN_JOB", the strings match
+          so the action will return False.<br/><br/>
+
+          <b>rrCompareNotCase("Main_Job","@JOBID", "True")</b><br/><br/>
+
+          Compares the string "Main_Job" to the current Job ID.  The compare is
+          case sensitive. If the current Job ID is "MAIN_JOB", the strings do not match
+          so the action will return True.<br/><br/>
+
+          <b>rrCompareNotCase("Paul","@X","@X.CaseFlag")</b><br/><br/>
+
+          This example assumes the action is called on a field object.  "@X" will obtain the text value
+          of the current field which is compared against the value "Paul".  The smart parameter @X.CaseFlag
+          will obtain the value of the variable CaseFlag on the current DCO object.  If the value of that
+          variable is "True", then the comparison will be case sensitive.  If the value of that variable is
+          "False", then the comparison will be case insensitive.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if the compared values do not match. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+    <method name="rrCompareNotCaseLength" qi=": Compares two values and returns false if they are identical. Case sensitivity and comparison length can be controlled.">
+      <p name="Text1" type="string"/>
+      <p name="Text2" type="string"/>
+      <p name="CaseSensitive" type="string"/>
+      <p name="Length" type="string"/>
+      <p name="FromStart" type="string"/>
+      <ap>
+        <b>Text1:</b> A value or a smart parameter, which is a reference to a value.<br/><br/>
+
+        <b>Text2:</b> A value or a smart parameter, which is a reference to a value, for comparison.<br/><br/>
+
+        <b>CaseSensitive:</b> 'True' performs a case sensitive compare.  'False' performs a case insensitive compare.<br/><br/>
+
+        <b>Length:</b> An integer for the number of characters to compare.  If the length is 0, then the entire string will be compared.<br/><br/>
+
+        <b>FromStart:</b> 'True' compares from the start of the string.  'False' compares from the end of the string.<br/><br/>
+
+        Smart parameters are supported for all parameters.<br/><br/>
+      </ap>
+      <h>
+        This action is the negation of rrCompareCaseLength.  It can be handy for when an action should be
+        performed only when two values are different.<br/><br/>
+
+        Uses the Smart Parameters that you enter as the parameter to locate and
+        compare the values of two object's variables.  The comparison can be limited to
+        a specified number of characters from the start or end of the string.
+        The comparison can be performed case sensitive or case insensitive.
+        <e>
+          <b>rrCompareNotCaseLength("Main","@JOBID", "False", 4, "True")</b><br/><br/>
+
+          Compares the string "Main" to the current Job ID.  Only the first 4 letters are compared and the compare is
+          case insensitive.  If the current Job ID is "MAIN_JOB", the action will return False.<br/><br/>
+
+          <b>rrCompareNotCaseLength("Main","@JOBID", "True", 4, "True")</b><br/><br/>
+
+          Compares the string "Main" to the current Job ID.  The compare is
+          case sensitive so the current Job ID is "MAIN_JOB", the comparison will
+          not match due to case differences and the action will return True.<br/><br/>
+
+          <b>rrCompareNotCaseLength("Main Line","Main Job", "True", 4, "True")</b><br/><br/>
+
+          Compares the string "Main Line" to the string "Main Job.  The compare is
+          case sensitive and only the first 4 characters are compared.  The comparison matches so
+          the action will return False.<br/><br/>
+
+          <b>rrCompareNotCaseLength("@P.ScanSrcPath","GOOD.BMP", "False", 8, "False")</b><br/><br/>
+
+          Performs a case insensitive compare of the last 8 characters of the
+          ScanSrcPath page variable to the last 8 characters of the string "GOOD.BMP".
+          If the value of ScanSrcPath is "c:\test\testvalidate\images\good.bmp", the
+          comparison will match so the action will return False.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if the compared values do not match. Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        rrCompareNotCaseLength, rrCompareNot, rrCompare<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="rrCompareNumeric" qi=": Compares two numeric values and returns true if they meet the requirements of the comparison operator.">
+      <p name="Number1" type="string"/>
+      <p name="Operator" type="string"/>
+      <p name="Number2" type="string"/>
+      <ap>
+        <b>Number1:</b> A numeric value or a smart parameter, which is a reference to a numeric value.<br/><br/>
+
+        <b>Operator:</b> Comparison operator as second parameter. Operator can be one of these <b>˂</b>,<b>˂=</b>,<b>=</b>,<b>>=</b>,<b>></b>,<b>˂>.</b><br/><br/>
+
+        <b>Number2:</b> A numeric value or a smart parameter, which is a reference to a numeric value, for comparison.<br/><br/>
+
+        Note: Either number reference can specify a variable of the calling
+        object (the bound object of the Document Hierarchy.) Alternatively, both references can
+        identify a variable of an object that is a parent or child of the calling object.<br/><br/>
+
+        Either of the two number parameters to compare is optional.  If a parameter is not specified, it will default to
+        the calling object.  If the calling object is a field, it will use the field value.
+        For batch, document and page objects, it will use a variable called "Text", creating
+        the variable if it does not exist.<br/><br/>
+      </ap>
+      <h>
+        Uses the Smart Parameters that you enter as the parameter to locate and
+        compare the numeric values of two object's variables.<br/><br/>
+
+        This action respects the current locale. The numbers specified
+        as the amount must match the specification for the current locale.  For example, if the
+        current locale is "en-US", then the decimal separator must be a period ".".  If the current locale
+        is "fr-FR", then the decimal separator must be a comma ",".<br/><br/>
+        <e>
+          <b>rrCompareNumeric("@P\Total_Cost",">","100")</b><br/><br/>
+
+          Assuming rule is configured at page level and the page has a child field called "Total_Cost", the first parameter
+          will resolve to the text value of the "Total_Cost" field.
+          If the value in field Total_Cost is greater than 100 then the action will return True else will return False.<br/><br/>
+
+          <b>rrCompareNumeric("@P.TemplateID",=,"555")</b><br/><br/>
+
+          This example shows a value from a page variable @P.TemplateID to be compare with the value 555 which is the default fingerprint value.
+          If the @P.TemplateID is equal to 555 then the action will return True, otherwise it will return false.
+          From the result the conclusion can be make that the default fingerprint is being used.<br/><br/>
+
+          <b>rrCompareNumeric("@X",">=", "@X.MyVariable")</b><br/><br/>
+
+          This example assumes that the rule is attached to a field object. The "@X" smart parameter will obtain
+          the text recognized text value of the current field. If that value is greater than or equal to the value
+          of the variable called "MyVariable" on the same field object, then the action will return true.  Otherwise
+          the action will return false.<br/><br/>
+
+          <b>rrCompareNumeric("@X.Var1", "=", "@X.Var2")</b><br/><br/>
+
+          This example compares that two values are equal. This is very similar to using rrCompare("@X.Var1","@X.Var2").
+          The difference is that rrCompareNumeric has the additional requirement that both variables are valid numbers
+          for the current locale. If the numbers are integers, then this action could be used interchangeably with rrCompare.<br/><br/>
+
+          <b>rrCompareNumeric("@X.Var1", "˂>", "@X.Var2")</b><br/><br/>
+
+          This example compares that two values are not equal. This is very similar to using rrCompareNot("@X.Var1","@X.Var2").
+          The difference is that rrCompareNumeric has the additional requirement that both variables are valid numbers
+          for the current locale. If the numbers are integers, then this action could be used interchangeably with rrCompareNot.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the parameters to compare are not numeric, if operator is not specified or if the condition is not satisfied, else will return  <b>True.</b>
+      </ret>
+      <see>
+        NumericMinimum, NumericMaximum, IncrementVariable<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.<br/><br/>
+
+        Refer to the "Locale Sensitive Operations" section in the top level help of the ValidationsAndTextAdjustments action library
+        for information regarding the operation of the current locale and how to set it.
+      </see>
+    </method>
+
+
+    <method name="rrContains" qi=": Returns true if the text is a sub-string of a source text.">
+      <p name="SearchForValue" type="string"/>
+      <p name="SearchInValue" type="string"/>
+      <p name="CaseSensitive" type="string"/>
+      <ap>
+        <b>SearchForValue:</b> A value or a smart parameter, which is a reference to a value to be searched for. If not supplied, it will
+        default to the text field of the current object.<br/><br/>
+
+        <b>SearchInValue:</b> A value or a smart parameter, which is a reference to a value that may contain the value from argument 1.<br/><br/>
+
+        <b>CaseSensitive:</b> True to perform a case sensitive comparison, False to ignore case sensitivity. Default is False.<br/><br/>
+
+        All parameters support smart parameters.<br/><br/>
+      </ap>
+      <h>
+        If the SearchForValue is within the SearchInvalue, the action will return true.  The SearchInValue can be
+        the entire string or a subset of the string.<br/><br/>
+        <e>
+          <b>rrContains("Dr", "@P.Name", "")</b><br/><br/>
+
+          This example shows how a value "Dr" is used as direct input, and the Page object's
+          Name variable is used as the text that is searched. If the word "Dr" is contained within
+          the value of the variable "Name", then the action returns true, otherwise the action returns false.<br/><br/>
+
+          <b>rrContains("@B.MyVar", "@X", "@B.Sensitive")</b><br/><br/>
+
+          Assuming this action is called on a field object, it compares the recognized text value of the current
+          field with the value stored in the batch level variable "MyVar".  The batch variable "Sensitive" determines
+          if the comparison is case sensitive or not.  If the value of "Sensitive" is "True". then the comparison is
+          case sensitive, otherwise the comparison will be case insensitive.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True</b> if the value of "SearchForValue" is found in the value of "SearchInValue". Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        rrCompareNot, rrCompare<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+
+
+
+    <method name="rrGet" qi=": Obtains the value of the parameter and stores it in the text value of the current object.">
+      <p name="Source" type="string"/>
+      <ap>
+        <b>Source:</b> A value or a smart parameter, which is a reference to a value, that will be copied to the calling object.
+      </ap>
+      <h>
+        Updates the current object with the value provided as a parameter.  Typically, the parameter would be a
+        smart parameter that obtains the value at runtime from another object or a variable.<br/><br/>
+
+        If the calling object is a field, only the value of the
+        field's text property will be changed.<br/><br/>
+
+        This action is a simplified version of rrSet. rrSet is more flexible in that it allows the target
+        location to be specified.<br/><br/>
+        <e>
+          <b>rrGet("@B.OPERATOR")</b><br/>
+          This example retrieves the ID of the current operator running the batch and stores it in the current object.<br/><br/>
+
+          <b>rrGet("@DICT_WORD(..\MONTH)")</b><br/>
+          This example shows how Smart Parameters translates the OMR recognized value of the
+          MONTH field to the text from a predefined dictionary.  The text is then assigned
+          to the calling object's Text property, if it is a field, or Text variable if it is not a field.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> the parameter is missing. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        rrSet, rrCompare<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+    
+    <method name="rrPrepend" qi="Appends text to the start of a value.">
+      <p name="Source" type="string"/>
+      <p name="Target" type="string"/>
+      <ap>
+        <b>Source:</b> A value or a smart parameter, which is a reference to a value, that will be copied.<br/>
+        <br/>
+        <b>Target:</b> A smart parameter referencing a target which is receiving the value.<br/><br/>
+
+        Either parameter is optional.  If a parameter is not specified, it will default to
+        the calling object.  If the calling object is a field, it will use the field value.
+        For batch, document and page objects, it will use a variable called "Text", creating
+        the variable if it does not exist.
+      </ap>
+      <h>
+        The action retrieves the value of the source object, and appends the value to the beginning
+        of the target value and stores the value in the target.
+        If the source value was "123" and the target was "ABC", the final value in the target
+        would be "123ABC".<br/><br/>
+        <e>
+          <b>rrPrepend("@D.DocID","@F")</b><br/>
+          <br/>
+          Assuming this action is called on a field level object, it obtains the
+          ID of the parent document and prepends it to the current field text value.<br/><br/>
+
+          The example is equivalent to rrSet("D.DocID+@F","@F")<br/><br/>
+        </e>
+      </h>
+      <lvl>All</lvl>
+      <ret>
+        <b>False</b> if the action cannot locate the target object. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        rrAppend<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+
+    <method name="rrSet" qi=": Copies a value from one locate to another location.">
+      <p name="Source" type="string"/>
+      <p name="Target" type="string"/>
+      <ap>        
+        <b>Source:</b> A value or a smart parameter, which is a reference to a value, that will be copied.<br/>
+        <br/>
+        <b>Target:</b> A smart parameter referencing a target which is receiving the value.<br/><br/>
+
+        Either parameter is optional.  If a parameter is not specified, it will default to
+        the calling object.  If the calling object is a field, it will use the field value.
+        For batch, document and page objects, it will use a variable called "Text", creating
+        the variable if it does not exist.
+      </ap>
+      <h>
+        Determines the the value of the source parameter
+        and assigns it to the target parameter.
+        If the value is copied from or copied to a field's text value, only the value of the
+        field will be changed.  You can use rrCopy if you wish to copy a field's
+        value, confidence, position and image reference of the source field object.<br/><br/>
+        <e>
+          <b>rrSet("@F.MySourceVar","@P.MyTargetVar")</b><br/>
+          This example assumes it is called on a field object.  "@F.MySourceVar" will access the
+          value from the variable "MySourceVar" belonging to the current field.
+          The value of "MySourceVar" will be assigned to the variable "MyTargetVar"
+          on the parent page object. If the target variable does not exist, it will be created. If the
+          target variable does exist, it will be replaced with the new value.<br/><br/>
+
+          <b>rrSet("1234", "@X")</b><br/>
+          Assuming this example is called on a field object, the text value of the current field
+          will be set to "1234".<br/><br/>
+
+          <b>rrSet("1234", "@X.MyVariable")</b><br/>
+          This action will assign the value "1234" to the variable "MyVariable" on the
+          current DCO object.  If the variable does not exist, it will be created.  If the
+          variable does exist, it will be overwritten.<br/><br/>
+
+          <b>rrSet("@D.Tot_Pages","@B.Tot_Pages")</b><br/>
+          This example assumes that the calling object is a Document object or a child of a Document object.
+          It locates the value in the calling document's
+          Tot_Pages variable and assigns it to the Tot_Pages variable of the Batch object.
+          <br/><br/>
+
+          <b>rrSet("@DICT_VALUE(..\MONTH)","")</b><br/>
+          This example shows how Smart Parameters translates the OMR recognized value of the
+          MONTH field to the text from a predefined dictionary.  The text is then assigned
+          to the calling object's Text property, if it is a field, or Text variable if it is not a field.<br/><br/>
+        </e>
+        <br/>
+        <br/>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the action cannot locate the target object.  Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        rrCopyFieldAndConfidence , rrGet, rrCompare<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="SetBatchPriority" qi=": Changes the priority for the current batch.">
+      <p name="Priority" type="string"/>
+      <ap>
+        An integer from 1-9 that indicates the new batch priority that will take affect
+        at the end of the Task.
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Sets the priority of the batch at the completion of the Task.
+        Values are typically 1-9 with 5 being the median. Batches with priority 1 are processed first,
+        batches with priority 9 are processed last.  Because the batch is already running, the
+        new priority will not take effect until the task completes.<br/><br/>
+
+        Generally, it isn't necessary to change the priority of the batch.  Change a batch priority if there is
+        a specific reason why the priority should be altered.<br/><br/>
+        <e>
+          <b>SetBatchPriority("1")</b><br/><br/>
+
+          This example increases the priority of the batch to the highest level.<br/><br/>
+
+          <b>SetBatchPriority("@B.NewPriority")</b><br/><br/>
+
+          This example uses a smart parameter to get the new priority from a batch level
+          variable called NewPriority.  It is required that some previous action has properly set
+          this variable on the batch object.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the value of the argument is invalid. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="SetIsOverrideable" qi=": Controls the ability for a verify panel operator to submit a batch that has a failed field.">
+      <p name="AllowOperatorOverride" type="string"/>
+      <ap>
+        <b>AllowOperatorOverride:</b> True, allows the operator to override a failed validation when
+        the current object's status is 1 indicating a failure.  False, prevents the verify panel operator
+        to submit a batch when the object is in a failed status.  The operator must either fix the problem
+        field so it passes the validation test or put the batch on hold. If no parameter is provided,
+        or if the value is invalid, the value will default to False.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Specifies that if the validation fails for the current object, the failure is non-overridable
+        or overridable by the user.<br/><br/>
+
+        <b>Important!</b> When the parameter value is False, it will prevent an operator from overriding a field's validations
+        and then continuing to subsequent pages until the failure is corrected.<br/><br/>
+
+        The use of SetIsOverridable("False") only remains in effect for the length of the current rule.  When the current rule
+        has completed, subsequent rules will default to "True", unless SetIsOverridable("False") is called again.<br/><br/>
+        <e>
+          <b>SetIsoverridable("False")</b><br/>
+          IsFieldPercentNumeric("100")<br/><br/>
+
+          In this sequence, if the field's captured value is not 100% Numeric, an operator
+          cannot override a Validation rule's subsequent rejection of the value.
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="SetOperatorID" qi=": Changes the ID of the operator running the task.">
+      <p name="OperatorID" type="string"/>
+      <ap>
+        A Single value representing the new Operator ID value.<br/><br/>
+
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        By default the operator ID of the current user (or current logged in user) is used to run the task. 
+        If the operator ID needs to be changed for a specific use case or reason, then use this action to change the ID.
+        This action does not need to be called for a typical installation.<br/><br/>
+        <e>
+          <b>SetOperatorID("admin")</b>
+
+          This example sets the new operator ID to "admin".<br/><br/>
+
+          <b>SetOperatorID("@B.NewOperator")</b><br/><br/>
+
+          This example uses a smart parameter to get the new priority from a batch level
+          variable called NewOperator.  It is required that some previous action has properly set
+          this variable on the batch object.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if an error occurs. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="SetReturnValue" qi=": Returns true or false based on the parameter.">
+      <p name="ReturnValue" type="string"/>
+      <ap>
+        <b>ReturnValue:</b>  The value can be "True" or "False".  The action will return
+        True or False based on the parameter.  Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        This action will return true or false based on the input parameter.<br/><br/>
+
+        By passing in true, the action will return true and continue with the actions in the current function.  If this is the last
+        action in a function, the function will complete and any additional functions within the current
+        rule will be skipped.<br/><br/>
+
+        If the parameter is "False", then this action will return false.  The remaining actions in the rule will be
+        skipped and the first action in the next function will run, if it exists.  When the input parameter
+        is false, this action works identically to the action GoToNextFunction.<br/><br/>
+
+        One use for this action
+        is a quick way to disable a rule by adding a new function, that precedes all other functions
+        in the rule, where the new function contains only this action with a parameter of true.  This will cause
+        all other functions in the rule to be skipped, the current rule will complete and the next rule will run.<br/><br/>
+        <e>
+          Ruleset<br/>
+          - Rule<br/>
+          - - Function1<br/>
+          - - - Some action1<br/>
+          - - - Some action2<br/>
+          - - - Some action3<br/>
+          - - Function2<br/>
+          - - - <b>SetReturnValue("true")</b><br/>
+          - - Function3<br/>
+          - - - Some action4<br/><br/>
+
+          This example shows a rule with 3 or more functions.  As with any rule, first Function1 will
+          start running its actions.  If Action1, Action2 and Action3 all return true, then the rule will
+          complete and then the next configured rule will run based on the current DCO structure.<br/><br/>
+
+          If either Action1 or Action2 or Action3 return false, then Function2 will run. The action SetReturnValue
+          will return True and the rule will stop processing.  In this example, Function3 will never run.<br/><br/>
+
+          This could be an example where perhaps an application is being debugged and it is desired to stop processing
+          at that point so the batch can be reviewed and debugged.<br/><br/>
+
+          Ruleset<br/>
+          - Rule<br/>
+          - - Function1<br/>
+          - - - Some action1<br/>
+          - - - Some action2<br/>
+          - - - Some action3<br/>
+          - - Function2<br/>
+          - - - <b>SetReturnValue("true")</b><br/><br/>
+
+          This is a very similar kind of example.  Here the set return value of true is the last thing in the rule.
+          This can be done to always cause a rule to have a True or "Good" final status when it completes, regardless of
+          any actions that may have returned false earlier in the ruleset.<br/><br/>
+
+          Ruleset<br/>
+          - MyPageRule<br/>
+          - - Function Set Field1<br/>
+          - - - rrSet("-1","@P\Field1.STATUS")<br/>
+          - - - GoToNextFunction()<br/>
+          - - Function Set Field2<br/>
+          - - - rrSet("-1","@P\Field2.STATUS")<br/>
+          - - - GoToNextFunction()<br/>
+          - - Function Set Field3<br/>
+          - - - rrSet("-1","@P\Field3.STATUS")<br/>
+          - - - GoToNextFunction()<br/>
+          - - Function Set Field4<br/>
+          - - - rrSet("-1","@P\Field4.STATUS")<br/>
+          - - - GoToNextFunction()<br/>
+          - - Function Stop<br/>
+          - - - <b>SetReturnValue("True")</b><br/><br/>
+
+          This is a more specific example where the rule will always return True at the end.
+          The above rule will first attempt to set Field1
+          to a STATUS of -1, which means it is hidden. If the
+          field exists, the rrSet action will run, then
+          the action GoToNextFunction will pass control
+          to the next function.  If Field1 does not exist,
+          rrSet for Field1 will return false. This again will pass control to
+          the next function which will attempt to set the status for Field2,
+          and so on for the rest of the desired fields.  This pattern allows
+          all of the actions to be called regardless of failure from previous actions.
+          The last function
+          calls the action SetReturnValue.  This action simply returns True or False
+          based on the input parameter.  Here it returns True, which causes the entire
+          rule to exit with a "True" or "successful" state.<br/><br/>
+
+          The above example would run exactly the same if the action GoToNextFunction()
+          was replaced by "SetReturnValue("False").<br/><br/>
+
+          Rule<br/>
+          - Function1<br/>
+          - - Some action1<br/>
+          - - Some action2<br/>
+          - - Some action3<br/>
+          - - <b>SetReturnValue("@X.WhatShouldIDo")</b><br/>
+          - Function2<br/>
+          - - Some action4<br/><br/>
+
+          This example shows the return value of SetReturnValue being obtained from a variable.
+          For illustration the variable "WhatShouldIDo" is expected to exist on the current object. If the variable is set to
+          "True", then the rule will end and Function2 will not be run.  If the variable "WhatShouldIDo"
+          does not equal "True", then the action will return False and Function2 will run.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>True,</b> if the action is passed the parameter 'true'.  Otherwise, <b>False.</b>
+      </ret>
+      <see>
+        GoToNextFunction, SetTaskAbortBatch<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="SetStationID" qi=": Changes the current station ID to a new station ID.">
+      <p name="StationID" type="string"/>
+      <ap>
+        The new Station ID value. Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Sets the Station ID at the completion of the Task.<br/><br/>
+        <e>
+          <b>SetStationID("4")</b><br/><br/>
+
+          This example sets the station to "4".<br/><br/>
+
+          <b>SetStationID("@X.NewStationID")</b><br/><br/>
+
+          This example uses a smart parameter get the value of the new station ID
+          from the variable NewStationID from the current object.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if setting the value throws an error. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="SetTaskAbortBatch" qi=": Sets the current task to an Abort status.">
+      <ap>None.</ap>
+      <h>
+        Stops processing the current batch and sets the status of the batch to Abort.
+        Typically a batch would only be set to Abort status if there is something critically wrong
+        where the batch should not continue being processed and would need to be reviewed to determine
+        what is wrong and how to fix it.  One example could be in an export task where the export
+        system is not available so the batch should not continue.<br/><br/>
+        <e>
+          rrCompareNot("@P.Expected_Pages","@B.Tot_Pages")<br/>
+          <b>SetTaskAbortBatch()</b><br/><br/>
+
+          Assuming this action is called on a page or field object, it will obtain the value of the variable
+          "Expected_Pages" from the page object and compare it to the value of the batch level variable "Tot_Pages".
+          If the variables have the same value, then the action will return False, which will skip all the following
+          actions in the current function and start running the first action in the next function.  If the values do
+          not match, then the action following the compare will run.  In this example, if the variables do not match
+          the batch will be set to abort.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="SetTaskStatus" qi=": Overrides the final status of the task.">
+      <p name="TaskStatus" type="string"/>
+      <ap>
+        <b>TaskStatus:</b> An integer value representing the status that the task is to return to User Application.
+        The task statuses are: <br/><br/>
+
+        0 : Abort. The batch has encountered a serious error and will not proceed with the next task until it has been
+        reviewed and reset. Subsequent actions will not be run.<br/>
+        1 : Cancelled. The batch has finished and will not proceed with the next task. Cancelled status can
+        automatically delete the entire batch directory.<br/>
+        2 : Finished. The batch has finished successfully.<br/>
+        4 : Hold. The batch is not complete and needs further processing.<br/>
+        8 : Pending. The batch will stay in the same task and be rerun again from the start of the task.<br/><br/>
+
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        Sets the Task Status value that is to be returned to User Application when the current task finishes processing.
+        Any subsequent actions will continue to run after this action has been called.<br/><br/>
+
+        Typically applications do not need to call this action.  Once a task completes, the batch will
+        advance to the next step in the workflow. This action would be used to cause the batch to
+        complete with an alternate status.<br/><br/>
+        <e>
+          <b>SetTaskStatus("4")</b><br/>
+          This example sets the task to end in a "Hold" status when complete.<br/><br/>
+
+          <b>SetTaskStatus("@B.WhatsMyStatus")</b><br/>
+          This example uses a smart parameter to grab the final status from a user controlled
+          batch variable called "WhatsMyStatus".  It is assumed some earlier rule would have set
+          an appropriate value for this variable.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not a valid status value. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="SkipChildrenObjectsAndRules" qi=": Prevents rules from being run on any of the current object's children objects.">
+      <ap>None.</ap>
+      <h>
+          Prevents rules applied to child objects of the current parent object from being run.
+          The action can optimize the execution of rules by eliminating the need to visit
+          every field on every page.<br/><br/>
+
+          The action is only for use in an "Open" event of a DCO object.  For example a Page "Open".
+          It must not be used within a rule that is configured to run on an object's "Close" event.<br/><br/>
+
+          Although this is a rarely used action, it is useful in the unique case where an application
+          can decide that child objects should not have rules run.<br/><br/>
+        <e>
+          rrCompare("Yes", "@X.Done")<br/>
+          <b>SkipChildrenObjectsAndRules()</b><br/><br/>
+
+          This example performs a test to see if the user defined variable "Done" on the current object
+          is set to "Yes".  If so, then none of the child objects will have rules run.  If this action was
+          called on a page object, then none of the rules attached to the field objects would be run.
+          If called on a document object, then none of the rules for the object's page or field objects
+          will be run. The variable "Done" is just used here as an example. The condition for when an application
+          would call this action can be unique for each application.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="StatusPreserveOff" qi=": Allows the status of an object to be set by the final return value of a rule.">
+      <ap>None.</ap>
+      <h>
+        This action turns the Status Preserve condition of a page and its fields from On to Off.<br/><br/>
+
+        When this action is used, the Status of an object will be affected based on the final return
+        value of the ruleset.  When Status Preserve is off, the status of an object will be set to 0,
+        if the rule completes with the last action run in the rule returns a true result for the current object.
+        If the last action run on the object returns false, then the status of the object will be set to 1,
+        which is considered a "problem" or "failed" status.
+        When a field status is 1, the Verify task's Data Entry in a Datacap client application
+        panel will then highlight the value with a colored background, alerting the operator to the problem so the field can be fixed.<br/><br/>
+
+        Typically StatusPreserveOff is used in a validation ruleset.  The usual intent of a validation ruleset is
+        to run actions that confirm that the data in a field is as expected or meets certain criteria.
+        It is also typical that StatusPreserveOff is called once at the page
+        level at the beginning of a ruleset.  When called at the page level, it will also allow the status to
+        be updated at the field level based on the return value of the rules.<br/><br/>
+
+        Typically a validation ruleset is the last ruleset run in a task and the
+        validation ruleset will test required fields to set the status of each field.  When
+        StatusPreserveOff is called, it is in effect for all of the subsequent objects run on the
+        current task.  If there is a need to have Status Preserve off in a subsequent
+        ruleset, then it will need to be called again in the subsequent ruleset.<br/><br/>
+
+        This action immediately sets the current DCO object to an initial status of "0", which means "OK" and that
+        the object does not have any problem. This action also deletes any value currently set for
+        the "MESSAGE" variable on the current object.  While in affect, if the current object
+        currently has a "problem" status of 1, the MESSAGE variable will automatically be deleted
+        at the start of the rule.  If StatusPreserveOn is active, which is the default, then
+        the MESSAGE variable is not changed and would need to be changed by actions as needed,
+        using an action such as MessageClear.<br/><br/>
+
+        When StatusPreserveOff is called, when the rule running on the current object completes,
+        the status of the current object is changed based on the true or false
+        return value of the last action run.  If the last action on the rule returns true, then the status
+        for the current object is set to 0, but only if the current status is 1 (fail).  If the last action on the rule returns false, then the status
+        of the current object is set to 1, but only if the current status is 0 (OK).<br/><br/>
+
+        It is also possible to update an object's status manually,
+        such as using an action like <b>rrSet("1","@F.STATUS").</b>  If an object's status is updated manually
+        like this with rrSet, then the status may not be automatically changed as expected by the return value
+        of the last action.
+        For example, if you manually set the status to 1 as shown, then the current ruleset returns with true,
+        the status of the object may remain at 1.  These two methods of automatically and manually
+        changing the status should not be intermixed.  Use one method or the other.<br/><br/>
+
+        <b>Important:</b> While StatusPreserveOff is in effect for the page object, any field object that is in a failed status of "1", will be reset to
+        a successful status of "0" at the start of each <b>Rule.</b>  At the end of the Rule, the status will then remain at
+        "0", if the last action returns True. The object status will be set to "1" if the last action returns False.  Only objects with a
+        status of "1" will be set to "0" at the beginning of each rule.  If the object has a different status, it will not be changed.<br/><br/>
+
+        Additionally, this action will immediately set the status for the current object, typically a page, will be unconditionally set to 0 (OK).<br/><br/>        
+        
+        <e>
+          Page Rule<br/>
+          - Function Setup Page<br/>
+          - - <b>StatusPreserveOff()</b><br/><br/>
+
+          Field1 Rule<br/>
+          - Function Validate Field is Currency<br/>
+          - - rrSet("ja-JP","@X.hr_locale")<br/>
+          - - IsFieldCurrency()<br/><br/>
+
+          Field2 Rule<br/>
+          - Function Validate Field is A Date<br/>
+          - - IsFieldDate()<br/><br/>
+
+          In this example, it assumes the first rule is attached to a page and the second rule
+          is attached to Field1 and the third rule is attached to Field2.
+          There could be a unique rule for each field that performs the necessary check that
+          is appropriate for each individual field.  The key aspect in these rules is that the last action
+          that runs needs to be setup to determine if the check worked or failed.  The final action's return
+          value of true or false will determine the status of the current object.<br/><br/>
+
+          This example ruleset would typically be run first as part of a larger set of rules run in a profile
+          run by Rulerunner, just before the verify task, such as "Profiler".  This ruleset would also likely be placed
+          into a profile of its own.  That profile would be the one configured to be called by the Verify panel when
+          the "Submit" button is pressed.  When "Submit" is pressed, the Verify panel will run the configured task
+          which is assigned to run this ruleset.  The rules will be run again on the current page.  The return value of
+          each rule will determine if the fields have been fixed, setting the status to 0, or if they are still wrong,
+          or if a good field has now become invalid, it will be set to a status of 1, so it will again be flagged in the
+          verify panel.<br/><br/>
+
+          The "Page Rule" will call StatusPreserveOff so that from now on, the status of objects will be changed
+          based on the return value of the last action.  Other work can be done on the page in this rule, if necessary,
+          the key here is that status preserve has been set to off.<br/><br/>
+
+          Next, rules will be run for each field on the page.  For Field1, it will check to see if the value in the field
+          matches the format required for it to be considered Currency.  If it matches, then the action will return true, and
+          since it is the last action in the rule, the field will be given a 0 status.
+          If it does not match the expected format, IsFieldCurrency will return false.  Because it is the last action in the rule,
+          the current object, in this case the field, will be set to a status of 1.  Note, that if the status was some other value,
+          it will not be changed to 1.  The status will be changed to 1 if the object is currently an "OK" status of 0.<br/><br/>
+
+          Then the next rule will run, in this example it is for Field2.  Again, if the last action, IsFieldDate, returns true,
+          then the status will be 0.  If the field does not match the current date format, the status will be set to 1.<br/><br/>
+
+          This is not the only way status values can be changed. As a further example, the rules below will have the same result as the rules above.<br/><br/>
+
+          Field1 Rule<br/>
+          - Function Validate Field is Currency<br/>
+          - - rrSet("ja-JP","@X.hr_locale")<br/>
+          - - rrSet("0", "@X.STATUS")<br/>
+          - - IsFieldCurrency()<br/>
+          - Function Validate Failed<br/>
+          - - rrSet("1", "@X.STATUS")<br/><br/>
+
+          Field2 Rule<br/>
+          - Function Validate Field is A Date<br/>
+          - - rrSet("0", "@X.STATUS")<br/>
+          - - IsFieldDate()<br/><br/>
+          - Function Validate Failed<br/>
+          - - rrSet("1", "@X.STATUS")<br/><br/>
+
+          This ruleset provides the same end result when preserve is "On". There is no need to set status preserve off and status preserve should
+          not be set to off when using this approach. The main difference is the rules are
+          slightly more complex in this approach, which is why StatusPreserveOff can be helpful for validation tasks.
+          However, the status change may not always be obvious so the action rules need to be written carefully when StatusPreserveOff
+          is used. With that said, either approach is allowed.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        StatusPreserveOn. The ValidationsAndTextAdjustments action library.<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.<br/><br/>
+
+        MESSAGE is a special DCO variable used to display verification failures to the
+        verification operator. Refer to the top-level help for more information about this variable
+        and how to provide translated versions of text.
+      </see>
+    </method>
+
+    <method name="StatusPreserveOn" qi=": Prevents the return value of a rule from changing an object's status.">
+      <ap>None.</ap>
+      <h>
+        This action enables the Status Preserve condition of a Page object and
+        Field objects. The "On" condition prevents the status of an object from being changed based on the
+        final return value of a rule run on the object.  If this action is not called, then
+        the Status Preserve condition defaults to "On", meaning that the return value of
+        the last action in a ruleset will not adjust the object's status.<br/><br/>
+
+        See the help for StatusPreserveOff
+        for details about how an object's status is automatically updated when this condition
+        is set to Off.<br/><br/>
+
+        Using StatusPreserveOn has no affect on actions that manually update the status,
+        such as an action like <b>rrSet("1","@F.STATUS").</b>  The status will still be updated
+        by clients and actions like this one that explicitly change an object's status.<br/><br/>
+
+        Typically, the StatusPreserveOff action is used only in rulesets that perform
+        validations to confirm a page's fields meet the requirements defined by
+        rules assigned to each field object.<br/><br/>
+        <e>
+          <b>StatusPreserveOn()</b><br/><br/>
+
+          This example sets the status preserve value to "On".  The default value is "On".
+          The action only needs to be called to reset the condition for an object that has
+          been set to "Off" earlier in the current task.  One example could be where certain
+          conditions were used on an object to set the status, however, in a later ruleset
+          the object's status should not be changed by the final return value of a rule,
+          so the StatusPreserveOn action is called within a rule to prevent the status
+          from being incorrectly changed when the rule ends.<br/><br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+      <see>
+        StatusPreserveOff.<br/><br/>
+        
+        The ValidationsAndTextAdjustments action library to test and validate field values.<br/><br/>
+
+        Refer to the top-level help for more information about this action library and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="TaskNumberOfSplits" qi=": Configures the split count to allow a batch to branch the workflow.">
+      <p name="NumberOfSplits" type="string"/>
+      <ap>
+        <b>NumberOfSplits:</b> The number of splits for the batch in the workflow. In most cases, you will want to use "1" as the parameter.
+        Smart parameters are supported.<br/>
+      </ap>
+      <h>
+        Specifies how many times sub-batches will be created from the current batch.
+        This action must be called prior to TaskRaiseCondition, which will configure the
+        conditions based on the number of splits specified in this action.<br/>
+
+        The two basic methods for workflow routing are branches and splits.
+        When you use branching to route workflows, the entire batch is sent from the main job to a child job.
+        When the child job completes, the batch returns to the main job.
+        When you use splitting to route workflows, documents in the batch are split off from the parent batch
+        and placed into one or more child batches. The child batches are sent to a
+        child job for processing and do not return to the main job.
+        For branching, use the TaskRaiseCondition action to raise the condition flag
+        of the task to determine the next step for the batch.<br/><br/>
+
+        <e>
+          TaskNumberOfSplits("1")<br/>
+          TaskRaiseCondition("0","0")<br/>
+          <br/>
+          In this example, the server is instructed to create one sub-batch entry and
+          to raise the first Child Job Condition for this sub-batch entry.<br/><br/>
+
+          Document Integrity<br/>
+          - Batch Rule Document Integrity Check<br/>
+          - - Function Check Batch Integrity<br/>
+          - - - CheckDocumentIntegrity()<br/>
+          - - Function Batch Route To Fixup<br/>
+          - - - TaskNumberOfSplits("1")<br/>
+          - - - TaskRaiseCondition("0","0")<br/>
+
+          This is an example of a Document Integrity ruleset. This is the kind of ruleset that would
+          be used to send a batch to a Fixup task.  The rule is attached to the batch level of the
+          Setup DCO.  First the action CheckDocumentIntegrity is called to check that the documents
+          within the match meet the rules defined for the batch.  If the check passes, then the
+          action returns True. Because it is the last action in the function, when it returns True,
+          the following function is not run. The result is that the batch continues through the workflow
+          as defined, becoming pending for the next task specified by the workflow.
+          If CheckAllIntegrity returns False, then the next function will be run.
+          The actions TaskNumberOfSplits and TaskRaiseCondition instruct the server to move the
+          batch to the Fixup task that is configured in the workflow administration panels.
+          The task will complete and then the batch will be pending for Fixup.<br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if the parameter you enter is not Numeric. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        TaskRaiseCondition<br/><br/>
+
+        Refer to the top-level help for more information about this action library, rule structure, tasks and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+    <method name="TaskRaiseCondition" qi=": Controls the next step when a batch is branching to a new workflow.">
+      <p name="ChildBatchIndex" type="string"/>
+      <p name="ChildBatchCondition" type="string"/>
+      <ap>
+        <b>ChildBatchIndex:</b> The applicable value of the sub-batch index. 0 is the first sub-batch,
+        1 is the second, etc. The TaskNumberOfSplits action determines how many
+        sub-batches are created when the task completes.<br/><br/>
+
+        <b>ChildBatchCondition:</b> The value that designates the Child Job Condition that should be assigned
+        to the specified sub-batch. 0 is the first Child Job Condition, 1 is the second, etc.
+        The conditions are predefined in the workflow administration panel.<br/>
+      </ap>
+      <h>
+        This action is intended to be used when the server has been instructed to branch the
+        batch to a different workflow, such as a Fixup workflow.
+        The Child Job Condition is assigned to the sub-batch entry created by
+        a previous call to the TaskNumberOfSplits action.<br/><br/>
+
+        Branching and splitting are initiated by using a condition flag that is raised during a rule.
+        When branching, the TaskNumberOfSplits action is required to be called first and specifies the number of
+        jobs to which the batch is sent before it returns to the main workflow (typically 1).
+        The TaskRaiseCondition action specifies the group index (typically 0) and condition’s index value.
+        The possible conditions are configured in the workflow setup panel.
+        The index specified for the condition must match
+        the desired condition.  Typically, there is only one condition and because the index is
+        zero-based, the index of 0 is specified for the first condition.
+        For example, if the Profiler task has one condition then the index for this condition is 0.<br/><br/>
+
+        A typical use of branching is to move the batch to a "Fixup" task.  A Fixup task is a step that
+        requires an interactive user. The batch goes to Fixup when there is a problem with the document
+        types within the batch. For example, some documents may not have had a page type assigned to them or
+        perhaps the types are correct but the pages are not within the required order.  The user would examine the
+        batch and correct the document types and order using the Fixup panel.<br/><br/>
+
+        In a normal work flow, the Fixup step is not required. When the actions detect there is a problem
+        with the batch that required the Fixup step, the rules call the TaskNumberOfSplits and TaskRaiseCondition
+        to instruct the server to branch the workflow to the fixup task.  Once the fixup task completes, then
+        the batch will be branched back to the workflow that was in progress.<br/><br/>
+
+        The actions TaskNumberOfSplits and TaskRaiseCondition will instruct the server how the batch
+        should be branched.  The branch will occur after the rules for the current task
+        have completed.<br/><br/>
+        <e>
+          TaskNumberOfSplits("1")<br/>
+          TaskRaiseCondition("0","0")<br/>
+          <br/>
+          In this example, the server is instructed to create one sub-batch entry and
+          to raise the first Child Job Condition for this sub-batch entry.<br/><br/>
+
+          Document Integrity<br/>
+          - Batch Rule Document Integrity Check<br/>
+          - - Function Check Batch Integrity<br/>
+          - - - CheckDocumentIntegrity()<br/>
+          - - Function Batch Route To Fixup<br/>
+          - - - TaskNumberOfSplits("1")<br/>
+          - - - TaskRaiseCondition("0","0")<br/>
+
+          This is an example of a Document Integrity ruleset. This is the kind of ruleset that would
+          be used to send a batch to a Fixup task.  The rule is attached to the batch level of the
+          Setup DCO.  First the action CheckDocumentIntegrity is called to check that the documents
+          within the match meet the rules defined for the batch.  If the check passes, then the
+          action returns True. Because it is the last action in the function, when it returns True,
+          the following function is not run. The result is that the batch continues through the workflow
+          as defined, becoming pending for the next task specified by the workflow.
+          If CheckDocumentIntegrity returns False, then the next function will be run.
+          The actions TaskNumberOfSplits and TaskRaiseCondition instruct the server to move the
+          batch to the Fixup task that is configured in the workflow administration panels.
+          The task will complete and then the batch will be pending for Fixup.<br/>
+        </e>
+      </h>
+      <lvl>All.</lvl>
+      <ret>
+        <b>False</b> if either parameter is not Numeric. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        TaskNumberOfSplits<br/><br/>
+
+        Refer to the top-level help for more information about this action library, rule structure, tasks and
+        the smart parameter reference guide.
+      </see>
+    </method>
+
+
+
+  </com>
+</rrx>

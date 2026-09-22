@@ -1,0 +1,500 @@
+﻿<?xml version='1.0' ?>
+<rrx namespace="Imail" v="9.0.1.24">
+  <g>
+    <![CDATA[
+'**************************************************************************************************
+' IMail Actions
+'--------------------------------------------------------------------------------------------------
+' Licensed Materials - Property of IBM
+' “Restricted Materials of IBM”
+' 5725-C15 
+'
+' © Copyright IBM Corp. 1994, 2018 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+'--------------------------------------------------------------------------------------------------
+'
+' version 9.0.0.17 update im_login action help to show support for :port at end of mail server URL/IP
+' version 9.0.0.20 updated help for im_login regarding ssl port number.
+' version 9.0.0.21 Added SetProxy action.
+' version 9.0.0.22 Updated the help for im_reject_types.
+' version 9.0.1.23 Updated the help for im_scan.
+' version 9.1.4.39 Updated the help for im_scan, added the info for FailedEmailCount dco variable.
+'**************************************************************************************************
+]]>
+  </g>
+
+  <com ref="dcjmail.CDCjmail"  qi="IMAP email import actions - import image attachments from email messages.">
+
+    <h>
+      The IMail actions are designed to scan an email Inbox for incoming mail messages,
+      and place selected messages into a new Batch.
+      It is possible to ignore all messages except those containing specific attachment types.<br/><br/>
+
+      The actions are typically assigned to a Task that is executed by an unattended Rulerunner station.
+      Multiple Inboxes can be scanned by stringing together a set of
+      login/scan/logout actions for each Inbox, or by assigning an Inbox to each input task.<br/><br/>
+
+      The mail account must contain an Inbox folder and separate folders for messages successfully imported (Done folder)
+      and messages that encountered errors (Problem folder).  Processed emails will be placed into one of these folders.
+      Done and Problem folders must be at the same level of the folder hierarchy as the Inbox and must be manually
+      created prior to running your application.
+      The names of these folders can be changed using the im_done_folder and im_problem_folder actions.<br/><br/>
+    </h>
+
+    <method name="im_login" qi="Specifies the IMAP mail server URL and login credentials.">
+      <p name="hostname" type="string" />
+      <p name="username" type="string" />
+      <p name="password" type="string" />
+      <ap>
+        hostname : URL or IP address of IMAP mail server. May end with colon followed by port number (:port).<br/>
+        username : Username for mail account.<br/>
+        password : Password for mail account.<br/><br/>
+        Smart parameters are supported for all parameters.  The password can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.  The URL and user name parameters can be stored in the General section of the Datacap Application Manager but they cannot be encrypted.  To retrieve the password that is stored in the Advanced section, use a smart parameter for the action's password parameter similar to @APPVAR(values/adv/mailPassword) where mailPassword is the name entered for the value in the Application Manager.
+      </ap>
+      <h>
+        Connects to the mail server using the specified account information.
+        Specifies the mail server URL and login credentials.
+        Login credentials are for a mail server that supports the IMAP protocol (such as MS Exchange, and many others).
+        Call once for each batch.<br/><br/>
+
+        To connect on an encrypted channel using SSL / HTTPS protocol, call im_useSSL(True) before login.
+        If a port number is not specified in the host name when using SSL, port 993 will be used.        
+        <e>
+          <b>im_login("mymailserver.com","theuser","password")</b><br/><br/>
+
+          <b>im_login("mymailserver.com:8000","theuser","password")</b><br/>
+          This example specifies the port along with the host name.
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        <b>True,</b> if the login succeeds.  Otherwise, <b>False.</b>
+      </ret>
+      <see>im_useSSL</see>
+    </method>
+
+    <method name="im_SetProxy" qi="Allows optional specification of proxy service settings.">
+      <p name="hostname" type="string" />
+      <p name="proxyPort" type="string" />
+      <p name="proxyType" type="string" />      
+      <p name="proxyUsername" type="string" />
+      <p name="proxyPassword" type="string" />
+      <ap>
+        hostname : URL or IP address of proxy service.<br/>
+        proxyPort : The proxy service connection port.<br/>
+        proxyType : The type of proxy service: HTTP, SOCKS4, SOCKS5 or NONE.<br/>
+        proxyUsername : Username for the proxy server.<br/>
+        proxyPassword : Password for the proxy server.<br/><br/>
+        
+        Smart parameters are supported for all parameters.  <br/><br/>
+        
+        The password can be encrypted by storing it in the Advanced section of the Custom tab in the Application Manager.  
+        The URL and user name parameters can be stored in the General section of the Datacap Application Manager but they cannot be encrypted.  
+        To retrieve the password that is stored in the Advanced section, 
+        use a smart parameter for the action's password parameter similar to 
+        @APPVAR(values/adv/mailProxyPassword) where mailProxyPassword is the name entered for the value in the Application Manager.
+      </ap>
+      <h>
+        Optionally sets the values to a proxy service that will be used to connect to the email server.
+        This action does not confirm that the connection to the proxy service is successful. Connection to the
+        proxy service will not occur until the im_login action is called.<br/><br/>
+        
+        If this action is used, it must be called prior to the im_login action.  If this action is not
+        called, then no proxy service will be used.  If proxyType is not one of the supported 
+        types, then it will default to "none".
+        <e>
+          <b>im_SetProxy("theHostName", "1234", "SOCKS4", "MyUser", "@APPVAR(values/adv/mailProxyPassword)")</b><br/>
+          im_login("mymailserver.com","theuser","password")<br/><br/>
+          
+          This example sets up the parameters to use a proxy and then performs the login.
+          The parameter for the password is an example smart parameter that obtains the password
+          from an advanced value in the application service.
+        </e>
+      </h>
+      <lvl>Any level, typically batch level.</lvl>
+      <ret>
+        <b>False,</b> if the proxyPort is not numeric, otherwise <b>True.</b>        
+      </ret>
+      <see>im_login</see>
+    </method>
+    
+    <method name="im_scan" qi="Poll the specified mail server for incoming emails with image attachments.">
+      <ap>None.</ap>
+      <h>
+        Scans emails in the Inbox for specified attachments, imports selected emails with attachments into the batch.
+        Call once for each batch.
+        A connection to the email server must have previously been established using the im_login action.<br/><br/>
+
+        Each input email will contain the following variables set in the document hierarchy:<br/>
+        <b>TYPE</b>: Always set to "Document".<br/>
+        <b>Subject</b>: The email subject.<br/>
+        <b>Body</b>: The text within the email.<br/>
+        <b>DateSent</b>: The sent date stamp on the email.<br/>
+        <b>From</b>: The email sender.<br/>
+        <b>User</b>: The email user specified in the im_login action.<br/>
+        <b>To</b>: The email recipients.<br/>
+        <b>Priority</b>: The state of the email importance flag.<br/><br/>
+
+        Attachments are ingested as individual pages within the email document, unless im_StoreEML(true) is called before im_scan.  With individual attachments, each attachment page will have the following variables set:<br/>
+        <b>TYPE</b>: Always set to "Other".<br/>
+        <b>IMAGEFILE</b>: The name of the attachment as saved on disk.<br/><br/>
+
+        The following batch level variable is created:<br/>
+        <b>EmailCount</b>: The number of emails scanned into the batch.<br/>
+        <b>FailedEmailCount</b>: The number of emails failed to be scanned into the batch, due to the issues with email or attachments.<br/><br/>
+
+        It is recommended that the subject line be no longer than 78 characters as this is a
+        common subject line length limitation.  Some systems may support even shorter lengths,
+        truncating the subject.  Our testing has been successful with lengths up to 255 characters.
+        It is recommended to test your settings and use lengths appropriate for your systems.<br/><br/>
+
+        Important: If any concurrently running threads might be using the same account,
+        your Imail-related tasks cannot be run in a multi-threaded configuration. Instead, use single-threaded tasks only.
+        For information about configuring threads in Rulerunner, see Configuring Rulerunner to run tasks.
+        For information about the account, see im_login.
+        <e>
+          im_wait_time("20")<br/>
+          im_abort_time("40")<br/>
+          im_max_docs("200")<br/>
+          im_types("jpg,tif")<br/>
+          <b>im_scan()</b>
+        </e>
+      </h>
+      <lvl>Batch level Open event only.</lvl>
+      <ret>
+        Returns <b>False</b> if the operation fails, and pauses before returning.  Otherwise, <b>True.</b><br/>
+        If no selected emails were available, the action returns <b>True</b> and pauses before returning.<br/>
+        Action returns when timeout is reached, or the requested number of emails have been processed.
+      </ret>
+      <see>im_useSSL, im_done_folder, im_problem_folder, im_wait_time, im_abort_time, im_StoreEML, im_AcceptMixedAttachments, im_AcceptNoAttachments, im_SortByDate</see>
+    </method>
+
+    <method name="im_logout" qi="Disconnect from the mail server.">
+      <ap>None.</ap>
+      <h>
+        Closes the connection to the mail server.
+        Call once for each batch after im_login and im_scan have completed.
+        <e>
+          <b>im_logout()</b>
+        </e>
+      </h>
+      <lvl>Batch level Open or Close event only.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_types" qi="Specifies valid file extensions for attachments to ingest.">
+      <p name="extensions" type="string" />
+      <ap>
+        extensions : Comma-separated list of file image file extensions to import,
+        with or without period.  If the parameter is blank, all emails with or without attachments will be processed.<br/><br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action specifies the allowable email attachment types.<br/><br/>
+
+        If this action is not called, the default value of ".pdf" will be used.<br/><br/>
+
+        If this action is called and no attachment types are specified, all emails and any attachments are added to the batch.
+        When emails without attachments are processed, this will result in documents without any "pages".<br/><br/>
+
+        If attachment types are specified and the email contains:<br/>
+        • Only the specified attachment types, the email and attachments will be added to the batch<br/>
+        • Only unspecified attachment types, or if it contains a mix of specified and unspecified attachment types, the email is moved to the Problem folder<br/>
+        • No attachments, the email is moved to the Problem folder<br/>
+        <e>
+          im_wait_time("20")<br/>
+          im_abort_time("40")<br/>
+          im_max_docs("200")<br/>
+          <b>im_types("jpg,tif")</b>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_reject_types" qi="Specifies file extensions for attachments to reject."> 
+      <p name="extensions" type="string" />
+      <ap>
+        extensions : Comma-separated list of file image file extensions to ignore,
+        with or without period.  Use in conjunction with im_AcceptMixedAttachments(True) to reject emails with specific attachment types.
+        Attachments specified in im_types will be ingested, attachment types not specified in im_types or im_reject_types will be ignored.<br/><br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action specifies disallowed attachment types.<br/><br/>
+
+        <e>
+          im_types("jpg,tif")<br/>
+          im_AcceptMixedAttachments("True")<br/>
+          <b>im_reject_types(".eml")</b><br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_wait_time" qi="Specifies the maximum time to wait for input emails for a single batch.">
+      <p name="nSecs" type="int" />
+      <ap>
+        nSecs : The maximum number of seconds to wait.
+      </ap>
+      <h>
+        The maximum time to wait for input emails for a single batch, when there is at least one pending email.
+        Used by the im_scan action after the first email has been processed to determine
+        how long to wait for the batch to fill up.  If no emails are pending, the im_scan action
+        will not wait regardless of the wait time value.<br/><br/>
+
+        The import of emails into the batch will stop when the wait limit is reached
+        or when the maximum emails per batch has been reached.
+        While waiting for new mail to arrive,
+        the configured mailbox will be polled every two seconds to check for waiting mail.
+        The action will continue to include new files into the batch until this wait time
+        is reached or the maximum number of emails per batch is reached.<br/><br/>
+
+        If this action is not called, the default wait time of 5 seconds will be used.
+        <e>
+          <b>im_wait_time("20")</b><br/>
+          im_abort_time("60")<br/>
+          im_max_docs("200")<br/>
+          im_types("jpg,tif")
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_abort_time" qi="Specifies the delay time before returning when a batch aborts.">
+      <p name="nSecs" type="int" />
+      <ap>
+        nSecs : The number of seconds to wait.
+      </ap>
+      <h>
+        The action configures how long an Imail action will wait before returning when an abort occurs.
+        This action can be useful to prevent a large number of aborted batches due to an error condition.
+        For example, if the email server should become unavailable for a time, or any other error that is quickly returned from the email server.
+        The abort timeout will limit the number of aborted batches until the mail server becomes available again.<br/><br/>
+
+        If this action is not called, the default abort time value of 30 seconds will be used.<br/><br/>
+
+        When logging in or ingesting emails, a single action can make multiple communication requests to the email server.
+        If the server does not respond to any single communication request within a specific period of time, the request will fail and cause
+        the batch to abort. By default, any single communication request to the email server will wait
+        5 minutes for a response. Typically communication is very fast and this default time is more than enough required for a 
+        typical request to complete.
+        This timeout is different from the value set by the im_abort_time action.  If necessary, the maximum time to wait for an email server
+        response can be adjusted by setting the DCO variable "ImailResponseTimeout" to the number of seconds to wait for
+        a response before forcefully stopping the waiting request to the email server.  The variable should be set on the same
+        DCO object that calls the IMail actions.<br/><br/>
+
+        <e>
+          im_wait_time("20")<br/>
+          <b>im_abort_time("60")</b><br/>
+          im_max_docs("200")<br/>
+          im_types("jpg,tif")<br/><br/>
+
+          In this example the abort time is set to 60 seconds.  If there is a failure when processing an email
+          that causes the action to abort, the action will delay an additional 60 seconds before
+          returning. This is to prevent a large number of cascade failures in a very short time as in the case
+          where the server may immediately reject the request for various reasons.<br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_max_docs" qi="Specifies maximum number of emails to include in a single batch.">
+      <p name="nDocs" type="int" />
+      <ap>
+        nDocs : The maximum number of emails in a batch.
+      </ap>
+      <h>
+        The import of emails into the batch will stop when this email limit is reached
+        or when the maximum wait time has been reached.  While waiting for new mail to arrive,
+        the configured mailbox will be polled every two seconds to check for waiting mail.<br/><br/>
+
+        If this action is not called, the default value of 100 will be used.
+        The actual amount included in the batch could be less than this maximum.
+        <e>
+          im_wait_time("20")<br/>
+          im_abort_time("60")<br/>
+          <b>im_max_docs("50")</b><br/>
+          im_types("jpg,tif")<br/><br/>
+
+          This example causes the scan operation to limit the number of emails in a
+          batch to a maximum of 50.
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_done_folder" qi="Specifies the IMAP folder for successfully imported emails.">
+      <p name="folder" type="string" />
+      <ap>
+        folder : Destination IMAP folder for successfully imported emails.<br/>
+        Smart parameters are supported.
+      </ap>
+      <h>
+        When an email is processed and the attachment is imported, the email is moved to the folder name
+        specified by this action.
+        The folder is expected to be on the root level, the same level as the inbox folder in the mail account specified by the im_login action.
+        If the folder exists in a subfolder,
+        then use a forward slash to separate the folder names.<br/><br/>
+
+        If this action is not called, the default value of "Done" will be used.
+        <e>
+          <b>im_done_folder("Imported")</b><br/>
+          im_problem_folder("Failed")<br/>
+          This example changes the default names of the "Done" and "Problem" folders and also requires
+          the "Imported" and "Failed" folders to be on the same level as the "Inbox" folder.<br/><br/>
+
+          <b>im_done_folder("Inbox/Imported")</b><br/>
+          im_problem_folder("Inbox/Failed")<br/><br/>
+
+          This example requires the folders to be a subfolder of the Inbox folder.
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_problem_folder" qi="Specifies the IMAP folder for problem emails.">
+      <p name="folder" type="string" />
+      <ap>
+        folder : Destination IMAP folder for problem emails.<br/>
+        Smart paramters are supported.
+      </ap>
+      <h>
+        When an email is processed and the attachment is not one of the expected types,
+        the email is moved to the folder specified by this action. <br/><br/>
+
+        The folder is expected to be on the root level, the same level as the inbox folder of the mail account specified by the im_login action.
+        If the folder exists in a subfolder, then use a forward slash to separate the folder names.<br/><br/>
+
+        If this action is not called, the default value of "Problem" will be used.
+        <e>
+          im_done_folder("Imported")<br/>
+          <b>im_problem_folder("Failed")</b><br/>
+          This example changes the default name of the "Problem" folder to "Failed" and
+          requires the "Imported" and "Failed" folders to be on the same level as the "Inbox" folder.<br/><br/>
+
+          im_done_folder("Inbox/Imported")<br/>
+          <b>im_problem_folder("Inbox/Failed")</b><br/>
+          This example specifies the folder which is a subfolder of the Inbox folder.
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+
+    <method name="im_UseSSL" qi="Connect to IMAP Server via SSL encrypted channel">
+      <p name="bUseSSL" type="bool" qi="A boolean value that enables or disables SSL communication"/>
+      <ap>
+        <b>True:</b> Use SSL to encrypt communication with the mail server.<br/>
+        <b>False:</b> Communicate with the email server without encryption.  This is the default method if im_UseSSL is not called.<br/>
+      </ap>
+      <h>
+        This action will configure the im_login action to use SSL for the login and must be called prior to im_login to have any effect.<br/><br/>
+        
+        When SSL is enabled, and no port number has been specified in the host name of the im_login action,
+        subsequent im_login and im_scan actions communicate with the email server via IMAPS protocol using SSL encryption via port 993.<br/>
+        When SSL is not in use, these actions communicate with the email server via IMAP protocol via port 143.
+        <e>
+          <b>im_UseSSL("True")</b><br/>
+          im_login("mymailserver.com","theuser","password")<br/>
+        </e>
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_StoreEML" qi="Store one .eml file per message, rather than one file per attachment">
+      <p name="bStoreEML" type="bool" qi="A boolean value that enables storing each email message as an .eml file"/>
+      <ap>
+        <b>True:</b> Store each ingested email message, formatted together with all attachments, in a single .eml file and attach it as a page to the document.<br/>
+        <b>False:</b> Add each ingested email message as a document, with associated variables, and add each attachment as a page within the document.
+        This is the default if im_StoreEML is not called. <br/>
+      </ap>
+      <h>
+        If set, the im_scan action creates a one page document containing the email and
+        attachments in an .eml file; no attachment pages are created and no variables are set in the document.
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_AcceptMixedAttachments" qi="Ingest emails with selected attachment types, even if non-selected attachment types are included">
+      <p name="bMixedOK" type="bool" qi="A boolean value that enables ingestion of emails with both allowed and disallowed attachment types"/>
+      <ap>
+        <b>True:</b> An email message with an attachment type not specified by im_types will be ingested as long as it contains some desired attachment.<br/>
+        <b>False:</b> An email message with any disallowed attachment will be rejected.  This is the default process if this action is never called.<br/>
+      </ap>
+      <h>
+        If this action is never called, the presence of any attachment not specified by im_types will cause im_scan to treat that email message as a "Problem".
+        If this action is called with parameter True, messages with disallowed attachment types are ingested as long as they contain at least one allowed attachment.
+        If im_types is called with a blank parameter prior to im_scan, all emails are ingested, so this action has no effect.
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_AcceptNoAttachments" qi="Ingest emails without attachments, even if attachment types are specified">
+      <p name="bNoAttachOK" type="bool" qi="A boolean value that enables ingestion of emails with no attachments"/>
+      <ap>
+        <b>True:</b> An email message with no attachments will be ingested by im_scan.<br/>
+        <b>False:</b> An email message no attachments will be rejected by im_scan, unless im_types has been called with a blank parameter.  This is the default behavoir if this action is never called.<br/>
+      </ap>
+      <h>
+        If this action is never called, the absence of an attachment will cause im_scan to treat that email message as a "Problem".
+        If this action is called with parameter True, messages with no attachments are ingested.
+        If im_types is called with a blank parameter prior to im_scan, all emails are ingested, so this action has no effect.
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="im_SortByDate" qi="Sort emails by received date">
+      <p name="bSort" type="bool" qi="A boolean value that enables or disables sorting of emails before ingestion"/>
+      <ap>
+        <b>True:</b> Causes im_scan to sort email messages by date received and ingest the oldest messages first.
+        This is the default behavior if im_SortByDate is never called. <br/>
+        <b>False:</b> Disables sorting of email messages.  This greatly increases performance of im_scan when many emails are pending in the inbox.<br/>
+      </ap>
+      <h>
+        When sorting is enabled, all pending emails are sorted and the oldest is ingested first.  This can take a significant amount of time for each batch.  When the inbox may contain a large number of emails (e.g. more than 100), call im_SortByDate(False) to speed up the process.  In this case, messages are processed in the order that the email server presents them to Taskmaster.
+      </h>
+      <lvl>Batch level.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+  </com>
+</rrx>

@@ -1,0 +1,352 @@
+<?xml version='1.0' ?>
+<rrx namespace="Statistics" v="9.1.9.10">
+  <i ref="rrunner"/>
+  <g>
+    <![CDATA[
+'************************************************************************
+
+' Copyright Datacap Inc. 2001-2025, All rights Reserved
+
+Version = "9.1.9.10"
+' Updated 05/15/2025 DTanikawa
+' Updated help for AddToDBTotals
+
+Version = "9.1.9.9"
+' Updated 02/24/2025 RFerin
+' Update help that actions have been replaced by actions in ExportToDatabase
+
+'Version = "9.1.7.8"
+' Updated 11/21/2019 Vshriva6 185549
+' Removed the deprecated statement from actions updated earlier in 9.1.7.7
+' LOG RRX VERSION:
+Writelog("Statistics " & Version)
+
+' Version = "9.1.7.7"
+' Updated 10/18/2019 Vshriva6 185549
+' Marked the actions deprecated.
+' LOG RRX VERSION:
+' Writelog("Statistics " & Version)
+
+'Version = "9.1.4.6"
+' Updated 4/16/2018 Vshriva6 180022
+' Added replace method to replace , with decimal to calculate accuracy 
+' LOG RRX VERSION:
+' Writelog("Statistics " & Version)
+
+' Version = "9.1.4.5"
+' Updated 4/6/2018 
+' LOG RRX VERSION:
+' Writelog("Statistics " & Version)
+
+'********************************************************************
+'------------HELPER FUNCTIONS-------------------------------------------------
+
+]]>
+  </g>
+
+  <f name="ExData" access="private">
+    <p name="pParent"/>
+    <g>
+      <![CDATA[
+	' create a list of changed fields
+	On Error resume next
+	
+	ExData=""
+	sRes=""
+	Set fldList=pParent.selectNodes(".//V[@n='TYPE']|.//V[@n='STATUS']|.//C")
+	For Each pSome in fldList
+	WriteLog(pSome.nodeName  & pSome.text)
+		If pSome.nodeName="C" Then 
+			sTxt=Trim(pSome.text)
+			If sTxt<>"" Then sRes=sRes & Chr(sTxt)
+		ElseIf pSome.getAttribute("n")="TYPE" Then
+			sRes=sRes & "|;|" & pSome.parentNode.getAttribute("id")
+		Else
+			sRes=sRes & "|:|" & pSome.text & "|:|"
+		End If
+	Next
+	ExData=sRes
+	writelog "res" & sRes
+	if err.number<>0 then err.clear
+]]>
+    </g>
+  </f>
+
+  <f name="Compare" access="private">
+    <p name="s1"/>
+    <p name="s2"/>
+    <g>
+      <![CDATA[
+  On Error Resume Next
+	Compare=0
+	If s1=s2 Then Exit Function
+	n1=Len(s1)
+	n2=Len(s2)
+	If InStr(s1, s2)>0 Then 	
+		Compare=n1-n2
+		Exit Function
+	End If
+	If InStr(s2, s1)>0 Then 	
+		Compare=n2-n1
+		Exit Function
+	End If
+	c1=1
+	c2=1
+	While c1<=n1 And c2<=n2
+		If (Mid(s1,c1,1)<>Mid(s2,c2,1)) Then 
+			t1=InStr(c1, s1, Mid(s2,c2,1))
+			t2=InStr(c2, s2, Mid(s1,c1,1))
+			If (t1>t2 And t2<>0) Or (t2<>0 And t1=0) Then 
+				Compare=Compare+(t2-c2)
+				c2=t2
+			Elseif (t1<t2 And t1<>0) Or (t1<>0 And t2=0) Then
+				Compare=Compare+(t1-c1)
+				c1=t1
+			Else
+				Compare=Compare+1
+				c1=c1+1
+				c2=c2+1
+			End If
+		Else
+			c1=c1+1
+			c2=c2+1
+		End If	
+	Wend
+	if err.number<>0 then err.clear
+]]>
+    </g>
+  </f>
+
+
+  <af name="SaveFieldsText" access="public" bInter="bInter" bDebug="bDebug" strParam="strParam" qi="Save recognized page types and field values after recognition, for accuracy calculations.">
+    <ap>
+   None.<br/><br/>
+  </ap>
+  <h> 
+      This action will be removed in a future release. It is recommended that the action is no longer used.
+      Instead, use the replacement action StatisticsSaveFieldsText in the application library ExportToDatabase.<br/><br/>
+      
+      
+    Call this action after page classification and OCR recognition, but before verification, to save the original recognized data for statistics calculations.
+	The type of each page is stored in page variable ClassifiedPageType.  The recognized value of each field is stored in field variable RecognizedText.
+    <e>
+      <b>SaveFieldsText()</b><br/><br/>
+    </e>
+  </h>
+    <lvl>Batch level.</lvl>
+    <ret>Always True.</ret>
+    <g>
+      <![CDATA[	
+On Error Resume Next
+	Call recursiveSaveRecognizedText(DCO)
+if err.number<>0 then 
+	writelog("Error " & err.number)
+	writelog("Error " & err.description)
+	err.clear
+end if
+SaveFieldsText = true
+]]>
+    </g>
+  </af>
+
+  <s name="recursiveSaveRecognizedText" access="private">
+    <p name="oDCO"/>
+    <g>
+      <![CDATA[	
+	For i = 1 to oDCO.NumofChildren
+		Set iObj = oDCO.GetChild(i-1)
+		If iObj.ObjectType = 2 Then ' Process pages (type=2)
+			iObj.Variable("ClassifiedPageType") = iObj.Type
+		end if
+		If iObj.ObjectType = 3 Then ' Process fields (type=3)
+			if iObj.Text <> "" then 
+				iObj.Variable("RecognizedText") = iObj.Text
+			end if
+		end if
+		If iObj.ObjectType < 4 Then
+			Call recursiveSaveRecognizedText(iObj)				
+		End if
+		Set iObj = Nothing
+	Next
+]]>
+    </g>
+  </s>
+
+
+  <af name="CompareFieldsText" access="public" bInter="bInter" bDebug="bDebug" strParam="strParam" qi="Calculates page type classification and field recognition accuracy statistics and updates database report tables.">
+     <ap>
+   None.<br/><br/>
+  </ap>
+  <h>
+      This action will be removed in a future release. It is recommended that the action is no longer used.
+      Instead, use the replacement action StatisticsCompareFieldsText in the application library ExportToDatabase.<br/><br/>
+      
+Call this action after data verification to calculate accuracy based on the changes to data during verification. The SaveFieldsText action must have previously run after the profiler task (recognition), and before verification.
+Batch variables are populated with accuracy values. PageClassifiedErrors is the number of page classification errors (page type changed after auto-classification), PageClassifiedCount is the number of pages classified in this batch, FieldRecognitionCount is the number of fields recognized, and FieldRecognitionErrors is the number of fields that were incorrectly recognized (were changed after recognition).
+    <e>
+      <b>CompareFieldsText()</b><br/><br/>
+    </e>
+  </h>
+    <lvl>Batch level.</lvl>
+    <ret>Always True.</ret>
+	<g>
+      <![CDATA[
+	
+	'Store page and field accuracy info in the runtime DCO batch level variables
+	  
+	DCO.Variable("PageClassifiedErrors") = "0"
+	DCO.Variable("PageClassifiedCount") = "0"
+	DCO.Variable("FieldRecognitionCount") = "0"
+	DCO.Variable("FieldRecognitionErrors") = "0"
+	DCO.Variable("FieldAccuracyPct") = "0."
+	DCO.Variable("ClassifyAccuracyPct") = "0."
+	
+	Call recursiveCompareText(DCO)	' calculate the error info
+	
+	FieldCount = CInt(DCO.Variable("FieldRecognitionCount"))
+	if FieldCount > 0 then 
+		Accuracy = 100.*CDbl(FieldCount - DCO.Variable("FieldRecognitionErrors"))/FieldCount
+		if Accuracy > 100 then Accuracy = 100
+		if Accuracy < 0 then Accuracy = 0
+		DCO.Variable("FieldAccuracyPct") = Replace(CStr(Accuracy), ",", ".")
+	End If
+	
+	PageCount = CInt(DCO.Variable("PageClassifiedCount"))
+	if PageCount > 0 then
+		Accuracy = 100.*CDbl(PageCount - DCO.Variable("PageClassifiedErrors"))/PageCount
+		if Accuracy > 100 then Accuracy = 100
+		if Accuracy < 0 then Accuracy = 0
+		DCO.Variable("ClassifyAccuracyPct") = Replace(CStr(Accuracy), ",", ".")
+	End If
+	
+	CompareFieldsText = true	
+	]]>
+    </g>
+  </af>
+
+  <s name="recursiveCompareText" access="private">
+    <p name="oDCO"/>
+    <g>
+      <![CDATA[	
+	For i = 1 to oDCO.NumofChildren
+		Set iObj = oDCO.GetChild(i-1)
+		'if iObj.ObjectType < 4 then writelog("reCompTxt " & iObj.ID)
+		If iObj.ObjectType = 2 Then ' Process pages (type=2)
+			if iObj.variable("ClassifiedPageType") <> "" And iObj.variable("ClassifiedPageType") <> "Other" then
+				'writelog("reCompTxt Classified")
+				DCO.Variable("PageClassifiedCount") = CInt(DCO.Variable("PageClassifiedCount")) + 1
+				if iObj.variable("ClassifiedPageType") <> iObj.Type then
+					DCO.Variable("PageClassifiedErrors") = CInt(DCO.Variable("PageClassifiedErrors")) + 1
+				end if
+			end if
+		end if
+		If iObj.ObjectType = 3 Then ' Process fields (type=3)
+			'writelog("reCompTxt Recognized")
+			if iObj.variable("RecognizedText") <> "" then
+				DCO.Variable("FieldRecognitionCount") = CInt(DCO.Variable("FieldRecognitionCount")) + 1
+				if iObj.Text <> iObj.variable("RecognizedText") then 
+					DCO.Variable("FieldRecognitionErrors") = CInt(DCO.Variable("FieldRecognitionErrors")) + 1
+				end if
+			end if
+		end if
+		If iObj.ObjectType < 4 Then
+			iObj.variable(strParam) = iObj.STATUS
+			Call recursiveCompareText(iObj)				
+		End if
+		Set iObj = Nothing
+	Next
+]]>
+    </g>
+  </s>
+
+  <af name="IsBatchAborted" access="public" bInter="bInter" bDebug="bDebug" qi="Reports if batch is set to abort.">
+         <ap>None.<br/><br/>
+  </ap>
+  <h>
+      This action will be removed in a future release. It is recommended that the action is no longer used.
+      Instead, use the replacement action IsBatchSetToAbort in the application library RuleRunnerLogic.<br/><br/>
+      
+Test whether the batch has already been aborted and stop the ruleset if so.<e>
+      <b>IsBatchAborted()</b><br/><br/>
+    </e>
+  </h>
+    <lvl>Any level.</lvl>
+    <ret>True if the batch is set to abort, else False.</ret>   
+	<g>   <![CDATA[
+if babort then 
+	isbatchaborted=true
+	else
+	isbatchaborted=false
+	end if
+
+]]>
+    </g>
+  </af>
+
+  <af name="AddToDBTotals" access="public" bInter="bInter" bDebug="bDebug" strParam="strParam" qi="">
+     <ap>
+   None.<br/><br/>
+  </ap>
+  <h>
+      This action will be removed in a future release. It is recommended that the action is no longer used.
+      Instead, use the replacement action StatisticsAddToDatabaseTotals in the application library ExportToDatabase.<br/><br/>
+      
+Update application summary statistics in the reportTotal table with this batch's totals.  Once this action executes successfully it sets batch variable TotalStatsUpdated to avoid double-counting.
+    <e>
+	  <b>ExportOpenConnection("@APPVAR(values/dsn/exportdb:cs)")</b><br/>
+      <b>AddToDBTotals()</b><br/>
+	  <b>ExportCloseConnection()</b><br/>	
+	  <br/><br/>
+	  <b>Important.</b> Make sure to call the ExportOpenConnection action before calling AddToDBTotals()
+    </e>
+  </h>
+    <lvl>Batch level.</lvl>
+    <ret>Always True.</ret>   
+   <g>    <![CDATA[
+
+	Dim sSmartParam
+	AddToDBTotals = true
+
+	iExported = MetaWord("@B.TotalStatsUpdated")
+	if iExported = "1" then
+		WriteLog("Statistics already updated")
+		exit function
+	End If
+	
+	' for each counter in reportTotal, only update those that have changed
+	
+	sParams = ""
+	
+	sCounter = MetaWord("@B.CheckRecognitionCount")
+	if sCounter <> "" then
+		if CInt(sCounter) > 0 then sParams = "rt_Feature1Count" & "," & sCounter
+	End If
+	
+	Set fso = CreateObject("Scripting.FileSystemObject")
+	dFoldersize = FSO.GetFolder(Pilot.BatchDir).Size
+	Set fso = nothing
+	sCounter = CStr(CLng((dFolderSize + 512) / 1024))
+	if sCounter <> "" then
+		if CLng(sCounter) > 0 then
+			if (sParams <> "") then sParams = sParams & ";"
+			sParams = sParams & "rt_TotalSizeKB" & "," & sCounter
+			DCO.Variable("SizeKB") = sCounter
+		End If
+	End If
+	
+	'WriteLog(sParams)
+	  ret = true
+	  if sParams <> "" then
+		  ret = AddToReportTotal(sParams)
+	  end if
+  
+	if ret = true then 
+		WriteLog("Statistics updated OK")
+		DCO.variable("TotalStatsUpdated") = "1"
+	End If
+
+]]>
+    </g>
+  </af>
+
+</rrx>

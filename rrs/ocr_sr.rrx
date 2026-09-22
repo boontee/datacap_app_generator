@@ -1,0 +1,1441 @@
+<?xml version='1.0' ?>
+<rrx namespace="ocr_sr" v="9.1.10.43">
+
+  <g>
+    <![CDATA[
+'******************************************************************************************
+' OCRS R Recognition Actions 
+
+' Licensed Materials - Property of IBM
+' "Restricted Materials of IBM"
+' 5725-C15 5725-C69
+'
+' Copyright IBM Corp. 1994, 2019 All Rights Reserved
+'
+' US Government Users Restricted Rights - Use, duplication or
+' disclosure restricted by GSA ADP Schedule Contract with
+' IBM Corp.
+
+'Version = "9.1.0.21"
+' Updated 06/05/2014 JMartinez
+' Updated help text for RecognizeToPDFOCR_S action.
+
+'Older change notices arranged by date entered, ascending
+'Version = "8.0.0" 
+' Updated 03/19/2010 jmartinez
+'   Initial implementation. 
+
+Version = "8.0.1" 
+' Updated 03/24/2010 jmartinez
+' Action names are now consistent, ending in OCR_S
+' Added actions RecognizeToFile_OCRS,RecognizeFieldVoteOCR_S,RecognizePageFields2CCO_OCRS
+
+'Version = "8.0.2" 
+' Updated 03/24/2010 jmartinez
+' Removed action RecognizePageFields2CCO_OCRS - usually this action applies to handprint recognition which is not performed by this engine.
+'
+'Version = "8.0.3" 
+' Updated 11/09/2010 jmartinez
+' Updated help text for actions RecognizeToPDFOCR_S,RecognizeToFileOCR_S, and RecognizeFieldVoteOCR_S
+
+'Version = "8.0.4" 
+' Updated 11/11/2010 jmartinez
+' Updated help text for action RecognizePageOCR_S to say that NormalizeCCO or CCO2CCO actions must be called after full page OCR 
+' if the application will be using navigation and pattern match actions. 
+
+'Version = "8.0.5"
+' Updated 11/23/10 jmartinez
+' Updated help text for action RecognizeFieldVoteOCR_S to describe exaclty how confidence values are raised. 
+' Corrected retrun value help text for action RotateImageOCR_S 
+
+'Version = "8.1.0.6"
+' Updated 05/24/11 jmartinez
+'- Moved parameter information from the qi= tag to the standard parameter help section
+'- Moved action information from the qi= tag to the standard action help section
+'- Added IBM Copyright notice
+
+'Version = "8.1.0.7"
+' Updated 06/18/2011 JMartinez
+' 31991 Updated help text for action RecognizeToFile_OCR_S to. This action can be called only at the Document or Page level.
+' 32483 Updated help text for action RecognizeToPDFOCR_S.
+
+'Version = "8.1.0.8"
+' Updated 01/04/2012 JMartinez
+' Updated help text for action RecognizeToPDFOCR_S
+
+'Version = "8.1.0.9"
+' Updated 02/17/2012 JMartinez
+' Updated help text for the action RecognizeFieldOCR_S. 
+
+'Version = "8.1.0.10"
+' Updated 07/20/2012 JMartinez
+' Updated help text for the action RecognizePageOCR_S. 
+
+'Version = "8.1.0.11"
+' Updated 10/24/2012 JMartinez
+' Updated help text for the action RotateImageOCR_S. 
+
+'Version = "8.1.0.12"
+' Updated 12/14/2012 JMartinez
+' Added Action SetEngineTimeoutOCR_S
+
+'Version = 8.0.0.13
+' Updated 01/08/2014 JMartinez
+' Added actions 
+' - SetOutOfProcessTimeoutOCR_S
+' - SetOutOfProcessLoggingOCR_S
+' - SetContinueOnFailureOCR_S
+' - UseOutOfProcessRecogOCR_S
+
+'Version = 8.0.0.14
+'Updated 04/23/2014
+' Updated help text for the action RecognizeToPDFOCR_S
+
+'Version = "9.0.0.15"
+' Updated 05/08/2014 JMartinez
+' Added new action RotateImageExOCR_S
+' Exposed a new setting, typesToInclude (variable), that takes a comma delimited list of page types to include in the pdf document or (other file type) to be created. Only the pages specified will be included. By default all pages are added.
+
+'Version = "9.0.0.16"
+' Updated 05/13/2014 JMartinez
+' Replaced the "typesToInclude" setting with a new setting, "typesToExclude" (variable), that takes a comma delimited list of page types to exclude from pdf document or (other file type) being created. By default all page types are added.
+' Added a new setting, "statusToExclude" which takes a comma delimited list of page statuses to exclude from pdf document or (other file type) being created. By default all page statuses are added.
+
+'Version = "9.0.0.17"
+' Updated 05/28/2014 JMartinez
+' Added back support for typesToInclude variable. The filters have the following hierarchy: statusToExclude overrides typesToInclude which overrides typesToExclude
+
+'Version = "9.0.0.18"
+' Updated 08/22/2014 JMartinez
+' Updated help text for action RotateImageExOCR_S
+
+'Version = "9.0.0.19"
+' Updated 06/04/2014 JMartinez
+' Updated help text for Recognize action
+
+'Version = "9.0.0.20"
+' Updated 06/05/2014 JMartinez
+' Updated help text for Recognize action. Added document level support.
+
+'Version = "9.0.0.21"
+' Updated 06/05/2014 JMartinez
+' Updated help text for RecognizeToPdfOCR_S action. 
+
+'Version = "9.0.0.22"
+' Updated 07/28/2015 94748 RFerin
+' Updated help text about the automatic retry feature.
+
+'Version = "9.0.0.23"
+' Updated 08/27/2015 JMartinez  129794
+' Updated help text for the Recognize action.
+
+'Version = "9.0.0.24"
+' Updated 9/08/2015 JMartinez 130991
+' Updated help text for the RecognizeToPdfOCR_S action.
+
+'Version = "9.0.0.25"
+' Updated 9/28/2015 JTucci 118220
+' Updated help text for the library header to list
+' supported languages.
+
+'Version = "9.0.0.26"
+' Updated 9/28/2015 JTucci 118220
+' Updated help text for the library header to list.
+
+'Version = "9.0.0.27" 
+' Updated 5/10/2016 Vshriva6 141307
+' Added new action "ReleaseEngineOCR_SR" which releases the recognition engine. 
+
+'Version = "9.0.0.28" 
+' Updated 6/17/2016 RFerin 118526
+' Help corrections.
+
+'Version = "9.0.0.29" 
+' Updated 6/21/2016 RFerin 118526
+' Help corrections.
+
+'Version = "9.1.0.30" 
+' Updated 9/28/2016 RFerin 152609
+' Help clarification that RecognizeTOPDFOCR_S does not support PDF to PDF.
+
+'Version = "9.1.0.31" 
+' Updated 9/27/2017 Vshriva6 172998
+' Help clarification for RecognizeToFileOCR_S output mode which are deprecated.
+
+'Version = "9.1.0.32" 
+' Updated 11/7/2017 Vshriva6 172998
+' Updated action help for RecognizeToFileOCR_S output mode and removed third party name.
+
+'Version = "9.1.4.32"
+' 02/09/2018 Rferin 174656 178332
+' Updated help with hand print recognition information, best practices and lossless compression.
+
+'Version = "9.1.4.33"
+' 02/27/2018 Rferin 178623
+' Updated help regarding automatic rotation and deskew during recognition.
+
+'Version = "9.1.4.34"
+' 03/21/2018 Rferin 178623
+' Additional help updates regarding automatic rotation and deskew during recognition.
+
+'Version = "9.1.4.35"
+' 03/23/2018 Rferin 178623
+' Some additional help updates in the top level help.
+
+'Version = "9.1.4.35"
+' 05/17/2018 Vshriva6 180749
+' Updated action help for RecognizeToFileOCR_S output mode to mark csv mode deprecated.
+
+'Version = "9.1.5.38"
+' 11/08/2018 RFerin 183835
+' Clarify use of layout XML is for other Datacap actions only.
+
+'Version = "9.1.6.40"
+' 03/04/2019 RFerin 186268
+' Changed reference of CCO2CCO to SharedRecognitionTools.
+
+'Version = "9.1.7.42"
+' 07/23/2020 shubjos6 194759
+' Updated action help for RecognizeToPDFOCR_S.
+
+'Version = "9.1.9.131" 
+' 03/08/2022 mandarap 196864
+' Update the action library help for RecognizeToPDFOCR_S
+' Remove line : By default, PDF documents created by this action are compatible with PDF version 1.6.
+
+'Version = 9.1.10.43
+' Update the help for ReleaseEngineOCR_SR.
+
+'*****************************************************************************************
+]]>
+  </g>
+
+  <com ref="Datacap.Libraries.ScansoftR.Actions">
+    <h>
+      The OCR/SR action library provides actions that perform recognition and rotation of images using the OCR/S engine.
+      Page and field level recognition can be performed which can then be processed by actions in other
+      libraries and ultimately displayed to the user for verification.
+      Machine print and hand print text can be recognized.<br/><br/>
+
+      It is strongly recommended that the document "Best Practices for optimal text recognition in IBM Datacap"
+      is reviewed to understand how to get the best results from recognition.<br/><br/>
+
+      <b>Recognition Success</b><br/><br/>
+
+      After a recognition operation is complete, the variable <b>RecogStatus</b> is set to indicate the
+      success or failure of recognition. If page-level recognition is being performed,
+      RecogStatus values of 0, 1 or 2 are considered successful.
+      The list of successful values includes:<br/><br/>
+
+      0 - Success<br/>
+      1 - Recognition was successful but there are no results...the page was empty.<br/>
+      2 - Recognition was successful and additional processing such as "RotateImage" was performed.<br/><br/>
+
+      Other values are considered failures.<br/><br/>
+
+      <b>Automatic Retry</b><br/><br/>
+
+      The OCR/SR actions support automatic retries when a recognition takes longer than expected.
+      In rare situations recognition can fail to complete, such as when processing a damaged or atypical
+      image.  When this occurs, once the configured timeout is reached, the recognition engine will
+      be stopped and restarted, then recognition attempted again until the retry count is reached.
+      By default, when a failure occurs because of the timeout being reached, the action will
+      be retried 1 time.  The default timeout is 180 seconds. These default values can be
+      changed using the SetupAutomaticRetry action in the RecogShared library.
+      No other actions are required to setup the automatic retry feature.<br/><br/>
+
+      Some actions, such as RecognizeToPDFOCR_S, may require more than the default time to complete.
+      The amount of required time will increase depending on the number of pages being processed
+      along with machine and network conditions.  More information about extending the time
+      is available in the help for RecognizeToPDFOCR_S.<br/><br/>
+
+      There are other timeouts in the system, such as the timeouts configured for rulerunner.
+      Older, legacy, timeout variable exist and have been deprecated in favor of the 
+      single timeout specified by the automatic retry action.  Legacy mode has separate timeouts for the engine
+      and the out-of-process recognition.  The legacy timeouts are configurable
+      with the actions SetOutOfProcessTimeoutOCR_S and SetEngineTimeoutOCR_S.
+      If you are using the legacy timout settings, they can be more difficult to set properly.<br/><br/>
+
+      <b>Supported Languages</b><br/><br/>
+
+      The following languages are supported by OCR_Sr:<br/>
+      Afrikaans (39), Albanian (23), Catalan (11), Chinese Simplified (120), Chinese Traditional (121), Croatian (21), Czech (17), Danish (7), Dutch
+      (3), English (0), Esperanto (28), Estonian (25), Faroese (52), Finnish (6), French (2), Gaelic Irish (56), Gaelic Scottish (57), German (1),
+      Greek (15), Hungarian (19), Icelandic (8), Italian (13), Japanese (119), Latvian (26), Lithuanian (27), Maltese (14), Norwegian (4), Polish (16),
+      Portuguese (9), Portuguese Brazil (45), Rhaetic (90), Romanian (22), Russian(36), Sami (98), Sami Northern (100), Sami Southern (101), Serbian
+      Cyrillic (30), Serbian Latin (29), Slovakian (18), Slovenian (20), Spanish (10), Swahili (105), Swedish (5), Turkish (24)<br/><br/>
+
+      The language can be bound to the DCO object by selecting it in the OCR_S tab in the Zones tab of Datacap Studio.
+      When selected in the OCR_S tab the variable <b>s_lg</b> is set to the numeric value of the language.
+      The language also can be set within rules using the <b>rrSet</b> action to set
+      the <b>s_lg</b> variable to the numeric value for the desired language.<br/><br/>
+
+      For example: <b>rrSet("2", "@X.s_lg")</b> will set the language to French.<br/><br/>
+
+      If the <b>s_lg</b> variable is not set for the current DCO object, the recognized
+      language is determined by the current locale set with the <b>hr_locale</b> variable.
+      For example, if the locale is set for Germany, then the text will be recognized as German.<br/><br/>
+
+      The value in <b>s_lg</b> takes precedence over the locale setting.
+      If <b>s_lg</b> is set but the engine should use the value set for <b>hr_locale</b> instead,
+      setting the variable <b>dco_uselocale</b> to "1" will give precedence to <b>hr_locale.</b><br/><br/>
+
+      <b>Hand Print Recognition</b><br/><br/>
+
+      The OCR/SR actions can recognize hand printed text.  Hand print is much harder to recognize accurately than machine generated text,
+      and success depends very heavily on character quality. The use of structured forms to limit the possible range of characters,
+      together with zone-level filters and individual character validation can significantly improve accuracy.
+      Recognition has a 159 member character set.
+      Your application will need to handle reduced accuracy of hand print compared to the high
+      quality of machine printed text.  In addition to setting restrictions on the recognized text,
+      applications will typically correct the text using a combination
+      of rules and verification.<br/><br/>
+      
+      The hand print recognition feature is provided as a "Preview" feature.<br/><br/>
+
+      Hand print text has these requirements to get the best recognition:<br/><br/>
+      
+      + Text should be from pre-printed forms; Drop-out colors work best. This can be drop out combs or boxes.<br/>
+      + Letters must not touch.<br/>
+      + Field level recognition must be used.<br/>
+      + Block characters work best.<br/>
+      + The list of languages and symbols supported by hand print is smaller compared to machine print.<br/>
+      + Multi-line fields are supported although you may get better results with single line fields.<br/>
+      + Write characters of even size and spacing.<br/>
+      + If using a dropout color, do not use a pen of the same dropout color.<br/>
+      + Pencil and felt-tip pens give poorer results.<br/>
+      + Maximum line length is 200 characters.<br/>
+      + Cursive text is not supported.<br/><br/>
+
+      Hand print recognition can be enabled in the OCR/S tab of the Zones tab in Datacap Studio.
+      Enable editing in the DCO tree and select the target field that will be recognized as text.
+      In the "Filling Type" property, select "HandPrint".
+      For the "Module" property select "RER reRecognition Handprint".<br/><br/>
+      
+      Hand printed text recognizes best when the input data can be restricted.  Use the
+      "Filer" and "Filter Plus" properties of the OCR/S tab to restrict the
+      input characters.  For example, if the input is only expected to be
+      numeric text, select the "Numeric" filter.  The "Filter Plus"
+      setting can be used to instruct the engine to restrict the specific characters 
+      for recognition to improve quality.<br/><br/>
+
+      The following symbols cannot be recognized when hand print is enabled:<br/><br/>
+      
+      # Number Sign<br/>
+      % Percent Sign<br/>
+      @ Commercial At<br/>
+      &amp; Ampersand<br/>
+      | Vertical Bar<br/>
+      $ Dollar Sign<br/>
+      * Asterisk<br/>
+      + Plus Sign<br/>
+      = Equals Sign<br/>
+      _ Spacing Underscore<br/>
+      / Slash<br/>
+      \ Backslash<br/>
+      &lt; Less-Than Sign<br/>
+      &gt; Greater-Than Sign<br/><br/>
+
+      Supported Hand Print Languages<br/><br/>
+
+      Code Language / Territory<br/>
+      AL Albanian<br/>
+      AT Austrian, German<br/>
+      BE Belgian, Dutch, French, German<br/>
+      CH Swiss, French, German, Italian<br/>
+      CS Czech, Slovakian<br/>
+      CZ Czech<br/>
+      DE German<br/>
+      DK Danish<br/>
+      EE Estonian<br/>
+      ES Spanish<br/>
+      EU West-European<br/>
+      FI Finnish<br/>
+      FR French<br/>
+      HU Hungarian<br/>
+      IE Irish, English, Gaelic Irish<br/>
+      IT Italian<br/>
+      LT Lithuanian<br/>
+      LV Latvian<br/>
+      NL Dutch<br/>
+      NO Norwegian<br/>
+      PL Polish<br/>
+      PT Portuguese<br/>
+      RO Romanian<br/>
+      SE Swedish<br/>
+      SF Scandinavia<br/>
+      SL Slovenian<br/>
+      SK Slovakian<br/>
+      TR Turkish<br/>
+      UK UK<br/>
+      US USA<br/><br/>
+
+      Cyrillic languages and Greek are not supported.<br/>
+      In Hungarian the lower case characters "Small I Acute", "Small O Acute"
+      and the "Small U Acute" are not supported,
+      in effect limiting recognition to upper case characters.<br/><br/><br/>
+      
+
+      <b>Automatic Rotation, Deskew and Border Removal</b><br/>
+      The following actions can automatically rotate, deskew and remove the border of the image during processing:<br/><br/>
+      
+      - RecognizePageOCR_S<br/>
+      - Recognize<br/>
+      - RecognizePageFieldsOCR_S<br/>
+      - RotateImageOCR_S<br/><br/>
+
+      When automatic rotation, automatic deskew or border removal are enabled, then the listed actions will adjust the image
+      prior to recognition. Images that are oriented correctly and deskewed will recognize better
+      and produce recognized text that is more consistent with the source page.  When automatic rotation
+      is enabled for RecognizePageOCR_S, Recognize or RecognizePageFieldsOCR_S actions, it is not necessary to
+      pre-rotate the image using RotateImageOCR_S, RotateImageExOCR_S
+      or other image rotation actions.<br/><br/>
+      
+      Depending on the application, it may be desirable to rotate and deskew prior to calling
+      a recognition action.  For example, when performing fingerprinting, images should first be rotated
+      and deskewed along with other Image Enhancement actions such as despeckle and line removal.
+      An application can have other functions that require similar Image Enhancements prior to recognition.
+      If images are enhanced prior to performing recognition, then these features can be disabled for
+      the recognition step since they do not need to be run a second time.
+      If the application does not need to preprocess an image, then rotation can be performed directly
+      in the recognition actions in one step.<br/><br/>
+
+      Automatic rotation, deskew and other image enhancement settings only works on image files, it will not adjust PDF files that are directly recognized.
+      To rotate, deskew and enhance PDF pages prior to recognition,
+      Use the PFFFREDocumentToImage action in the Convert action library to first convert the PDF to separate TIF images without recognizing them,
+      perform image enhancement and correction as necessary, then use RecognizePageOCR_S, Recognize, RecognizePageFieldsOCR_S or
+      RecognizeFieldOCR_S to perform recognition on the corrected images.<br/><br/>
+
+      <b>Automatic Rotation</b><br/>
+      Automatic rotation can be enabled by setting the DCO variable "s_autorotate" to "1" or disabled by setting it to "0".
+      Automatic rotation is off by default.
+      It is important to properly set the language for the DCO object when enabling the automatic rotation feature, or when using
+      RotateImageOCR_S or RotateImageExOCR_S.
+      <br/><br/>
+
+      <b>Automatic Deskew</b><br/>
+      Automatic deskew can be enabled by setting the DCO varialbe "s_deskew" to "1" or disabled by setting it to "0".
+      Automatic Deskew is off by default.<br/><br/>
+      
+      If an image contains text with various orientations, for example vertical and horizontal,
+      the image might be rotated undesirably.
+      The automatic image rotation algorithm relies on, and works best with,
+      images with good quality machine printed text.
+      The page should include at least one text line which includes a machine printed text of at least 30 characters.
+      The automatic rotation algorithm does not fully work with images containing 9-pin dot-matrix text or non-machine printed text.<br/><br/>
+
+      The automatic deskew is effective only on images with a lower than 15-degree skew.  If the image is skewed greater
+      than that amount the image may or may not be adjusted.<br/><br/>
+
+      <b>Border Removal</b><br/>
+      Border removal can be enabled by setting the DCO variable "s_removeborders" to the border pixel width.
+      Border removal does not crop the image, it will change the black border around the image to white.
+      "0" will disable border removal.
+      Border Removal is off by default.<br/><br/>
+      
+      Border removal cleans marginal shadows that may result from scanning or when deskewing an image.
+      The borders are filled in with the color white.  The image is not cropped.
+      The feature is off by default but can be
+      enabled using the DCO variable s_removeborders.  Set the variable to a positive
+      numerical integer indicating the width of the borders, in pixels, to remove the borders.
+      If you have documents that need to be adjusted, a typical starting number could be 50 pixels.
+      From that value, test real data and see if the number needs to be adjusted up or down.
+      If the variable is blank or set to 0, then the feature is disabled.<br/><br/>
+
+      Features like rotation and deskew can be more reliable when performed by a recognition engine
+      as compared to the image enhancement actions which work based on image geometry.
+      However, other types of image enhancements such as despeckle, noise removal
+      line removal and other image cleanup
+      steps can best be handled by the image enhancement actions.  The separate Image Enhancement
+      ruleset allows interactive use of settings so values can be entered and the results
+      can be immediately seen in the configuration window.  This interactive mode helps
+      guide you to the optimal set of enhancements to give the clearest letters
+      with a clean background.  When setting up an application, some experimentation
+      between the available approaches to image enhancement will help find the right
+      combination for the expected input documents.  Additionally, the Image
+      Enhancement ruleset saves unique image adjustment settings for
+      each page type.  It is possible to
+      perform different enhancements based on the page type which can tailor
+      the specific enhancements based on the page type.  These different approaches
+      may need to be used together to prepare a document for recognition.<br/><br/>
+
+      <b>Original Image Backup</b><br/>
+      When an image requires rotation or other enhancements are performed by the OCRS actions,
+      the original image will be saved in a backup
+      file within the batch using a name similar to: "filename.ocrs.ext".  For example, if the
+      original file name was "TM000001.tif", the new name of the original file will be
+      "TM000001.ocrs.tif" and the the file "TM000001.tif" will be updated with the corrected
+      rotation and skew.  The suffix added to the original file name can be controlled
+      by setting the DCO variable s_ImageSuffix.  If not set, the value will default to ".ocrs".<br/><br/>
+
+      <b>OCR/S Engine Settings</b><br/>
+      The OCR/S tab in the Zones tab of Datacap Studio contains settings that can be used
+      to configure the engine.  Each setting has a description that identifies
+      what it configures.  These settings are used to help tailor the engine to improve
+      the recognition of your specific types of input documents.
+      For example, here is where the recognition language
+      can be set for each document type within the application.<br/><br/>
+      
+      To configure a setting for a page or field level object, first lock the DCO,
+      select the target DCO node, then make the appropriate settings in the OCR/S
+      tab.  When complete, save the settings and unlock the DCO.<br/><br/>
+
+      The Filter and Filter Plus settings are field level only settings that allow specification
+      of the expected character sets.  These settings will improve field level recognition by
+      providing information to the engine regarding the expected characters.  For example,
+      if only numeric values are expected in the field, then the numeric characters should be
+      specified to improve the recognition quality.  For example, if a field is numeric only,
+      then the engine will be provided hints making it recognize a "1" as a numeric "1" and not
+      a lower case L "l".  These filters can be tailored for the expected set of characters, reducing
+      incorrect characters and substitution characters.  The input character sets should
+      always be restricted as much as possible to prevent incorrect characters.<br/><br/>
+
+      <b>Smart Parameters</b><br/>
+      Parameters that use an "@" notation, such as "@X.xxxx", "@P.xxxx", "@STRING()", "@PILOT()", etc., are
+      known as "smart parameters". The data passed as a parameter to an action will be evaluated at runtime.
+      For example, "@X" is notation for accessing the current object. "@P" accesses the page object, which
+      could be the current object, or a parent object. Being evaluated at runtime, allows recognized data
+      or other batch specific data to be passed to actions or stored as metadata. A smart parameter such
+      as @DATE could be used to name export files based on the current date.  Similar smart parameters
+      will retrieve the current batch ID, current batch directory, current operator ID, and more.
+      Smart parameters are a very powerful mechanism of getting data from other areas of the application and copying
+      it into a new location or passing it as a parameter to an action. It is recommended that the smart parameter
+      documentation is reviewed to understand the full capabilities available. The top-level help of the
+      ValidationAndTextAdjustments action library also has information about smart parameters. Some characters such
+      as +, \ and . also have special smart parameter meaning and may be interpreted as a smart parameter.  This
+      can be controlled using smart parameter syntax.<br/><br/>
+
+      <b>Temporary Files</b><br/>
+      While processing files, the recognition engine will create temporary files in the windows
+      temporary directory.  In some cases, these files may not be removed when the batch
+      completes.  By default, any of these files that are older than 2 hours, will be removed
+      automatically when OCR/SR recognition is performed.  
+      If the maximum directory age needs to be changed, the batch level variable s_MaxTempDirAge
+      can be set to the maximum allowed age of the temporary engine files in minutes.
+      The variable can be set at the batch level in the setup DCO or can be set at runtime
+      using rrSet, for example: rrSet("180","@B.s_MaxTempDirAge").<br/><br/>
+    </h>
+    
+    <method name="SetEngineTimeoutOCR_S" >
+      <p name="Seconds" type="int"  />
+      <ap>
+        <b>Seconds</b> - value indicating the number of seconds to wait to determine that an OCR/S recognition
+        action has stalled.<br/><br/>
+      </ap>
+      <h>
+        It is recommended to <b>not</b> call SetEngineTimeoutOCR_S and instead use the automatic retry feature.
+        See the top level help topic in the OCR/SR library for more information.
+        Calling this action will enable the legacy process for using the timeout settings and disable the automatic retry.<br/><br/>
+        
+        The OCR/SR action library supports automatic retry of operations without needing special rules to handle a
+        failure.  Calling SetEngineTimeoutOCR_S will disable the automatic
+        retry of recognition failures, enabling legacy mode where any recognition retries must be handled within rules.<br/><br/>
+
+        This action sets the maximum amount of time, in seconds, that the recognition engine will spend processing a single image/zone.<br/><br/>
+
+        If a recognition action does not complete within the specified number of seconds indicated by a
+        <b>SetOutOfProcessTimeoutOCR_S</b>action or a <b>SetEngineTimeoutOCR_S</b>action, it is assumed that the
+        recognition engine has encountered a severe error, and is removed from memory. 
+        A variable with RecogStatus of 1 is created in the calling object in this situation. <br/><br/>
+
+        If <b>SetEngineTimeoutOCR_S</b>is not called, the default value of 180 seconds will be used. In normal
+        conditions, the default value will be sufficient and does not need to be changed. This value will
+        need to be increased only if a single page consistently takes more than 3 minutes to complete, which
+        is a very atypical situation. The programmer can choose to shorten this time to reduce the time to
+        detect failures earlier, provided there is time left to perform recognition in "worst case" scenarios.
+        For best results, this timeout should be set the same or a bit shorter than the value specified in a
+        <b>SetOutOfProcessTimeoutOCR_S</b>action.<br/><br/>
+
+        <e>
+          <b>SetEngineTimeoutOCR_S(180)</b><br/>
+          RecognizeFieldOCR_S<br/>
+          <br/>
+        </e>
+      </h>
+      <lvl>Page or Field.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not numeric or less than 1. Otherwise, <b>True.</b>
+      </ret>
+      <see>SetupAutomaticRetry in the RecogShared action library.</see>
+    </method>
+
+    <method name="SetOutOfProcessTimeoutOCR_S" >
+      <p name="Seconds" type="int"  />
+      <ap>
+        <b>Seconds</b> - value indicating the number of seconds to wait to determine that an out-of-process
+        recognition action has stalled.<br/><br/>
+      </ap>
+      <h>
+        It is recommended to <b>not</b> call SetOutOfProcessTimeoutOCR_S and instead use the automatic retry feature.
+        See the top level help topic in the OCR/SR library for more information.
+        Calling this action will enable the legacy process for using the timeout settings and disable the automatic retry.<br/><br/>
+        
+        This action is provided for legacy support of rules that manually perform a retry of recognition failures
+        and is provided for backwards compatibility.  It is recommended that you allow OCR/SR actions to automatically
+        handle retries of recognition failures.  When automatic mode is used, this action does not need to be called.
+        See the top level action help topic in the OCR/SR library for more information.<br/><br/>
+
+        This action sets the number of seconds to wait to determine that an out-of-process
+        action has stalled.
+
+        If a recognition action does not complete within the specified number of seconds indicated by a
+        <b>SetOutOfProcessTimeoutOCR_S</b>action or a <b>SetEngineTimeoutOCR_S</b>action, it is assumed that the
+        recognition engine has encountered a severe error, is removed from memory. A variable with RecogStatus of -1 is created in the calling object in this situation.
+
+        If <b>SetOutOfProcessTimeoutOCR_S</b>is not called, the default value of 600 seconds will be used. In normal
+        conditions, the default value will be sufficient and does not need to be changed. This value will
+        need to be increased only if a single page consistently takes more than 10 minutes to complete, which
+        is a very atypical situation. The programmer can choose to shorten this time to reduce the time to
+        detect failures earlier, provided there is time left to perform recognition in "worst case" scenarios.
+        For best results, this timeout should be set the same or a bit longer than the value specified in a
+        <b>SetEngineTimeoutOCR_S</b>action.<br/><br/>
+
+        <e>
+          SetEngineTimeoutOCR_S(185) <br/>
+          <b>SetOutOfProcessTimeoutOCR_S(180)</b><br/>
+          RecognizeFieldOCR_S<br/>
+          <br/>
+        </e>
+      </h>
+      <lvl>Page or Field.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not numeric or less than 1. Otherwise, <b>True.</b>
+      </ret>
+      <see>SetupAutomaticRetry in the RecogShared action library.</see>
+    </method>
+
+    <method name="RecognizeFieldOCR_S" >
+      <ap>None</ap>
+      <h>
+        This field-level action is a shortcut to zonal recognition procedures that are carried out
+        in response to settings in the OCR/S tab of DStudio.  Automatic retry is supported if the operation timeout is reached.<br/><br/>
+
+        The properties in the OCR/S tab of the Zones tab in Datacap Studio can be set to adjust recognition.
+        Recognition results will be best when the expected character set is configured.  For example,
+        if the field is expected to contain only numeric characters or only alphabetic characters.
+        It is recommended to restrict the character set whenever possible, even if it is specified
+        to remove a small set of characters from being considered.
+        Restricting the expected set of characters will provide more accurate recognition.<br/><br/>
+        <e>
+          <b>RecognizeFieldOCR_S()</b>
+        </e>
+      </h>
+      <lvl>Field level.</lvl>
+      <ret>
+        <b>False</b> if the ruleset with this action is not bound to a <b>Field</b>object of the
+        Document Hierarchy. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        The top level action help topic for this library contains information about recognizing hand printed text.
+      </see>
+    </method>
+
+    <method name="RecognizeFieldVoteOCR_S" >
+      <ap>None.</ap>
+      <h>
+        This field-level action initiates a voting procedure that first uses specifications in the OCR/S
+        tab of the Recognition Options Setup dialog to recognize the field's characters. <br/><br/>
+        
+        When this action stores the results of recognition, it first determines if the corresponding
+        Field object of the Document Hierarchy contains a value. If a value is present, the action
+        compares the field's existing value with the recognition results - character by character.<br/><br/>
+
+        If a particular character's values match, the Confidence Rating for the character
+        is raised to 9 if the original confidence is smaller than 9. Otherwise the confidence of matching characters is raised to the maximum level (10).<br/><br/>
+
+        Note that when using this voting procedure, the second Recognition engine is secondary and its results
+        are never assigned.  Instead, the action changes the Confidence Ratings on the basis of results provided
+        by the first Recognition engine. If there are no recognition results previous to this action, it
+        will act just like the <b>RecognizeFieldOCR_S</b> action.
+        Automatic retry is supported if the operation timeout is reached.
+        <e>
+          RecognizeFieldICR_C()<br/>
+          <b>RecognizeFieldVoteOCR_S()</b>
+        </e>
+      </h>
+      <lvl>Field only.</lvl>
+      <ret>
+        <b>False</b> if the ruleset with this action is not bound to a <b>Field</b> object of the
+        Document Hierarchy. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="RecognizePageOCR_S">
+      <ap>None.</ap>
+      <h>
+        This action responds to settings in the OCR/S tab in the Zones tab of Datacap Studio to recognize
+        all characters on a page, and populates the page's CCO file with the recognition results.
+        Automatic retry is supported if the operation timeout is reached.<br/>
+        <br/>
+        <b><i>Alert!</i></b> The NormalizeCCO action from the <b>SharedRecognitionTools</b> action library should be called after
+        RecognizePageOCR_S if the application will be using the navigation and pattern match actions
+        to find recognized text on a page, perform pattern matching or use click-n-key in a verification panel. <br/><br/>
+
+        The DCO variable s_charReplace can be used to indicate characters that should be replaced with an alternate character
+        during the recognition step.
+        This procedure can be used when replacing a specific character in a post processing step is not feasible.
+        Using this technique it can be a way to limit characters with full page recognition as can be done with field level recognition.
+        The replacement string must contain pairs of comma separated decimal values that represent the characters
+        to replace, such as: "original,new,original,new,original,new,etc." See the example below.
+        It is recommended that this feature is used only if absolutely necessary. It is usually better to adjust characters
+        later in a follow on step.  s_charReplace is only used during full page recognition.  It is not used for field level recognition.<br/><br/>
+        
+        <b>Alert!</b> If a CCO file does not exist at the time this action is called, the action will create one.  If a CCO file
+        already exists, it will be replaced.<br/><br/>
+
+        This action recognizes images only.  Other input documents, such as PDF, are not directly supported.
+        To use this action with document types that are not supported, use one of Datacap's conversion actions
+        to change the source document into an image that can be recognized.
+        For example, use PDFFREDocumentToImage in the Convert action library to create multiple images for each page, then this
+        action can be used to recognize the created pages.<br/><br/>
+
+        Refer to the "Best Practices" document to understand the best image settings, such as DPI, for optimal
+        recognition.  Additionally, images should use a lossless compression like FAX or LZW,
+        and should not use a lossy compression
+        such as JPEG. If JPEG is used at any step in the process, it will degrade
+        the crispness of character lines, reducing recognition quality.<br/><br/>
+
+        <b>Automatic Rotation, Deskew and Border Removal</b><br/><br/>
+        
+        Automatic rotation, deskew and border removal can be performed automatically at the same time as recognition,
+        if the feature is enabled. Refer to the top level help topic for this action library
+        for more information regarding enabling automatic rotation.<br/><br/>
+
+        The action SetFullPageRecognitionArea from the SharedRecognitionTools action library 
+        can be configured to instruct RecognizePageOCR_S to recognize only a portion of the page.  Refer to the action
+        help for more information.<br/><br/>
+        <e>
+          AnalyzeImage()<br/>
+          <b>RecognizePageOCR_S()</b><br/>
+          <b>NormalizeCCO("")</b><br/><br/>
+          
+          This sequence creates a CCO file for the current page, and checks to see if rotation of the image is needed.
+          Full-page recognition then takes place in response to settings in the OCR/S tab of the Recognition
+          Options Setup dialog The recognition results are stored in the CCO file. The words and lines in the CCO are then sorted
+          for use by navigation and pattern match actions.<br/><br/>
+
+          rrSet("8212,45","@X.s_charReplace")<br/>
+          <b>RecognizePageOCR_S()</b><br/><br/>
+          
+          This example shows how to use the character replacement string. In this case, any dashes that are 
+          recognized as a Unicode dash (8213 in decimal),
+          are converted to a standard minus sign character (45 in decimal).  If there were more
+          characters to filter, just continue with more pairs in the same string.
+        </e>
+      </h>
+      <lvl>Page only.</lvl>
+      <ret>
+        <b>False</b> if the ruleset with this action is not bound to a <b>Page</b>object of the Document Hierarchy.
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        It is strongly recommended that the document "Best Practices for optimal text recognition in IBM Datacap"
+        is reviewed to understand how to get the best results from recognition.<br/><br/>
+        
+        The top level action help topic for this action library contains information about 
+        image cleanup, recognizing hand printed text and other important topics
+        to get optimal recognition quality.<br/><br/>
+
+        SetFullPageRecognitionArea
+      </see>
+    </method>
+
+    <method name="Recognize">
+      <ap>None.</ap>
+      <h>
+        The <b>Recognize</b> action performs document layout analysis and OCR, generating a layout XML file such as TM000001_layout.xml. 
+        The recognition performed is similar to the RecognitPage_OCRS action but this action does not 
+        directly create a CCO. The CCO must be created in a second step.<br/><br/>
+        
+        The layout file groups text into blocks similar to how a person would visually see and identify 
+        the structure while looking at the document. For example, a page can have tables, paragraphs, lines, etc., 
+        which are all a type of a block. Each block may have the default type of block or a specific type 
+        such as title or table, depending on how it was interpreted by the recognition engine. There are locate 
+        actions available in the Locate action library to navigate the block structure such as GoSiblingBlockNext. 
+        This is in contrast to the CCO file produced by other actions that groups text into lines that span the width of the page. <br/><br/>
+        
+        The layout XML file also retains font and color attributes, saved in CSS format, for 
+        the text which is used for extracting data and reconstructing the document in a new format. <br/><br/>
+        
+        To use the Locate actions and perform click 'n' key during verification, use the 
+        action <b>CreateCcoFromLayout</b> action in the <b>SharedRecognitionTools</b> action library
+        after performing recognize.
+        The CreateCcoFromLayout action will create a CCO file from the recognized text within layout XML file.<br/><br/>
+
+        The layout file contains the results of recognition. Heuristic algorithms are used
+        to identify the text elements on the page.  The elements detected can be different
+        on pages that look the same or use the same form.  It cannot be guaranteed
+        that a particular element will always exist or will be recognized.<br/><br/>
+        
+        Following are the types of elements that may be present in the layout XML file:<br/><br/>
+
+        <b>Block Type/XML Node</b><br/><br/>
+
+        <i>
+          Block/Block<br/>
+          Header/Header<br/>
+          Footer/Footer<br/>
+          Title/Title<br/>
+          Heading1/H1<br/>
+          Heading2/H2<br/>
+          Heading3/H3<br/>
+          Picture/Picture<br/>
+          Barcode/Barcode<br/>
+          Space/S<br/>
+          Tab/Tab<br/>
+          Table/Table<br/>
+          Row/Row<br/>
+          Cell/Cell<br/>
+          Paragraph/Para<br/>
+          Line/L<br/>
+          Sentence/Sent<br/>
+          Word/W<br/>
+          Character/C<br/><br/>
+        </i>
+
+        The layout file is intended for use by other Datacap actions such as
+        CreateCcoFromLayout, FindTableValueRegEx, etc. and the listing
+        of the possible components are intended to help make use
+        of those actions.  Direct reading and use
+        of the layout.xml file by custom actions or processes is not supported.
+	Additionally, the format and content of the file can change in future releases.<br/><Br/>
+
+        <b>Supported File Formats</b><br/><br/>
+
+        The Recognize action can process color images and PDF files. When processing PDF documents, the action 
+        will extract embedded text within the PDF document, and perform recognition only on those 
+        areas that contain data but do not contain embedded text. 
+        This improves the processing speed and overall performance of the processing of PDF documents.<br/><br/>
+
+        <b>Tip:</b> It is also possible to process Microsoft Excel, Microsoft Word, Html, Rtf, 
+        and Txt documents by first converting those documents to searchable PDFs via the Convert library. 
+        For example, a Microsoft Excel document can be converted to PDF by calling the 
+        action ExcelWorkbookToPdf. Once the PDF document is created, 
+        then it can be processed through the Recognize action.<br/><br/>
+
+        <b>Important Note:</b> When processing PDF files with this action, it will create a single layout file only
+        and does not extract the images from the document.  DCO nodes for each page are not created.
+        If you intend to extract pages from a PDF for recognition, perform verification or use other Datacap actions
+        on the resulting pages, then use the PDFFREDocumentToImage action in the Convert action library
+        to create unique pages that can be individually processed by subsequent tasks.<br/><br/>
+
+        Refer to the "Best Practices" document to understand the best image settings, such as DPI, for optimal
+        recognition.  Additionally, images to be recognized should use a lossless compression like FAX (for black and white images) or LZW (for grayscale and color),
+        and should not use a lossy compression
+        such as JPEG. JPEG should only be used on photos that do not have text to be recognized.<br/><br/>
+
+        <b>Configuring Lanaguage and Other Properties</b><br/><br/>
+        
+        The language to recognize can be configured by setting the "Language" property in the
+        OCR/S tab of the Zones tab in Datacap Studio.  The OCR/S tab has a number of additional
+        properties that can be set to control recognition.  Properly setting these properties
+        other than leaving them as defaults, can improve recognition accuracy.
+        Select the DCO node, such as a page or field, lock the DCO and the properties
+        can then be changed.  After making any selections, save the DCO and unlock it.<br/><br/>
+        
+        <b>Language Detection</b><br/><br/>
+
+        The <b>Recognize</b> action does not support automatic language detection. However, 
+        this feature is available in the <b>Recognize</b> action of the <b>OCR/A</b> action library.<br/><br/>
+
+        <b>Loading The CCO</b><br/><br/>
+        
+        The CCO is how Datacap works with recognized text.  The CCO contains all of the text
+        and the positions for each recognized character.
+        It allows text related actions, like the Locate actions, to
+        operate.  The "RecognizePage" actions directly create the CCO automatically.  The "Recognize" actions do not directly
+        create the CCO.  They create an intermediate layout file.  To create a CCO from the layout file
+        call the action CreateCcoFromLayout in the SharedRecognitionTools after performing Recognize.<br/><br/>
+
+        Table layouts can be detected only if the page contains grid lines that define the table.
+        The CCO does not use or store the table information.
+        If table detection is not needed, then it is usually best to remove the lines from the image prior to recognition
+        to get the best possible recognition results.<br/><br/>
+
+        <b>Automatic Rotation, Deskew and Border Removal</b><br/><br/>
+        
+        Automatic rotation, deskew and border removal can be performed automatically at the same time as recognition,
+        if the feature is enabled. Refer to the top level help topic for this action library
+        for more information regarding enabling automatic rotation.<br/><br/>
+
+        <e>
+          <b>Recognize()</b><br/>
+          CreateCcoFromLayout()<br/>
+          <br/>
+          This sequence creates layout xml file and subsequently a CCO file for the current page. The CCO file produced is ready for use by navigation and pattern match actions.
+        </e>
+      </h>
+      <lvl>Page only.</lvl>
+      <ret>
+        <b>False</b> if the ruleset with this action is not bound to a <b>Page</b>object of the Document Hierarchy.
+        Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        It is strongly recommended that the document "Best Practices for optimal text recognition in IBM Datacap"
+        is reviewed to understand how to get the best results from recognition.<br/><br/>
+      </see>
+    </method>
+
+    <method name="RecognizePageFieldsOCR_S" >
+      <ap>None.</ap>
+      <h>
+        This page-level action recognizes all fields on the page that have been configured for OCR/S
+        recognition (see the OCR/S tab of the Recognition Options Setup dialog.)<br/><br/>
+
+        The properties in the OCR/S tab of the Zones tab in Datacap Studio can be set to adjust recognition.
+        Recognition results will be best when the expected character set is configured.  For example,
+        if the field is expected to contain only numeric characters or only alphabetic characters.
+        It is recommended to restrict the input to expected characters even if the specification of expected characters removes
+        only small set of possible characters.
+        Restricting the expected set of characters will provide more accurate recognition.<br/><br/>
+
+        <b>Automatic Rotation, Deskew and Border Removal</b><br/><br/>
+        Automatic rotation, deskew and border removal can be performed automatically at the same time as recognition,
+        if the feature is enabled. These settings would be configured at the page level.
+        Refer to the top level help topic for this action library
+        for more information regarding enabling automatic rotation.<br/><br/>
+
+        Although this is a page level action, it will recognize each field using the unique property values that are set
+        on each individual field.  For example, the OCR/S tab settings for language, filter, etc., need to be set
+        on each recognized field.<br/><br/>
+
+        <b>Note:</b>Individual field-level recognition actions will overwrite the results from this page-level action.<br/><br/>
+        The action will not recognize a zoned field if the Skip Recognition checkbox in the OCR/S tab of the
+        Recognition Options Setup dialog has been selected.<br/><br/>
+        
+        Automatic retry is supported if the operation timeout is reached.<br/><br/>
+        <e>
+          ReadZones()<br/>
+          <b>RecognizePageFieldsOCR_S()</b>
+        </e>
+      </h>
+      <lvl>Page only.</lvl>
+      <ret>
+        <b>False</b> if the ruleset with this action is not bound to a <b>Page</b>object of the
+        Document Hierarchy. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        The top level action help topic contains information about recognizing hand printed text.
+      </see>
+    </method>
+
+    <method name="RecognizeToPDFOCR_S" >
+      <p name="OutputPDFType" type="int" />
+      <ap>
+        A numeric value indicating the PDF output type:<br/><br/>
+        <b>1.</b> A PDF document with the original image in the foreground with the recognized text hidden in the background (but in the correct position). Perfect for archiving and indexing documents.<br/><br/>
+        <b>2.</b> A general PDF document where the text in the original image is replaced by the corresponding text recognized by the engine.<br/><br/>
+        <b>3.</b> A special type of PDF document, where the suspect words are covered by their images cut out from the original image.<br/><br/>
+        <b>4.</b> A non-searchable PDF document.<br/>
+        <br/>
+      </ap>
+      <lvl>Document and Page only.</lvl>
+      <h>
+        This action converts a scanned Image file (.tif) to an Adobe Portable Document Format (PDF) file. <br/>
+        <br/>
+        However, it is possible to change the default compatibility by setting the "s_pdfVersion" variable to one of the following values:<br/> <br/>
+
+        2 = PDF Version 1.5 <br/>
+        3 = PDF Version 1.4 <br/>
+        4 = PDF Version 1.3 <br/>
+        5 = PDF Version 1.2 <br/>
+        6 = PDF Version 1.1 <br/>
+        7 = PDF Version 1.0 <br/>
+        8 = PDF Version A <br/>
+        9 = PDF Version 1.6 <br/>
+        10 = PDF Version 1.7<br/>
+        11 = PDF Version A2B <br/>
+        12 = PDF Version A2U <br/>
+        13 = PDF Version A1A <br/>
+        14 = PDF Version A2A <br/><br/>
+
+        To exclude specific page types, set the variable "typesToExclude" to a comma delimited list of page types to exclude from the pdf. <br/><br/>
+        To include specific page types, set the variable "typesToInclude" to a comma delimited list of page types to include from the pdf. <br/><br/>
+        To exclude specific page status, set the variable "statusToExclude" to a comma delimited list of page status to exclude from the pdf. <br/><br/>
+        When more than one filter is specified, the following order of precedence takes place: <br/>
+        - "statusToExclude" overrides "typesToInclude" <br/>
+        - "typesToInclude" overrides "typesToExclude" <br/><br/>
+
+        If calling the action at the document level, the types and status filters apply to both the documents and child pages. <br/>
+        If calling the action at the page level, the types and status filters apply to the page only. <br/><br/>
+
+        These variables must be set before calling the action <b>RecognizeToPDFOCR_S.</b><br/><br/>
+
+        This action does not support converting or combining PDFs into a new PDF.<br/><br/><br/>
+        
+        <b>Automatic Rotation and Deskew</b><br/><br/>
+        When combinding images into a new PDF document, this action will automatically attempt to rotate and dekew
+        the images as they are placed into the PDF.  The input images will not be changed, only as they appear in the document.<br/><br/>
+
+        Automatic rotation can be disabled by setting the DCO variable "s_autorotate" to "0".<br/>
+        Automatic deskew can be disabled by setting the DCO varialbe "s_deskew" to "0".<br/><br/>
+
+        If an image contains text with various orientations, for example vertical and horizontal,
+        the image might be rotated undesirably.
+        The automatic image rotation algorithm relies on, and works best with,
+        images with good quality machine printed text.
+        The page should include at least one text line which includes a machine printed text of at least 30 characters.
+        The automatic rotation algorithm does not fully work with images containing 9-pin dot-matrix text or non-machine printed text.<br/><br/>
+
+        The automatic deskew is effective only on images with a lower than 15-degree skew.
+        If the image is skewed greater
+        than that amount the image may or may not be adjusted.<br/><br/><br/>
+        
+        
+        <b>Automatic Retry</b><br/><br/>
+        Automatic retry is supported if the operation timeout is reached.<br/><br/>
+        
+        The automatic retry time out may need to be adjusted by calling the action SetupAutomaticRetry,
+        or the actions SetOutOfProcessRecogTimeout and EgineTimeoutOCR_S if you are using the
+        legacy timeout procedure.<br/><br/>
+        
+        The intent of the timeout is to prevent a recognition action to indefinitely hang should something
+        go wrong in the recognition engine and it never completes.
+        The default timeout is typically sufficient for single page recognition, however when building multiple pages
+        into a single PDF, this action will require more time than the default value.  The amount of time needed is
+        directly dependent on the number of pages being converted to a PDF and dependent on the current machine load.
+        The required time must be further extended if the batch directory exists on a network directory,
+        which will also increase the action's processing time.
+        While it is not possible to provide a specific default that works in every case, it is recommended
+        to set a very large value if you are finding that the action is taking longer than the timeout,
+        stopping the conversion prematurely.
+        The action should eventually complete once all of the pages have been processed.<br/><br/>
+
+        Keep in mind that there may be other timeouts that can affect this action.  For example,
+        Rulerunner has timeouts as well that may prematurely terminate a thread that is taking longer
+        to run because of the large number of pages being processed.  These additional time outs
+        may also need to be adjusted to allow the action to complete successfully. <br/><br/><br/>
+		
+		<b>Compression</b><br/><br/>
+		Compression format for Color images with both MRC and non-MRC PDF.<br/><br/>
+		
+		The size of the resulting file may be smaller using JPEG2000. Compression format for the images can be set using "s_PDFColorFormat".<br/><br/>
+		
+		Possible values for compression are :<br/>
+		0 - JPEG<br/>
+		1 - JPEG2000<br/>
+		The size of the resulting file may be smaller using JPEG2000. Default value for s_PDFColorFormat is JPEG2000.<br/><br/><br/>
+		
+		<b>Pictures DPI</b><br/><br/>
+		Picture DPI can be set using "s_pictureDPI". Default value for this is set to original.<br/><br/>
+		
+		Possible values for DPI are :<br/>
+		 0 - None<br/>
+		 1 - Original<br/> 
+		 2 - DPI72<br/>
+		 3 - DPI100<br/>  
+		 4 - DPI150<br/>  
+		 5 - DPI200<br/>  
+		 6 - DPI300<br/><br/><br/>
+		 
+        <br/><br/>
+        <e>
+          rrSet("75","@D.statusToExclude) <br/>
+          rrSet("Blank","@D.typesToExclude) <br/>
+          <b>RecognizeToPDFOCR_S(3)</b><br/><br/>
+
+          The above example creates a PDF document with all pages contained in the dco document object , except those with type "Blank" and status of "75". <br/>
+        </e>
+      </h>
+      <ret>
+        <b>False</b> if the rule with this action is not applied to a document or page object, and/or if the parameters are not in the valid range. Otherwise, <b>True.</b>
+      </ret>
+      <see>
+        The top level action help topic contains information about configuring the automatic retry and its associated
+        time out.
+      </see>
+    </method>
+
+    <method name="RotateImageOCR_S" >
+      <ap>None</ap>
+      <h>
+        This action performs automatic rotation of black and white .TIF (or .TIFF) files.
+        The automatic image rotation algorithm relies on, and works best with,
+        images with good quality machine printed text.
+        The page should include at least one text line which includes a machine printed text of at least 30 characters.<br/><br/>
+        
+        If an image contains text with various orientations, for example vertical and horizontal,
+        the image might be rotated undesirably.
+        The automatic rotation algorithm does not fully work with images containing 9-pin dot-matrix text or other non-machine printed text.
+        <br/><br/>
+
+        This action will also perform other image enhancements such as deskew, if they are enabled.
+        See the top level help to enable these settings.<br/><br/>
+
+        Alternatively, automatic rotation and deskew can be performed automatically at the same time as recognition,
+        if image enhancements are enabled. If automatic rotation
+        is enabled during recognition, then it is not necessary to call this action prior to recognition
+        unless the application requires the rotation to be fixed prior to recognition for some other
+        application specific reason.  For example, it may be desirable to perform automatic rotation before 
+        fingerprinting or using the Image Enhancement ruleset.
+        Refer to the top level help for more information regarding enabling automatic rotation.<br/><br/>
+
+        It is recommended that this action be called in a separate ruleset and task profile before recognition due
+        to instances where the image may not be released until the ruleset has completed.
+        This problem can manifest as a "cco does not exist" error in the log file.<br/><br/>
+        
+        Automatic retry is supported if the operation time out is reached.
+        <br/>
+        <e>
+          <b>RotateImageOCR_S()</b><br/>
+          RecognizePageICR_C()<br/><br/>
+
+          In this example, automatic image rotation is performed prior to full page recognition via the ICR_C actions.
+        </e>
+      </h>
+      <lvl>Page only.</lvl>
+      <ret>
+        <b>False</b> if the ruleset with this action is not bound to a <b>Page</b>object of the
+        Document Hierarchy, or if the action cannot locate the image file representing the current page.
+        Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="RotateImageExOCR_S" >
+
+      <p name="ImagePath" type="string" qi="Path to the image file to rotate. If left blank, the current page image file is used by default."/>
+      <p name="RotationMode" type="string" qi="Type of rotation to apply to the image. Valid values are 0 (Auto), 1 (No Rotation), 2 (90 degree rotation, clockwise), 3 (180 degree rotation, clockwise), 4 (90 degree rotation, counter-clockwise). If left blank, 0(Auto) is used by default."/>
+      <ap>
+        <b>ImagePath:</b> Path to the image file to rotate. Smart parameters are supported. If left blank, the current page's image file is used by default.<br/>
+        <b>RotationMode:</b> Type of rotation to apply to the image. Valid values are: <br/><br/> 0 - (Auto)<br/> 1 - (No Rotation)<br/> 2 - (90 degree rotation, clockwise)<br/> 3 - (180 degree rotation, clockwise)<br/> 4 - (90 degree rotation, counter-clockwise)<br/><br/> If left blank, 0(Auto) is used by default.<br/>
+      </ap>
+      <h>
+        This action performs rotation of the specified image, using the specified rotation mode. 
+        When the <b>RotationMode</b> is not specified, the automatic image rotation algorithm is used.
+        Note that this algorithm relies on, and works best with,
+        images with good quality machine printed text.
+        <br/><br/>
+        
+        If an image contains text with various orientations, for example vertical and horizontal,
+        the image might be rotated undesirably.<br/><br/>
+        
+        The automatic rotation algorithm does not fully work with images containing 9-pin dot-matrix text or other non-machine printed text.
+        After the action runs and the image is rotated, the rotation applied to the image is saved in a page level variable called <b>OCRSRotMod</b>
+        <br/><br/>
+
+        It is recommended that this action be called in a separate ruleset and profile before recognition due
+        to instances where the engine will not release the image until the ruleset has completed.<br/><br/>
+
+        Automatic retry is supported if the operation timeout is reached.<br/><br/>
+
+        Automatic rotation and deskew can be performed automatically at the same time as recognition,
+        if the feature is enabled. If automatic rotation
+        is enabled during recognition, then it is not necessary to call this action prior to recognition
+        unless the application requires the rotation to be fixed prior to recognition for some other
+        application specific reason.  Refer to the top level help for more information regarding enabling automatic rotation.<br/><br/>
+        <br/>
+        <e>
+          <b>RotateImageEx("","")</b><br/>
+          RotateImageEx("", "2") <br/><br/>
+
+          In this example, the first instance of RotateImageEx rotates the current page image file automatically and saves the rotation mode applied in the variable "OCRSRotMod".
+          The second instance applies a 90 degree rotation to the current image.
+        </e>
+      </h>
+      <lvl>Page level.</lvl>
+      <ret>
+        <b>False</b> if the ruleset with this action is not bound to a <b>Page</b>object of the
+        Document Hierarchy, or if the action cannot locate the image file specified in the first parameter, or if the rotation mode specified is not within the valid set of values.
+        Otherwise, <b>True.</b>
+      </ret>
+
+    </method>
+
+    <method name="RecognizeToFileOCR_S" >
+      <p name="FileType" type="int"  />
+      <ap>
+        <b>fileType</b> - The action requires a <i>Numeric</i>parameter from 1-22 to specify a combination of recognition targets
+        and output formats.<br/><br/>
+
+        <b>Important!</b>"Image" refers to the image of the bound <b>Page</b>object of the Document Hierarchy.
+        "Filename" is the string portion of a file's name that precedes its extension.<br/><br/>
+
+        The output for all of these parameters will produce a file name that is identical to the original
+        file name and will have the extension specified for that parameter.<br/><br/>
+		
+		<b>1.</b> A PDF document with the original image in the foreground with the recognized text hidden in the background (but in the correct position). Perfect for archiving and indexing documents.<br/><br/>
+        <b>2.</b> A general PDF document where the text in the original image is replaced by the corresponding text recognized by the engine.<br/><br/>
+        <b>3.</b> A special type of PDF document, where the suspect words are covered by their images cut out from the original image.<br/><br/>
+        <b>4.</b> A non-searchable PDF document.<br/><br/>
+        <b>5.</b> Recognize an HTML image of the bound <b>Page</b>object of the Document Hierarchy.
+        Output: ".html" (HTML 140).<br/><br/>
+        <b>6.</b> Recognize an image of the bound <b>Page</b>object of the Document Hierarchy in an Excel file.
+        Output: ".xls" (Excel 2000.) - <b>Obsolete</b><br/><br/>
+        <b>7.</b> Recognize any image of the bound <b>Page</b>object of the Document Hierarchy in a Word2000 file with a ".doc" extension.
+        Output: ".doc" (Word 2000).<br/><br/>
+        <b>8.</b> Recognize any image of the bound <b>Page</b>object of the Document Hierarchy in a WordML file.
+        Output: ".doc" (Word ML).<br/><br/>
+        <b>9.</b> Recognize any image of the bound <b>Page</b>object of the Document Hierarchy in a Word97 file.
+        Output: ".doc" (Word 97)  - <b>Obsolete</b><br/><br/>
+        <b>10.</b> Recognize any image of the bound <b>Page</b>object of the Document Hierarchy in a RTF2000SWord file.
+        Output: ".rtf" (RTF 2000SWord) - <b>Obsolete</b><br/><br/>
+        <b>11.</b> Recognize any image of the bound <b>Page</b>object of the Document Hierarchy in an RTF2000 file.
+        Output: ".rtf" (RTF 2000).<br/><br/>
+        <b>12.</b> Recognize the image of the bound <b>Page</b>object of the Document Hierarchy in a Text file with an ".RTF6" extension.
+        Output: ".rtf" (Rich Text).  <b>Obsolete</b><br/><br/>
+        <b>13.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with an "RTF6" extension.
+        Output: ".rtf" (Rich Text).   <b>Obsolete</b><br/><br/>
+        <b>14.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with an ".Text" extension.
+        Output: ".txt" (Text).<br/><br/>
+        <b>15.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with an ".Csv" extension.
+        Output: ".txt" (CSV - Comma Separated Variable).<b>Obsolete</b><br/><br/>
+        <b>16.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with a ".FormattedTxt" extension.
+        Output: ".txt" (Formatted Text).<br/><br/>
+        <b>17.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with a ".UText" extension.
+        Output: ".txt" (Text).<br/><br/>
+        <b>18.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with a ".UCSV" extension.
+        Output: ".CSV" (Comma Separated Variable). <b>Obsolete</b> <br/><br/>
+        <b>19.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with a ".UFormattedText" extension.
+        Output: ".txt" (Text).<br/><br/>
+        <b>20.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with an ".Audio" extension.
+        Output: ".aud" (Text).<br/><br/>
+        <b>21.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with a ".WordPad" extension.
+        Output: ".rtf" (Rich Text for WordPad).<br/><br/>
+        <b>22.</b> Recognize the image of the <b>Page</b>object of the Document Hierarchy in a Text file with an ".XML" extension.
+        Output: ".xml" (XML).<br/><br/>
+		
+		<b>
+		The following output converters are no longer supported:"
+		<br/>
+		<li>Converters.Text.Excel97/Excel 2000</li>
+		<li>Converters.Text.Word2000 (native Doc format, replaced with Converters.Text.RTF2000)</li>
+		<li>Converters.Text.Word97 (native Doc format, replaced with Converters.Text.RTF2000)</li>
+		<li>Converters.Text.RTF97</li>
+		<li>Converters.Text.RTF6</li>
+		<li>Converters.Text.RTF2000SWord</li>
+		<li>Converters.Text.eBook</li>
+		<li>Converters.Text.MicrosoftReader</li>
+		</b>
+		<br/>		
+      </ap>
+      <h>
+        Performs OCR recognition on the image of a source page, and stores the output of the OCR/S recognition
+        engine in a file. The output file is in one of 22 alternative formats. Because the files are not actually
+        processed in the format you specify, this action is useful primarily for debugging the engine,
+        of if you need raw (unverified) OCR output in that format.<br/><br/>
+        Automatic retry is supported if the operation timeout is reached.
+
+        <br/><br/>
+        <b>         
+          However, it is possible to change the default compatibility by setting the "s_pdfVersion" variable to one of the following values:<br/> <br/>
+
+          2 = PDF Version 1.5 <br/>
+          3 = PDF Version 1.4 <br/>
+          4 = PDF Version 1.3 <br/>
+          5 = PDF Version 1.2 <br/>
+          6 = PDF Version 1.1 <br/>
+          7 = PDF Version 1.0 <br/>
+          8 = PDF Version A <br/>
+          9 = PDF Version 1.6 <br/>
+          10 = PDF Version 1.7<br/>
+          11 = PDF Version A2B <br/>
+          12 = PDF Version A2U <br/>
+          13 = PDF Version A1A <br/>
+          14 = PDF Version A2A <br/><br/>
+
+          To exclude specific page types, set the variable "typesToExclude" to a comma delimited list of page types to exclude from the pdf. <br/>
+          To exclude specific page status, set the variable "statusToExclude" to a comma delimited list of page status to exclude from the pdf. <br/><br/>
+          These variables must be set before calling the action "RecognizeToFileOCR_S"
+        </b><br/><br/>
+        <e>
+          rrSet("75","@D.statusToExclude) <br/>
+          rrSet("Blank","@D.typesToExclude) <br/>
+          <b>RecognizeToFileOCR_S(1)</b><br/><br/>
+
+          The above example creates a PDF document with all pages contained in the dco document object , except those with type "Blank" and status of "75". <br/>
+        </e>
+      </h>
+      <lvl>Page or Document.</lvl>
+      <ret>
+        <b>False</b> if a ruleset with this action is bound to a <b>Field</b>object of the Document Hierarchy,
+        or if the parameter is not numeric. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="SetOutOfProcessLoggingOCR_S" >
+      <p name="EnableLogging" type="bool"  />
+      <ap>
+        <b>EnableLogging</b> - a value indicating whether write out logs for the out-of-process process for debugging purposes.<br/><br/>
+      </ap>
+      <h>
+        This action write out logs for the out-of-process process for debugging purposes.
+        The log file is written to the batch folder. Multiple logs are created and they are named: 
+        "dcoprocessor.logdcoproc XX_XX_XX.log", where X are numerics.<br/><br/>
+        <e>
+          SetOutOfProcessLoggingOCR_S(true)<br/>
+          <b>SetOutOfProcessTimeoutOCR_S(185)</b><br/>
+          RecognizeFieldOCR_S<br/>
+          <br/>
+        </e>
+      </h>
+      <lvl>Page or Field.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="SetupAutomaticRetryOCR_S" >
+      <p name="retryCount" type="string"  />
+      <p name="timeout" type="string"  />
+      <ap>
+        1. <b>retryCount:</b> The number of times a failed action should be retried.  If this action is not called,
+        the default retryCount is 1.<br/><br/>
+
+        2. <b>timeout:</b> The number of seconds to wait for an action to complete before retrying.  If this action
+        is not called, the default timeout is 180 seconds.  Note that this is the minimum time that will be used.
+        Depending on the specific nature of the failure, it may be several seconds longer before the
+        current operation is stopped and retried.<br/><br/>
+
+        Smart parameters are supported.
+      </ap>
+      <h>
+        This action changes the default values for the number of retries and the time to wait for an action to complete, for
+        actions that support automatic retry. Actions that support automatic retry use these
+        values to control the retry logic.  To see if an action library supports automatic retry, check
+        the help for the library.<br/><br/>
+
+        The intent of the automatic retry is to provide transparent recovery for the rare situation where an action
+        may not terminate.  For example, if an image is being recognized and something about the image is peculiar or invalid and
+        causes the recognition engine to never terminate the recognition step.  Sometimes, retrying these failures
+        will work successfully on the second attempt.<br/><br/>
+
+        The automatic retry mechanism will wait
+        for the number of seconds specified, and if the action does not complete, will stop the current operation and
+        retry it.  If the action is successful after the automatic retry, the action will complete and
+        operation will continue as normal.  If the action is not successful,
+        failure will be conveyed using the method as documented in the help for the action that failed.<br/><br/>
+
+        While the default time is long enough in most situations for single page recognition, it is possible that there may be times when
+        the default timeout should be changed.  For example, if an application is processing atypical documents
+        that complete successfully but in a time longer than the default time.
+        Building a PDF from multiple TIF images can also take longer than the default timeout setting.
+        In this kind of situation,
+        use this action to increase the expected length of time for an operation to complete.
+        If the time is not increased, the action may be forced to exit prematurely although no error
+        has occurred, and the action will not complete successfully.<br/><br/>
+
+        Automatic retry is enabled by default for action libraries that support it.  However, certain legacy actions
+        can disable the automatic retry feature, as noted in the action help.
+        Calling SetupAutomaticRetry overrides legacy mode and will enable automatic retry.<br/><br/>
+
+        The OCR/SR action library supports the automatic retry feature.<br/><br/>
+        <e>          
+          <b>SetupAutomaticRetryOCR_S(1, 300)</b><br/>
+          RecognizePageOCR_S()<br/>
+          CreateTextFile()<br/><br/>
+
+          In this example, the default value for the timeout is changed just prior to the page being recognized.
+        </e>
+      </h>
+      <lvl>Document, Page or Field.</lvl>
+      <ret>
+        <b>False,</b> if the input parameter is invalid, otherwise <b>True.</b>
+      </ret>
+    </method>
+
+    
+    <method name="SetRecognitionFailureRetryDelayOCR_S" >
+      <p name="RetryDelay" type="string"  />
+      <ap>
+        <b>RetryDelay</b> - The number of seconds for the action to wait before restarting the recognition process.
+        Smart parameters are supported.<br/><br/>
+      </ap>
+      <h>
+        The retry delay controls the length of time the action waits between a failure due to a timeout condition
+        and the reloading of the engine.  If this action is not called, then the default time is 5 seconds.
+        This action must be called prior to calling a recognition action or it will not have any effect.
+        It must also be called on the same level as the recognition action.<br/><br/>
+        <e>
+          <b>SetRecognitionFailureRetryDelayOCR_S("10")</b><br/>
+          SetupAutomaticRetry(1, 300)<br/>
+          RecognizePageOCR_S()<br/>
+          <br/>
+        </e>
+      </h>
+      <lvl>Document, Page or Field.</lvl>
+      <ret>
+        <b>False,</b> if the input parameter is invalid, otherwise <b>True.</b>
+      </ret>
+    </method>
+
+
+    <method name="SetContinueOnFailureOCR_S" >
+      <p name="ContinueOnFailure" type="bool"  />
+      <ap>
+        <b>ContinueOnFailure</b> - a value indicating whether a recognition action will abort or continue after it has encountered an error.
+        If this action is not called, the default value of <b>true</b> is used.<br/><br/>
+      </ap>
+      <h>
+        It is recommended to <b>not</b> call SetContinueOnFailureOCR_S and instead use the automatic retry feature.
+        See the top level help topic in the OCR/SR library for more information.
+        Calling this action will enable the legacy process for using the timeout settings.<br/><br/>
+        
+        This action is provided for legacy support of rules that manually perform a retry of recognition failures
+        and is provided for backwards compatibility.  It is recommended that you allow OCR/SR actions to automatically
+        handle retries of recognition failures.  When automatic mode is used, this action does not need to be called.
+        See the top level help topic in the OCR/SR library for more information.<br/><br/>
+
+        This action sets a value indicating whether a recognition action will abort or continue after it has encountered an error. <br/>
+
+        If this action is not called, the default behavior is for the recognition actions to continue on error. <br/>
+
+        <e>
+          SetContinueOnFailureOCR_S(true)<br/>
+          <b>SetOutOfProcessTimeoutOCR_S(185)</b><br/>
+          RecognizeFieldOCR_S<br/>
+          <br/>
+        </e>
+      </h>
+      <lvl>Page or Field.</lvl>
+      <ret>
+        Always <b>True.</b>
+      </ret>
+    </method>
+
+    <method name="UseOutOfProcessRecogOCR_S" >
+      <p name="UseOutOfProcessRecog" type="bool"  />
+      <ap>
+        <b>UseOutOfProcessRecog</b> -A value indicating whether recognition will run out-of-process. Set to true for out-of-process recognition, and False for in-process recognition. By default, the recognition actions run out-of-process. <br/><br/>
+      </ap>
+      <h>
+        This action is provided for legacy support of rules that manually perform a retry of recognition failures
+        and is provided for backwards compatibility.  It is recommended that you allow OCR/SR actions to automatically
+        handle retries of recognition failures.
+        When automatic mode is used, this action does not need to be called and recognition will be automatically run out of process.<br/><br/>
+
+        This action indicates whether recognition will run out-of-process or in process.  Running out of process improves stability of the application.
+
+        If a recognition action does not complete within the specified number of seconds indicated by a
+        <b>SetOutOfProcessRecogTimeoutOCR_S</b>action or a <b>SetEngineTimeoutOCR_S</b>action, it is assumed that the
+        recognition engine has encountered a severe error. If the recognition action does not complete by the specified time on the second attempt, the recognition
+        action will be set to abort if <b>ContinueOnFailure(False)</b>was used.<br/><br/>
+
+        <e>
+          SetEngineTimeoutOCR_S(180)<br/>
+          <b>SetOutOfProcessTimeoutOCR_S(185)</b><br/>
+          RecognizeFieldOCR_S<br/>
+          <br/>
+        </e>
+      </h>
+      <lvl>Page or Field.</lvl>
+      <ret>
+        <b>False</b> if the parameter is not numeric or less than 1. Otherwise, <b>True.</b>
+      </ret>
+    </method>
+	<method name="ReleaseEngineOCR_SR" >          
+      <h>
+        This action shuts down the OCR/S Engine. It will automatically restart when needed by an OCR/S action.<br/><br/>
+
+        <e>
+          ReleaseEngineOCR_SR()<br/>          
+          <br/>
+        </e>
+      </h>
+      <lvl>All</lvl>    
+	 <ret>
+        Always <b>True.</b>
+      </ret>  
+    </method>
+  </com>
+
+</rrx>
