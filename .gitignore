@@ -1,5 +1,21 @@
-node_modules/
+﻿node_modules/
 .bob/tmp/
 *.log
 dist/
 
+# Datacap runtime / batch output
+apps/*/batches/
+apps/*/*.app.bak
+apps/*/images/Input/bkup/
+apps/*/dco_*/*.xmb
+apps/*/dco_*/rules/*.dll
+apps/*/dco_*/rules/*.dll.config
+apps/*/dco_*/*.script
+apps/*/dco_*/VScan.script
+apps/*/dco_*/ScanFromDisk_*.script
+apps/*/dco_*/rules/*.bak
+apps/*/dco_*/rules/*.bak2
+
+# Generator outputs (large / local only)
+output/
+sample_docs/

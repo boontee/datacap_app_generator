@@ -21,6 +21,7 @@
 - [ExportToXML](#exporttoxml) - 8 actions
 - [FileIO](#fileio) - 21 actions
 - [FingerprintMaintenance](#fingerprintmaintenance) - 5 actions
+- [IBMCMExtended](#ibmcmextended) - 0 actions
 - [IBMFileNetP8](#ibmfilenetp8) - 33 actions
 - [ICM](#icm) - 6 actions
 - [ImageUtilities](#imageutilities) - 19 actions
@@ -33,6 +34,7 @@
 - [PictureCharacterValidation](#picturecharactervalidation) - 5 actions
 - [RuleRunnerLogic](#rulerunnerlogic) - 37 actions
 - [SplitBatch](#splitbatch) - 1 actions
+- [Statistics](#statistics) - 4 actions
 - [TiffMultipageMerge](#tiffmultipagemerge) - 6 actions
 - [ValidationsAndTextAdjustments](#validationsandtextadjustments) - 71 actions
 - [VoteUsingComparativeText](#voteusingcomparativetext) - 3 actions
@@ -3354,6 +3356,15 @@ CloseDatabase()
 
 ---
 
+## IBMCMExtended
+
+**File**: IBMCMExtended.rrx  
+**Version**: 8.1.0.0  
+
+_No documented actions._
+
+---
+
 ## IBMFileNetP8
 
 **File**: IBMFileNetP8.rrx  
@@ -5847,6 +5858,64 @@ Controls the next step when a batch is branching to a new workflow.
 
 ---
 
+## Statistics
+
+**File**: Statistics.rrx  
+**Version**: 9.1.9.10  
+
+### Actions
+
+#### SaveFieldsText
+
+Save recognized page types and field values after recognition, for accuracy calculations.
+
+**Level**: Batch level.  
+**Returns**: Always True.  
+
+**Parameters**: None
+
+**Example**:
+```
+SaveFieldsText()
+```
+
+#### CompareFieldsText
+
+Calculates page type classification and field recognition accuracy statistics and updates database report tables.
+
+**Level**: Batch level.  
+**Returns**: Always True.  
+
+**Parameters**: None
+
+**Example**:
+```
+CompareFieldsText()
+```
+
+#### IsBatchAborted
+
+Reports if batch is set to abort.
+
+**Level**: Any level.  
+**Returns**: True if the batch is set to abort, else False.  
+
+**Parameters**: None
+
+**Example**:
+```
+IsBatchAborted()
+```
+
+#### AddToDBTotals
+
+**Level**: Batch level.  
+**Returns**: Always True.  
+
+**Parameters**: None
+
+---
+
 ## TiffMultipageMerge
 
 **File**: TiffMultipageMerge.rrx  
@@ -7278,6 +7347,8 @@ Use this checklist when reviewing a Datacap application's rulesets:
 | Email import | Ewsmail, Imail, Email.MSGraph | GetMailMessages, AttachmentToImage |
 | File I/O | FileIO | CopyFile, MoveFile, DeleteFile |
 | IBM FileNet P8 | IBMFileNetP8 | CheckInDocument, CheckOutDocument |
+| IBM Content Manager | IBMCMExtended | IBMCM_Logon, IBMCM_CreateItem, IBMCM_UploadDCO_Page |
+| Statistics (deprecated) | Statistics | SaveFieldsText, CompareFieldsText, AddToDBTotals |
 | Logging | Nenu | LogMessage, WriteToLog |
 | Batch split | SplitBatch | SplitBatch |
 

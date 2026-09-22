@@ -1,4 +1,4 @@
-﻿function Get-NodeText($node) {
+function Get-NodeText($node) {
     if (-not $node) { return "" }
     if ($node -is [System.Xml.XmlElement]) { return $node.InnerText }
     return [string]$node
@@ -18,58 +18,119 @@ function Clean-Node($node) {
     return Strip-Xml(Get-NodeText($node))
 }
 
+# Parse a single <method> or <af> element into an action PSCustomObject
+function Parse-MethodNode($m) {
+    $params = @($m.p) | Where-Object { $_ -is [System.Xml.XmlElement] -and $_.name } | ForEach-Object {
+        $pQi = Strip-Xml($_.qi)
+        if ($pQi) { "$($_.name): $pQi" } else { $_.name }
+    }
+    $lvl     = Clean-Node($m.lvl)
+    $ret     = Clean-Node($m.ret)
+    $qi      = (Strip-Xml(Get-NodeText($m.qi))).TrimStart(": ")
+    $ap      = Clean-Node($m.ap)
+    $example = ""
+    $hNode   = $m.h
+    if ($hNode -is [System.Xml.XmlElement]) {
+        $hXml = $hNode.InnerXml
+        if ($hXml -match '<e>(.*?)</e>') {
+            $example = Strip-Xml($Matches[1])
+        }
+    }
+    return [PSCustomObject]@{
+        Name       = $m.name
+        QuickInfo  = $qi
+        Params     = if ($params) { ($params -join "; ") } else { "" }
+        SmartParam = if ($ap -and $ap -notmatch "^None") { "Yes" } else { "" }
+        Level      = $lvl
+        Returns    = $ret
+        Example    = $example
+    }
+}
+
 $rrxFiles = Get-ChildItem -Path ".\rrs" -Filter "*.rrx" | Sort-Object Name
 $allLibs = @()
 
 foreach ($file in $rrxFiles) {
     try {
         [xml]$xml = Get-Content $file.FullName -Encoding UTF8
-        $ns = $xml.rrx.namespace
+        $ns  = $xml.rrx.namespace
         $ver = $xml.rrx.v
+
+        # ── Layout 1: standard <com><method> structure ──────────────────────
         $coms = @($xml.rrx.com)
-        foreach ($com in $coms) {
-            $comRef = $com.ref
-            if (-not $comRef) { continue }
-            $comQi = (Strip-Xml(Get-NodeText($com.qi))).TrimStart(": ")
-            $methods = @($com.method)
+        $hasComs = @($coms | Where-Object { $_ -is [System.Xml.XmlElement] -and ([string]$_.ref) -ne "" }).Count -gt 0
+
+        if ($hasComs) {
+            foreach ($com in $coms) {
+                $comRef = $com.ref
+                if (-not $comRef) { continue }
+                $comQi = (Strip-Xml(Get-NodeText($com.qi))).TrimStart(": ")
+                $methods   = @($com.method)
+                $actionList = @()
+                foreach ($m in $methods) {
+                    if (-not $m.name) { continue }
+                    $actionList += Parse-MethodNode $m
+                }
+                $allLibs += [PSCustomObject]@{
+                    File        = $file.Name
+                    Namespace   = $ns
+                    Version     = $ver
+                    ComRef      = $comRef
+                    Description = $comQi
+                    Actions     = $actionList
+                }
+            }
+            continue   # done with this file
+        }
+
+        # ── Layout 2: <method> directly under <rrx> (e.g. IBMCMExtended) ───
+        $topMethods = $xml.SelectNodes("/rrx/method")
+        if ($topMethods.Count -gt 0) {
             $actionList = @()
-            foreach ($m in $methods) {
+            foreach ($m in $topMethods) {
                 if (-not $m.name) { continue }
-                $params = @($m.p) | Where-Object { $_ -is [System.Xml.XmlElement] -and $_.name } | ForEach-Object {
-                    $pQi = Strip-Xml($_.qi)
-                    if ($pQi) { "$($_.name): $pQi" } else { $_.name }
-                }
-                $lvl     = Clean-Node($m.lvl)
-                $ret     = Clean-Node($m.ret)
-                $qi      = (Strip-Xml(Get-NodeText($m.qi))).TrimStart(": ")
-                $ap      = Clean-Node($m.ap)
-                $example = ""
-                $hNode   = $m.h
-                if ($hNode -is [System.Xml.XmlElement]) {
-                    $hXml = $hNode.InnerXml
-                    if ($hXml -match '<e>(.*?)</e>') {
-                        $example = Strip-Xml($Matches[1])
-                    }
-                }
-                $actionList += [PSCustomObject]@{
-                    Name       = $m.name
-                    QuickInfo  = $qi
-                    Params     = if($params){ ($params -join "; ") } else { "" }
-                    SmartParam = if($ap -and $ap -notmatch "^None") { "Yes" } else { "" }
-                    Level      = $lvl
-                    Returns    = $ret
-                    Example    = $example
-                }
+                $actionList += Parse-MethodNode $m
             }
             $allLibs += [PSCustomObject]@{
                 File        = $file.Name
                 Namespace   = $ns
                 Version     = $ver
-                ComRef      = $comRef
-                Description = $comQi
+                ComRef      = ""
+                Description = ""
                 Actions     = $actionList
             }
+            continue
         }
+
+        # ── Layout 3: <af access="public"> action functions (e.g. Statistics) ─
+        $afNodes = $xml.SelectNodes("//af[@access='public']")
+        if ($afNodes.Count -gt 0) {
+            $actionList = @()
+            foreach ($m in $afNodes) {
+                if (-not $m.name) { continue }
+                $actionList += Parse-MethodNode $m
+            }
+            $allLibs += [PSCustomObject]@{
+                File        = $file.Name
+                Namespace   = $ns
+                Version     = $ver
+                ComRef      = ""
+                Description = ""
+                Actions     = $actionList
+            }
+            continue
+        }
+
+        # ── No recognised layout — record library with no actions ────────────
+        $allLibs += [PSCustomObject]@{
+            File        = $file.Name
+            Namespace   = $ns
+            Version     = $ver
+            ComRef      = ""
+            Description = ""
+            Actions     = @()
+        }
+
     } catch {
         Write-Host "ERROR $($file.Name): $($_.Exception.Message)"
     }
@@ -157,14 +218,14 @@ $lines.Add("")
 foreach ($grp in ($libGroups | Sort-Object Name)) {
     $ns = $grp.Name
     if (-not $ns) { continue }
-    $libs = $grp.Group
+    $libs  = $grp.Group
     $first = $libs[0]
     $lines.Add("## $ns")
     $lines.Add("")
     $lines.Add("**File**: $($first.File)  ")
     $lines.Add("**Version**: $($first.Version)  ")
     $refs = ($libs | ForEach-Object { $_.ComRef } | Where-Object { $_ }) -join ", "
-    $lines.Add("**Assembly**: $refs  ")
+    if ($refs) { $lines.Add("**Assembly**: $refs  ") }
     $desc = ($libs | ForEach-Object { $_.Description } | Where-Object { $_ }) | Select-Object -First 1
     if ($desc) { $lines.Add("**Description**: $desc") }
     $lines.Add("")
@@ -244,6 +305,8 @@ $lines.Add("| Barcode | Barcode | ReadBarcode1D, ReadBarcode2D |")
 $lines.Add("| Email import | Ewsmail, Imail, Email.MSGraph | GetMailMessages, AttachmentToImage |")
 $lines.Add("| File I/O | FileIO | CopyFile, MoveFile, DeleteFile |")
 $lines.Add("| IBM FileNet P8 | IBMFileNetP8 | CheckInDocument, CheckOutDocument |")
+$lines.Add("| IBM Content Manager | IBMCMExtended | IBMCM_Logon, IBMCM_CreateItem, IBMCM_UploadDCO_Page |")
+$lines.Add("| Statistics (deprecated) | Statistics | SaveFieldsText, CompareFieldsText, AddToDBTotals |")
 $lines.Add("| Logging | Nenu | LogMessage, WriteToLog |")
 $lines.Add("| Batch split | SplitBatch | SplitBatch |")
 $lines.Add("")
@@ -254,3 +317,8 @@ $lines.Add("*Generated from IBM Datacap 9.1.10 RRX action library files. $(Get-D
 $lines | Set-Content ".\knowledge-base\datacap_actions_kb.md" -Encoding UTF8
 Write-Host "Written $($lines.Count) lines to knowledge-base\datacap_actions_kb.md"
 
+# Print per-library summary
+$libGroups | Sort-Object Name | ForEach-Object {
+    $total = ($_.Group | ForEach-Object { @($_.Actions).Count } | Measure-Object -Sum).Sum
+    Write-Host "  $($_.Name): $total actions"
+}
