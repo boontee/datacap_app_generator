@@ -44,6 +44,8 @@ configuration for the initial application structure, ruleset skeletons, and C# a
 
 ## Two-Phase Process
 
+![Datacap App Generator — full generation flowchart](docs/img_1790085258133.png)
+
 ### Phase 1 — Intake
 
 A structured Q&A conversation across **6 sections**. Each section is confirmed before moving to the next. Answers are incrementally written to `output/<AppName>/requirements.json`.
