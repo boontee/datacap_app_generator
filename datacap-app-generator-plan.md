@@ -5,12 +5,13 @@
 > Templates: `templates/`
 > All generated artifacts use the templates as the base; nothing is created from scratch.
 >
-> **Plan version: 1.4**
+> **Plan version: 1.5**
 > Changelog:
 > - v1.1: Fixed E1–E5 (flowchart path gaps, collection.xml custom-action entry, Numeric validation action, missing generation logic for `integrityBranch` and `batchSplit`). Added G1–G6 gaps (Extraction.rul, output directory creation, missing KB reference, resume logic). Added I3 (`CreateDocs` task question).
 > - v1.2: Added `templates/app-config/AppName.app`, `templates/gitignore.txt`. Added `knowledge-base/datacap-watsonx-ai-integration.md`. Plan template table + KB reference table updated.
 > - v1.3: Added Phase 3 — MCP-driven incremental and end-to-end testing using `mcp-datacap-server`. Flowchart extended, Execution Protocol STEP 6 and STEP 7 added, Deployment Checklist MCP Testing section added.
 > - v1.4: Added `knowledge-base/datacap_actions_kb.md` (598 actions, 29 libraries, extracted from RRX files). Grounded all ruleset generation and validation steps in the actions KB. Added action-lookup rules to Execution Protocol STEP 4, Validation Rules, and Notes on Template Usage.
+> - v1.5: Added `pageIDMethod=watsonx_ai` as a supported intake enum. Added `watsonx` block to `requirements.json` schema. Extended Generation Map with `watsonx.ai_PageID.rul`, `watsonx.ai_Data_Extraction.rul`, and `CreateDocs.rul` generation logic. Added watsonx.ai-specific Validation Rules (W1–W5). Codified five hard-won lessons from live InvoiceProcessing deployment: `dcomap.open` behaviour, per-task LLM setup, `Format` parameter meaning, `ConvertFiles` transaction guard, and `@X.` DCO variable scoping.
 
 ---
 
@@ -342,18 +343,51 @@ output/<AppName>/
 │       │     • Add BatchSplit ruleset if batchSplit=true
 │       │     • NOTE: customActions.required generates a DLL+RRX, NOT a .rul entry
 │       │
-│       ├── PageID.rul                        ← GENERATED (no direct template)
+│       ├── PageID.rul  OR  watsonx.ai_PageID.rul  ← GENERATED (no direct template)
 │       │   DRIVEN BY: documents[].pages[].pageIDMethod, fingerprintStorage,
 │       │              workflow.integrityBranch
 │       │   LOGIC per page type:
-│       │     pageIDMethod=fingerprint → SetFingerprintDir + FindFingerprint + SetPageType
-│       │     pageIDMethod=barcode     → ReadBarCodeBP / MatchBarcodeBP + SetPageType
-│       │     pageIDMethod=textmatch   → AddKeyList + FindKeyList + SetPageType
-│       │     pageIDMethod=pattern     → PatternMatch_Identify + pat_RegisterZones + SetPageType
+│       │     pageIDMethod=fingerprint  → SetFingerprintDir + FindFingerprint + SetPageType
+│       │     pageIDMethod=barcode      → ReadBarCodeBP / MatchBarcodeBP + SetPageType
+│       │     pageIDMethod=textmatch    → AddKeyList + FindKeyList + SetPageType
+│       │     pageIDMethod=pattern      → PatternMatch_Identify + pat_RegisterZones + SetPageType
+│       │     pageIDMethod=watsonx_ai   → THREE-FUNCTION RULE (see watsonx.ai Rules below):
+│       │       func "Recognize Page":
+│       │         SetMaxCharacterHeightTMM(0) + SetMaxCharacterHeightAVG(0)
+│       │         + Recognize + CreateCcoFromLayout + NormalizeCCO
+│       │         + CreateTextFile + GoToNextFunction
+│       │       func "Classify With Watson":
+│       │         SetEndpointURL + SetModel + SetProjectID + SetAPIKey
+│       │         + SetEnhancedLogging(1) + SetMaximumNewTokens(4096)
+│       │         + AskAQuestionUsingPageText(classifyPrompt, "@X.LLMPageType", Format="")
+│       │         + GoToNextFunction
+│       │       func "Test For <TypeName>" (one per page type):
+│       │         IsValueInText(@X.LLMPageType, TypeName, False) + SetPageType(TypeName)
+│       │       CRITICAL: rule element has NO dcomap.open attribute (qi="" only).
+│       │                 Format="" (empty) — reads OCR text via CreateTextFile. Required for
+│       │                 both batch mode and transaction mode to function correctly.
 │       │   ALWAYS: route unidentified pages if manualPageID=true
 │       │            (Task_RaiseCondition(UnidentifiedPage))
 │       │   IF integrityBranch=true: add CheckAllIntegrity + Task_RaiseCondition(IntegrityFailure)
 │       │            at document level after CreateDocuments
+│       │
+│       ├── CreateDocs.rul                    ← GENERATED (when pageIDMethod=watsonx_ai)
+│       │   DRIVEN BY: workflow.createDocsTask
+│       │   LOGIC: CreateDocuments action at Batch level to promote classified pages
+│       │          to typed document instances. Placed in collection.xml after
+│       │          watsonx.ai_PageID and before watsonx.ai_Data_Extraction.
+│       │
+│       ├── watsonx.ai_Data_Extraction.rul    ← GENERATED (when pageIDMethod=watsonx_ai)
+│       │   DRIVEN BY: watsonx.extractFields[], documents[].pages[].fields[]
+│       │   LOGIC: rule element has dcomap.open="P:<TypeName>" — fires only on classified pages.
+│       │     func "Setup LLM" (REQUIRED first function in every LLM task):
+│       │       SetEndpointURL + SetModel + SetProjectID + SetAPIKey
+│       │       + SetEnhancedLogging(1) + SetMaximumNewTokens(4096)
+│       │     func "Extract Fields":
+│       │       AskForPageValuesUsingKeys(keys=CSV of field names, target=@X.SaveLLMjson)
+│       │     CRITICAL: all five LLM setup actions MUST be repeated here even though
+│       │               watsonx.ai_PageID already called them — the watsonx_ai DLL resets
+│       │               all state between RRS task processes.
 │       │
 │       ├── Recognition.rul                   ← GENERATED
 │       │   DRIVEN BY: recognition.*, documents[].pages[].fields[]
@@ -366,7 +400,8 @@ output/<AppName>/
 │       │     generatePDF=true → RecognizeToPDF
 │       │     Always: RegisterPageFields + SnapCCOtoDCO
 │       │
-│       ├── Extraction.rul                    ← GENERATED
+│       ├── Extraction.rul                    ← GENERATED (stub when pageIDMethod=watsonx_ai;
+│       │                                        extraction is handled by watsonx.ai_Data_Extraction.rul)
 │       │   DRIVEN BY: recognition.mode, documents[].pages[].fields[]
 │       │   LOGIC:
 │       │     mode=fullpage → Locate-based extraction per field:
@@ -492,7 +527,7 @@ Full schema with types and defaults:
           "name":          "string",
           "required":      "boolean",
           "repeating":     "boolean",
-          "pageIDMethod":  "fingerprint | barcode | textmatch | pattern | manual",
+          "pageIDMethod":  "fingerprint | barcode | textmatch | pattern | manual | watsonx_ai",
           "hasLineItems":  "boolean",
           "lineItemFields": [{ "name": "string", "dataType": "string" }],
           "fields": [
@@ -543,6 +578,15 @@ Full schema with types and defaults:
     "voting":            "boolean",
     "mode":              "zones | fullpage",
     "generatePDF":       "boolean"
+  },
+  "watsonx": {
+    "endpointURL":  "string (default: https://us-south.ml.cloud.ibm.com/ml/v1/text/chat?version=2023-05-29)",
+    "model":        "string (e.g. meta-llama/llama-3-3-70b-instruct)",
+    "projectId":    "string (IBM watsonx project GUID)",
+    "apiKeyAppVar": "string (APPVAR path to secured key, e.g. values/adv/watsonkey)",
+    "maxTokens":    "integer (default: 4096)",
+    "classifyPrompt": "string (full LLM classification question — must list every page type name)",
+    "extractFields":  ["string"] (field names to extract via AskForPageValuesUsingKeys)
   },
   "integrations": {
     "exports": [
@@ -606,6 +650,16 @@ Before generating any file, verify:
 | Fingerprint method used but `autoFingerprint=false` | 🟡 Warning | Fingerprints must be created manually before first run |
 | `type=rest_api` export but no `authType` set | 🟡 Warning | REST export will be generated without authentication headers |
 | `batchSplit=true` but `conditionFlags[]` has no split-routing flag | 🟡 Warning | Add a condition flag name for the split routing job router |
+
+**watsonx.ai-specific checks (W1–W5) — applied when any `pageIDMethod=watsonx_ai`:**
+
+| Check | Severity | Message |
+|-------|----------|---------|
+| W1: `watsonx.endpointURL` is set | 🔴 Error | LLM endpoint required for classification and extraction |
+| W2: `watsonx.model` is set | 🔴 Error | Model ID required for all watsonx.ai calls |
+| W3: `watsonx.projectId` is set | 🔴 Error | Project GUID required for all watsonx.ai calls |
+| W4: `watsonx.apiKeyAppVar` is set | 🔴 Error | API key APPVAR path required — never hard-code the key |
+| W5: `watsonx.classifyPrompt` lists every page type name from `documents[].pages[]` | 🟡 Warning | Classification prompt must enumerate all page types or the LLM cannot classify them |
 
 ### Action Name Validation (KB-grounded)
 
@@ -931,4 +985,80 @@ When generating any `.rul` file, consult the knowledge base in this order:
 
 ---
 
-*Plan version: 1.4 — IBM Datacap 9.1.10 — Knowledge base: knowledge-base/ — Templates: templates/*
+## Lessons Learned — Live Deployment (InvoiceProcessing, Sep 2026)
+
+The following bugs were found and fixed during the first end-to-end deployment of a `pageIDMethod=watsonx_ai` application. They are encoded in this plan as generation rules to prevent recurrence.
+
+### L1 — `dcomap.open` on watsonx.ai PageID rules
+
+**Symptom:** All pages skip with `"skip: current DCO has no associated rules from this ruleset"` in the RRS log.
+
+**Root cause:** A `dcomap.open="P"` attribute on the `<rule>` element restricts it to pages whose DCO type already matches. Since pages start as `"Other"`, a `dcomap.open="P"` can never fire for page-level classification.
+
+**Fix:** The `<rule>` element in `watsonx.ai_PageID.rul` must have **no `dcomap.open` attribute** (only `qi=""`). With no attribute the RRS engine automatically maps the rule to `P:Other`, which fires on unclassified pages in both batch and transaction mode.
+
+**Do NOT use:** `dcomap.open="P"` on any watsonx.ai PageID rule.
+
+**Contrast:** `watsonx.ai_Data_Extraction.rul` **should** use `dcomap.open="P:TypeName"` so it fires only on already-classified pages.
+
+---
+
+### L2 — LLM setup must be repeated in every RRS task
+
+**Symptom:** `watsonx.ai_Data_Extraction.rul` fails silently — no LLM response, no error in the log.
+
+**Root cause:** The `watsonx_ai.dll` keeps all state (endpoint URL, model, project ID, API key) in process-local memory. Datacap spawns a new RRS process for each task profile execution. State set during PageID is **not visible** to the extraction task.
+
+**Fix:** Every ruleset that calls any `net:watsonx_ai.Actions` action must begin with this exact 5-action block:
+```xml
+<a ns="net:watsonx_ai.Actions" name="SetEndpointURL">   ... </a>
+<a ns="net:watsonx_ai.Actions" name="SetModel">         ... </a>
+<a ns="net:watsonx_ai.Actions" name="SetProjectID">     ... </a>
+<a ns="net:watsonx_ai.Actions" name="SetAPIKey">        ... </a>
+<a ns="net:watsonx_ai.Actions" name="SetEnhancedLogging"> ... </a>
+```
+
+This is **not** a defensive copy — it is required for correct operation.
+
+---
+
+### L3 — `AskAQuestionUsingPageText` Format parameter
+
+| `Format` value | Behaviour | Use when |
+|----------------|-----------|----------|
+| `""` (empty) | Reads OCR text from a `.txt` file written to the batch folder by `CreateTextFile` | Always — both batch and transaction mode |
+| `"1"` | Reads text from the in-memory CCO word map | Avoid — not compatible with transaction mode |
+
+**Rule:** Always emit `Format=""` in generated rulesets. `Format="1"` was confirmed to break transaction-mode classification even though it works in queue batch mode.
+
+---
+
+### L4 — `ConvertFiles` `SplitMultipageTiff` aborts on single-page TIFF in transaction mode
+
+**Symptom:** `transaction-run` returns Status 1 with no classification; `SplitPageCount` never appears in the result XML.
+
+**Root cause:** `SplitMultipageTiff` raises an abort error when given a single-page TIFF and the `CheckDCOStatus` guard (which would skip the function for non-multipage inputs) is `disabled="True"`.
+
+**Fix:** In `ConvertFiles.rul`, the `CheckDCOStatus` action inside the **"Multipage TIFF Expansion"** function must be `disabled="False"`. All other `CheckDCOStatus` guards can remain `disabled="True"`.
+
+```xml
+<func name="Multipage TIFF Expansion">
+  <a name="CheckDCOStatus" disabled="False">   <!-- ← must be False -->
+    <p name="ExpectedStatus" v="49"/>
+  </a>
+  <a name="SplitMultipageTiff" .../>
+  ...
+</func>
+```
+
+---
+
+### L5 — `@X.` DCO variables in transaction mode
+
+**Symptom:** `LLMPageType` is set during execution (confirmed in batch-mode logs) but does not appear in the returned `VScan.xml` from `transaction-run`.
+
+**Status:** Confirmed working in queue batch mode (RRS log shows `Setting 'TM000001.LLMPageType' value to 'Invoice'`). In transaction mode `@X.` page-level variables are written to the in-memory DCO tree but may not be serialised back into the exported `VScan.xml` unless the ruleset explicitly writes the value to a named DCO field via `UpdateField`. For LLM classification the practical workaround is to check the `TYPE` field (set by `SetPageType`) rather than `LLMPageType` in the transaction result.
+
+---
+
+*Plan version: 1.5 — IBM Datacap 9.1.10 — Knowledge base: knowledge-base/ — Templates: templates/*

@@ -7,7 +7,7 @@
       ],
       "env": {
         "DATACAP_URL": "http://localhost:82/service",
-        "DATACAP_APP": "APT",
+        "DATACAP_APP": "InvoiceProcessing",
         "DATACAP_USER": "admin",
         "DATACAP_PASSWORD": "admin",
         "DATACAP_STATION": "1"
