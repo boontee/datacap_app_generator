@@ -10,7 +10,9 @@
 
 ## Demo
 
-▶ [DataCap App Generator Bob Accelerator Demo](https://www.youtube.com/watch?v=Dae4k6YQ0jQ) — end-to-end walkthrough of the generator and InvoiceProcessing app with IBM watsonx.ai.
+[![DataCap App Generator Bob Accelerator Demo](https://img.youtube.com/vi/Dae4k6YQ0jQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=Dae4k6YQ0jQ)
+
+*DataCap App Generator Bob Accelerator Demo — end-to-end walkthrough of the generator and InvoiceProcessing app with IBM watsonx.ai.*
 
 ---
 
